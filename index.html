@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090b10" />
+  <title>小宇微電｜幸運車庫</title>
+  <meta name="description" content="小宇微電成交限定幸運車庫，輸入抽獎碼即可開啟專屬優惠。" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <main class="app-shell">
+    <header class="brand-bar">
+      <div class="brand-mark" aria-hidden="true">YU</div>
+      <div>
+        <p class="eyebrow">小宇微電</p>
+        <h1>幸運車庫</h1>
+      </div>
+      <span class="status-pill">成交限定</span>
+    </header>
+
+    <section id="setupView" class="panel setup-panel hidden" aria-live="polite">
+      <div class="setup-icon">🧩</div>
+      <h2>尚未連接 Firebase</h2>
+      <p>請先把 Firebase Web 設定貼進 <code>firebase-config.js</code>，再重新上傳網站。</p>
+    </section>
+
+    <section id="entryView" class="panel hero-panel">
+      <div class="hero-icon" aria-hidden="true">⚡</div>
+      <p class="kicker">每位完成下訂的客戶</p>
+      <h2>都有一次開庫拿優惠的機會</h2>
+      <p class="subcopy">輸入小宇提供的抽獎碼，再挑一座車庫。每一庫都有獎，最高現折 NT$2,000。</p>
+
+      <form id="codeForm" class="code-form" novalidate>
+        <label for="drawCode">抽獎碼</label>
+        <div class="input-wrap">
+          <input id="drawCode" name="drawCode" type="text" inputmode="text" autocomplete="one-time-code" maxlength="24" placeholder="例如：YU8K3M9Q" />
+          <button id="verifyBtn" type="submit" class="primary-btn">驗證資格</button>
+        </div>
+        <p id="codeMessage" class="form-message" aria-live="polite"></p>
+      </form>
+
+      <div class="trust-row">
+        <span>🔒 全網一碼一次</span>
+        <span>☁️ Firebase 記錄</span>
+        <span>🎁 人人有獎</span>
+      </div>
+    </section>
+
+    <section id="garageView" class="panel garage-panel hidden" aria-labelledby="garageTitle">
+      <div class="section-heading">
+        <p class="kicker">資格驗證成功</p>
+        <h2 id="garageTitle">請挑一座幸運車庫</h2>
+        <p>選定後由 Firebase 寫入抽獎時間，結果無法更換。</p>
+      </div>
+
+      <div id="garageGrid" class="garage-grid" role="list"></div>
+      <p class="fairness-note">結果由抽獎碼、所選車庫與 Firebase 伺服器時間透過 SHA-256 計算，抽獎前無法預先知道。</p>
+    </section>
+
+    <section id="resultView" class="panel result-panel hidden" aria-live="polite">
+      <div class="result-glow"></div>
+      <p class="result-label">🎉 恭喜獲得</p>
+      <h2 id="prizeTitle">現折 NT$500</h2>
+      <p id="prizeDescription" class="prize-description">本優惠限本次訂單使用。</p>
+
+      <div class="receipt-card">
+        <div>
+          <span>抽獎碼</span>
+          <strong id="resultCode">—</strong>
+        </div>
+        <div>
+          <span>車庫號碼</span>
+          <strong id="resultGarage">—</strong>
+        </div>
+        <div>
+          <span>兌換序號</span>
+          <strong id="resultSerial">—</strong>
+        </div>
+        <div>
+          <span>Firebase 時間</span>
+          <strong id="resultTime">—</strong>
+        </div>
+      </div>
+
+      <button id="copyResultBtn" class="primary-btn wide-btn" type="button">複製兌換資訊</button>
+      <p class="screenshot-tip">請截圖並傳給小宇，確認後即可折抵。</p>
+      <a id="lineLink" class="line-link" href="https://line.me/R/ti/p/@762eqvlg" rel="noopener">開啟官方 LINE：@762eqvlg</a>
+    </section>
+
+    <section class="panel rules-panel">
+      <details>
+        <summary>查看活動規則與公開機率</summary>
+        <div class="rules-content">
+          <p>本活動僅限完成下訂且取得抽獎碼的客戶參加。每組抽獎碼只能在 Firebase 成功登記一次；優惠不得折現、轉售或與其他優惠併用。</p>
+          <div id="oddsPlaceholder" class="odds-placeholder">輸入有效抽獎碼後，系統會顯示該活動的正式機率。</div>
+          <ul id="oddsList"></ul>
+          <p class="smallprint">主辦單位：小宇微電。抽獎演算法版本：SHA-256 v1。</p>
+        </div>
+      </details>
+    </section>
+
+    <footer>
+      <p>小宇微電｜找小宇買微電，不走彎路</p>
+      <a href="admin.html" class="admin-entry">管理</a>
+    </footer>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="firebase-config.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

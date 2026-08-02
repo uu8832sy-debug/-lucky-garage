@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090b10" />
+  <title>小宇微電｜幸運車庫管理</title>
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">小宇微電</p>
+        <h1>幸運車庫管理</h1>
+      </div>
+      <a href="index.html">回抽獎頁</a>
+    </header>
+
+    <section id="configWarning" class="card warning hidden">
+      <h2>尚未連接 Firebase</h2>
+      <p>請先完成 <code>firebase-config.js</code> 與 <code>firestore.rules</code> 設定。</p>
+    </section>
+
+    <section id="loginCard" class="card">
+      <h2>管理員登入</h2>
+      <p>請用你的 Google 帳號登入。管理頁建議使用 Safari 或 Chrome 開啟，不要在 LINE 內建瀏覽器操作。</p>
+      <button id="loginBtn" class="primary" type="button">使用 Google 登入</button>
+      <p id="loginMessage" class="message"></p>
+    </section>
+
+    <section id="bootstrapCard" class="card hidden">
+      <h2>建立第一位管理員</h2>
+      <p>你已登入，但這個帳號還沒有管理權限。請到 Firestore 控制台建立以下文件：</p>
+      <div class="code-box">
+        <span>文件路徑</span>
+        <strong id="adminPath">admins/—</strong>
+      </div>
+      <div class="code-box">
+        <span>欄位</span>
+        <strong>enabled = true（boolean）</strong>
+      </div>
+      <button id="copyUidBtn" class="secondary" type="button">複製管理員 UID</button>
+      <button id="recheckBtn" class="primary" type="button">建立後重新檢查</button>
+      <p class="note">Firebase 控制台建立文件屬於專案管理操作，不受網站端規則限制。</p>
+    </section>
+
+    <div id="adminArea" class="hidden">
+      <section class="card account-card">
+        <div>
+          <p class="eyebrow">管理員已登入</p>
+          <strong id="adminEmail">—</strong>
+        </div>
+        <button id="logoutBtn" class="secondary compact" type="button">登出</button>
+      </section>
+
+      <section class="card">
+        <h2>① 建立不可修改的活動</h2>
+        <p class="note">活動建立後，獎項、機率與演算法會永久固定。要改機率，請建立新的活動 ID。</p>
+        <div class="grid two">
+          <label>
+            <span>活動 ID（英文）</span>
+            <input id="campaignId" value="main-2026" maxlength="40" />
+          </label>
+          <label>
+            <span>活動名稱</span>
+            <input id="campaignName" value="小宇微電幸運車庫" maxlength="50" />
+          </label>
+        </div>
+        <div id="prizePreview" class="prize-preview"></div>
+        <button id="createCampaignBtn" class="primary" type="button">建立活動</button>
+        <p id="campaignMessage" class="message"></p>
+      </section>
+
+      <section class="card">
+        <h2>② 產生一次性抽獎碼</h2>
+        <div class="grid three">
+          <label>
+            <span>活動 ID</span>
+            <input id="codeCampaignId" value="main-2026" maxlength="40" />
+          </label>
+          <label>
+            <span>代碼前綴</span>
+            <input id="codePrefix" value="YU" maxlength="6" />
+          </label>
+          <label>
+            <span>產生數量</span>
+            <input id="codeCount" type="number" min="1" max="300" value="20" />
+          </label>
+        </div>
+        <button id="generateCodesBtn" class="primary" type="button">產生並寫入 Firebase</button>
+        <p id="codesMessage" class="message"></p>
+        <textarea id="generatedCodes" spellcheck="false" placeholder="新產生的抽獎碼會顯示在這裡"></textarea>
+        <div class="actions">
+          <button id="copyCodesBtn" class="secondary" type="button">複製抽獎碼</button>
+          <button id="downloadCodesBtn" class="secondary" type="button">下載 CSV</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-row">
+          <div>
+            <h2>最近抽獎碼</h2>
+            <p class="note">未使用的代碼不會顯示結果；使用後才會依 Firebase 時間計算並顯示獎項。</p>
+          </div>
+          <button id="refreshBtn" class="secondary compact" type="button">重新整理</button>
+        </div>
+        <div id="codeList" class="code-list">
+          <p class="empty">尚無資料。</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <script src="config.js"></script>
+  <script src="firebase-config.js"></script>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

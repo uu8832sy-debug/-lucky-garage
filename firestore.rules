@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.enabled == true;
+    }
+
+    match /admins/{uid} {
+      // 讓登入者檢查自己是否已被設為管理員。
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+
+    match /campaigns/{campaignId} {
+      allow get: if signedIn();
+      allow list: if isAdmin();
+
+      // 活動只能建立一次，建立後不能修改或刪除。
+      allow create: if isAdmin()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.active is bool
+        && request.resource.data.algorithm == 'sha256-v1'
+        && request.resource.data.seed is string
+        && request.resource.data.name is string
+        && request.resource.data.prizes is list;
+
+      allow update, delete: if false;
+    }
+
+    match /drawCodes/{codeHash} {
+      // 未使用的有效代碼可由持碼者驗證；使用後只讓原抽獎者與管理員讀取。
+      allow get: if signedIn()
+        && (
+          resource.data.used == false
+          || resource.data.usedBy == request.auth.uid
+          || isAdmin()
+        );
+      allow list: if isAdmin();
+
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasAll([
+          'code', 'campaignId', 'active', 'used', 'usedBy', 'usedAt',
+          'selectedGarage', 'createdAt', 'createdBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'code', 'campaignId', 'active', 'used', 'usedBy', 'usedAt',
+          'selectedGarage', 'createdAt', 'createdBy'
+        ])
+        && request.resource.data.code is string
+        && request.resource.data.campaignId is string
+        && request.resource.data.active == true
+        && request.resource.data.used == false
+        && request.resource.data.usedBy == null
+        && request.resource.data.usedAt == null
+        && request.resource.data.selectedGarage == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.auth.uid
+        && exists(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId));
+
+      allow update: if
+        // 管理員只能啟用或停用「尚未使用」的代碼。
+        (
+          isAdmin()
+          && resource.data.used == false
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
+          && request.resource.data.active is bool
+        )
+        ||
+        // 客人只能把尚未使用的代碼一次性登記為自己使用。
+        (
+          signedIn()
+          && resource.data.active == true
+          && resource.data.used == false
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'used', 'usedBy', 'usedAt', 'selectedGarage'
+          ])
+          && request.resource.data.used == true
+          && request.resource.data.usedBy == request.auth.uid
+          && request.resource.data.usedAt == request.time
+          && request.resource.data.selectedGarage is int
+          && request.resource.data.selectedGarage >= 1
+          && request.resource.data.selectedGarage <= 9
+        );
+
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
