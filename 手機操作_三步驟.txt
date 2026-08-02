@@ -1,0 +1,23 @@
+小宇微電系統更新｜手機操作三步驟
+
+第 1 步：更新 GitHub
+1. 下載「小宇微電_幸運車庫_訂單保固整合版.zip」並解壓縮。
+2. 進入原本 GitHub 儲存庫。
+3. 點 Add file → Upload files。
+4. 將解壓後資料夾內的全部檔案上傳，勾選覆蓋同名檔案後提交。
+
+第 2 步：發布 Firestore 規則
+1. 開啟 Firebase Console。
+2. Firestore Database → 規則。
+3. 將壓縮包內 firestore.rules 的內容全部複製貼上。
+4. 按「發布」。
+
+第 3 步：開啟系統
+1. 等 GitHub Pages 約 1～3 分鐘更新。
+2. 開啟原本網站網址後面加 /business.html。
+3. 使用 uu8832sr@gmail.com 登入。
+
+客人保固查詢頁：網站網址後面加 /warranty.html
+原本抽獎管理頁：網站網址後面加 /garage-admin.html
+
+全程不需要新增 Firebase 專案、不需要升級 Blaze、不需要綁信用卡。

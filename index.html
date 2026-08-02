@@ -6,7 +6,9 @@
   <meta name="theme-color" content="#090b10" />
   <title>小宇微電｜幸運車庫</title>
   <meta name="description" content="小宇微電成交限定幸運車庫，輸入抽獎碼即可開啟專屬優惠。" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="styles.css?v=6" />
 </head>
 <body>
   <div class="ambient ambient-a"></div>
@@ -105,14 +107,14 @@
 
     <footer>
       <p>小宇微電｜找小宇買微電，不走彎路</p>
-      <a href="admin.html" class="admin-entry">管理</a>
+      <div class="footer-links"><a href="warranty.html" class="admin-entry">保固查詢</a><span>・</span><a href="business.html" class="admin-entry">訂單管理</a><span>・</span><a href="garage-admin.html" class="admin-entry">抽獎管理</a></div>
     </footer>
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <script src="config.js"></script>
-  <script src="firebase-config.js"></script>
-  <script type="module" src="app.js"></script>
+  <script src="config.js?v=6"></script>
+  <script src="firebase-config.js?v=6"></script>
+  <script type="module" src="app.js?v=6"></script>
 </body>
 </html>

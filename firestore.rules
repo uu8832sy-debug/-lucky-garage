@@ -5,14 +5,25 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isAdmin() {
+    function isOwnerEmail() {
       return signedIn()
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
-        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.enabled == true;
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == 'uu8832sr@gmail.com';
+    }
+
+    function isAdmin() {
+      return signedIn() && (
+        isOwnerEmail()
+        || request.auth.uid == 'rN911472GUXjc1IYToSPhgf6zbs2'
+        || request.auth.uid == 'iRdFBpDpXcNklIQ2tzP8kP1lDu42'
+        || (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+          && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.enabled == true
+        )
+      );
     }
 
     match /admins/{uid} {
-      // 讓登入者檢查自己是否已被設為管理員。
       allow get: if signedIn() && request.auth.uid == uid;
       allow list, create, update, delete: if false;
     }
@@ -20,8 +31,6 @@ service cloud.firestore {
     match /campaigns/{campaignId} {
       allow get: if signedIn();
       allow list: if isAdmin();
-
-      // 活動只能建立一次，建立後不能修改或刪除。
       allow create: if isAdmin()
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.createdAt == request.time
@@ -30,20 +39,16 @@ service cloud.firestore {
         && request.resource.data.seed is string
         && request.resource.data.name is string
         && request.resource.data.prizes is list;
-
       allow update, delete: if false;
     }
 
     match /drawCodes/{codeHash} {
-      // 未使用的有效代碼可由持碼者驗證；使用後只讓原抽獎者與管理員讀取。
-      allow get: if signedIn()
-        && (
-          resource.data.used == false
-          || resource.data.usedBy == request.auth.uid
-          || isAdmin()
-        );
+      allow get: if signedIn() && (
+        resource.data.used == false
+        || resource.data.usedBy == request.auth.uid
+        || isAdmin()
+      );
       allow list: if isAdmin();
-
       allow create: if isAdmin()
         && request.resource.data.keys().hasAll([
           'code', 'campaignId', 'active', 'used', 'usedBy', 'usedAt',
@@ -63,33 +68,42 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.createdBy == request.auth.uid
         && exists(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId));
-
-      allow update: if
-        // 管理員只能啟用或停用「尚未使用」的代碼。
-        (
-          isAdmin()
-          && resource.data.used == false
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
-          && request.resource.data.active is bool
-        )
-        ||
-        // 客人只能把尚未使用的代碼一次性登記為自己使用。
-        (
-          signedIn()
-          && resource.data.active == true
-          && resource.data.used == false
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-            'used', 'usedBy', 'usedAt', 'selectedGarage'
-          ])
-          && request.resource.data.used == true
-          && request.resource.data.usedBy == request.auth.uid
-          && request.resource.data.usedAt == request.time
-          && request.resource.data.selectedGarage is int
-          && request.resource.data.selectedGarage >= 1
-          && request.resource.data.selectedGarage <= 9
-        );
-
+      allow update: if (
+        isAdmin()
+        && resource.data.used == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
+        && request.resource.data.active is bool
+      ) || (
+        signedIn()
+        && resource.data.active == true
+        && resource.data.used == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'used', 'usedBy', 'usedAt', 'selectedGarage'
+        ])
+        && request.resource.data.used == true
+        && request.resource.data.usedBy == request.auth.uid
+        && request.resource.data.usedAt == request.time
+        && request.resource.data.selectedGarage is int
+        && request.resource.data.selectedGarage >= 1
+        && request.resource.data.selectedGarage <= 9
+      );
       allow delete: if false;
+    }
+
+    // 私人訂單與收據：僅管理員可讀寫。
+    match /orders/{orderId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    match /receipts/{receiptId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    // 電子保固卡：公開頁只可用正確編號讀取已發布資料；禁止公開列出全部保固卡。
+    match /warranties/{warrantyId} {
+      allow get: if isAdmin() || resource.data.published == true;
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
     }
 
     match /{document=**} {

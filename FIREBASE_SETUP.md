@@ -100,3 +100,14 @@
 ### Firebase Web 設定放在前端安全嗎？
 
 Firebase Web 設定用來識別專案，本身不是管理員密碼。資料能否讀寫由 Firebase Authentication 與 Firestore Security Rules 決定。不要把服務帳戶私鑰或 Admin SDK 憑證放進網站。
+
+
+## 訂單與保固系統
+
+發布新版 `firestore.rules` 後，可開啟：
+
+- `business.html`：訂單、收據、保固、交車卡及文案管理。
+- `warranty.html`：客人電子保固查詢。
+- `garage-admin.html`：原本抽獎管理。
+
+完整升級流程請看 `系統升級說明.md`。

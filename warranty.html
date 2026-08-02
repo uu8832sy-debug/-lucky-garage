@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#090b10" />
+  <title>小宇微電｜保固查詢</title>
+  <meta name="description" content="小宇微電保固卡查詢" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="warranty.css?v=1" />
+</head>
+<body>
+  <main class="warranty-shell">
+    <header>
+      <div class="brand">YU</div>
+      <div><p>小宇微電</p><h1>電子保固卡</h1></div>
+    </header>
+
+    <section class="query-card">
+      <label for="warrantyId">保固卡編號</label>
+      <div class="query-row"><input id="warrantyId" maxlength="80" placeholder="掃描 QR Code 會自動帶入" /><button id="queryBtn" type="button">查詢</button></div>
+      <p id="queryMessage"></p>
+    </section>
+
+    <section id="resultCard" class="result-card hidden">
+      <div class="status-line"><span id="statusBadge">保固中</span><strong id="resultId">—</strong></div>
+      <div class="vehicle"><small>保固車輛</small><h2 id="vehicleName">—</h2><p id="vehicleColor">—</p></div>
+      <dl>
+        <div><dt>車主</dt><dd id="ownerName">—</dd></div>
+        <div><dt>車架號</dt><dd id="chassisMasked">—</dd></div>
+        <div><dt>電池類型</dt><dd id="batteryType">—</dd></div>
+        <div><dt>交車日期</dt><dd id="deliveryDate">—</dd></div>
+        <div><dt>整車保固至</dt><dd id="vehicleWarrantyEnd">—</dd></div>
+        <div><dt>電池保固至</dt><dd id="batteryWarrantyEnd">—</dd></div>
+      </dl>
+      <div class="terms"><h3>保固說明</h3><p id="termsText"></p></div>
+      <a id="lineLink" class="line-link" href="https://line.me/R/ti/p/@762eqvlg">聯絡官方 LINE：@762eqvlg</a>
+    </section>
+
+    <section id="notFoundCard" class="not-found hidden"><h2>查無有效保固資料</h2><p>請確認保固編號，或聯絡小宇協助查詢。</p></section>
+    <footer><a href="index.html">回到幸運車庫</a><p>找小宇買微電，不走彎路</p></footer>
+  </main>
+  <script src="config.js?v=6"></script>
+  <script src="firebase-config.js?v=6"></script>
+  <script type="module" src="warranty.js?v=1"></script>
+</body>
+</html>
