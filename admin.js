@@ -66,7 +66,10 @@ let db;
 let currentUser = null;
 let currentCodes = [];
 const campaignCache = new Map();
-const OWNER_UID = "rN911472GUXjc1IYToSPhgf6zbs2";
+const OWNER_UIDS = new Set([
+  "rN911472GUXjc1IYToSPhgf6zbs2",
+  "iRdFBpDpXcNklIQ2tzP8kP1lDu42"
+]);
 
 function hasRealFirebaseConfig(config) {
   return Boolean(config.apiKey && config.projectId && config.appId && !Object.values(config).some((value) => String(value).includes("YOUR_")));
@@ -107,7 +110,7 @@ async function checkAdminAccess(user) {
   adminEmail.textContent = user.email || user.uid;
 
   try {
-    let enabled = user.uid === OWNER_UID;
+    let enabled = OWNER_UIDS.has(user.uid);
     if (!enabled) {
       const snapshot = await getDoc(doc(db, "admins", user.uid));
       enabled = snapshot.exists() && snapshot.data().enabled === true;
