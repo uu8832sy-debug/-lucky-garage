@@ -33,7 +33,7 @@ const elements = {
   statusFilter: $("#statusFilter"), refreshOrdersBtn: $("#refreshOrdersBtn"), exportCsvBtn: $("#exportCsvBtn"), orderList: $("#orderList"),
   statOrders: $("#statOrders"), statPending: $("#statPending"), statDeposits: $("#statDeposits"), statBalance: $("#statBalance"),
   documentDialog: $("#documentDialog"), documentCanvas: $("#documentCanvas"), dialogTitle: $("#dialogTitle"),
-  downloadPngBtn: $("#downloadPngBtn"), printBtn: $("#printBtn"), closeDialogBtn: $("#closeDialogBtn"),
+  savePhotoBtn: $("#savePhotoBtn"), downloadPngBtn: $("#downloadPngBtn"), printBtn: $("#printBtn"), closeDialogBtn: $("#closeDialogBtn"),
   textDialog: $("#textDialog"), textDialogTitle: $("#textDialogTitle"), textTabs: $("#textTabs"), generatedText: $("#generatedText"),
   copyTextBtn: $("#copyTextBtn"), closeTextDialogBtn: $("#closeTextDialogBtn"), toast: $("#toast")
 };
@@ -495,22 +495,93 @@ elements.copyUidBtn.addEventListener("click", async () => {
 elements.logoutBtn.addEventListener("click", () => signOut(auth));
 elements.closeDialogBtn.addEventListener("click", () => elements.documentDialog.close());
 elements.printBtn.addEventListener("click", () => window.print());
-elements.downloadPngBtn.addEventListener("click", async () => {
+
+function safeFileName(value) {
+  return String(value || "小宇微電文件").replace(/[\\/:*?"<>|]/g, "-").trim() || "小宇微電文件";
+}
+
+async function renderCurrentDocumentToFile() {
   const sheet = elements.documentCanvas.querySelector(".doc-sheet");
-  if (!sheet || !window.html2canvas) return showToast("圖片工具尚未載入");
-  elements.downloadPngBtn.disabled = true;
+  if (!sheet || !window.html2canvas) throw new Error("圖片工具尚未載入");
+
+  if (document.fonts?.ready) await document.fonts.ready;
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+  const scale = Math.max(2, Math.min(3, Number(window.devicePixelRatio || 1) * 2));
+  const canvas = await window.html2canvas(sheet, {
+    scale,
+    backgroundColor: "#ffffff",
+    useCORS: true,
+    logging: false,
+    imageTimeout: 15000
+  });
+
+  const blob = await new Promise((resolve, reject) => {
+    canvas.toBlob((result) => result ? resolve(result) : reject(new Error("圖片轉換失敗")), "image/png", 1);
+  });
+
+  return new File([blob], `${safeFileName(currentDocumentName)}.png`, {
+    type: "image/png",
+    lastModified: Date.now()
+  });
+}
+
+async function withDocumentImage(button, action) {
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = "圖片製作中…";
   try {
-    const canvas = await window.html2canvas(sheet, { scale: 2, backgroundColor: null, useCORS: true });
-    const link = document.createElement("a");
-    link.download = `${currentDocumentName}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+    const file = await renderCurrentDocumentToFile();
+    await action(file);
   } catch (error) {
-    console.error(error);
-    showToast("圖片產生失敗，可改用列印存成 PDF");
+    if (error?.name !== "AbortError") {
+      console.error(error);
+      showToast(error?.message || "圖片產生失敗，可改用列印存成 PDF");
+    }
   } finally {
-    elements.downloadPngBtn.disabled = false;
+    button.disabled = false;
+    button.textContent = originalText;
   }
+}
+
+elements.savePhotoBtn.addEventListener("click", async () => {
+  await withDocumentImage(elements.savePhotoBtn, async (file) => {
+    const shareData = { files: [file], title: currentDocumentName };
+    if (navigator.share && (!navigator.canShare || navigator.canShare(shareData))) {
+      await navigator.share(shareData);
+      showToast("請在分享選單點「儲存影像」");
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    const opened = window.open(url, "_blank");
+    if (opened) {
+      showToast("圖片已開啟，請長按後選「儲存到照片」");
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+      return;
+    }
+
+    const link = document.createElement("a");
+    link.download = file.name;
+    link.href = url;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 3000);
+    showToast("已下載到檔案 App，可再分享並儲存影像");
+  });
+});
+
+elements.downloadPngBtn.addEventListener("click", async () => {
+  await withDocumentImage(elements.downloadPngBtn, async (file) => {
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+    link.download = file.name;
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 3000);
+    showToast("圖片已下載到檔案 App");
+  });
 });
 elements.textTabs.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-name]");

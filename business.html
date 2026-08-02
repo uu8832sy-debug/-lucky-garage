@@ -8,7 +8,7 @@
   <title>小宇微電｜訂單與保固管理</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="business.css?v=1" />
+  <link rel="stylesheet" href="business.css?v=2" />
 </head>
 <body>
   <main class="shell">
@@ -135,7 +135,8 @@
     <div class="dialog-toolbar">
       <strong id="dialogTitle">文件預覽</strong>
       <div class="actions">
-        <button id="downloadPngBtn" class="secondary compact" type="button">下載 PNG</button>
+        <button id="savePhotoBtn" class="primary compact" type="button">儲存到相簿</button>
+        <button id="downloadPngBtn" class="secondary compact" type="button">下載到檔案</button>
         <button id="printBtn" class="secondary compact" type="button">列印／存 PDF</button>
         <button id="closeDialogBtn" class="ghost compact" type="button">關閉</button>
       </div>
@@ -156,6 +157,6 @@
   <script src="firebase-config.js?v=6"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script type="module" src="business.js?v=1"></script>
+  <script type="module" src="business.js?v=2"></script>
 </body>
 </html>
