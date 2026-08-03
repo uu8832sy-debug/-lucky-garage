@@ -1,5 +1,5 @@
-/* 小宇微電｜幸運車庫介面設定 v5 */
-window.LUCKY_GARAGE_UI_CONFIG.cinematicVideoUrl = "garage-open.mp4";
+/* 小宇微電｜幸運車庫介面設定 v7 */
+window.LUCKY_GARAGE_UI_CONFIG = {
   brandName: "小宇微電",
   campaignName: "幸運車庫",
   lineId: "@762eqvlg",

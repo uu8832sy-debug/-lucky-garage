@@ -634,6 +634,12 @@ window.addEventListener("resize", () => {
 });
 
 async function start() {
+  if (!codeForm || !codeInput || !verifyBtn || !entryView || !garageView || !resultView) {
+    console.error("幸運車庫頁面檔案版本不一致：請同步覆蓋 index.html、app.js、styles.css。 ");
+    document.body.insertAdjacentHTML("afterbegin", `<div style="position:fixed;z-index:99999;inset:12px 12px auto;padding:14px;border-radius:12px;background:#7f1d1d;color:#fff;font-weight:800">網站檔案版本不一致，請重新上傳 v7 修復檔。</div>`);
+    return;
+  }
+  setCodeMessage("系統連線中，請稍候…", true);
   renderGarages();
   updateSoundButton();
   setStep(1);
@@ -653,6 +659,7 @@ async function start() {
     await setPersistence(auth, browserLocalPersistence);
     currentUser = await ensureAnonymousUser();
     verifyBtn.disabled = false;
+    setCodeMessage("");
   } catch (error) {
     console.error(error);
     showSetupError(`Firebase 連線失敗：${error.message || "請檢查設定。"}`);

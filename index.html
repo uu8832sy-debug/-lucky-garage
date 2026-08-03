@@ -3,118 +3,172 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#090b10" />
+  <meta name="theme-color" content="#05070b" />
+  <meta name="description" content="小宇微電幸運車庫，輸入專屬抽獎碼，開啟你的購車優惠。" />
+  <meta name="color-scheme" content="dark" />
   <title>小宇微電｜幸運車庫</title>
-  <meta name="description" content="小宇微電成交限定幸運車庫，輸入抽獎碼即可開啟專屬優惠。" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="stylesheet" href="styles.css?v=6" />
 </head>
 <body>
-  <div class="ambient ambient-a"></div>
-  <div class="ambient ambient-b"></div>
+  <div class="site-noise" aria-hidden="true"></div>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+  <div class="ambient ambient-c" aria-hidden="true"></div>
 
   <main class="app-shell">
-    <header class="brand-bar">
-      <div class="brand-mark" aria-hidden="true">YU</div>
-      <div>
-        <p class="eyebrow">小宇微電</p>
-        <h1>幸運車庫</h1>
+    <header class="glass-header">
+      <a class="brand-lockup" href="index.html" aria-label="回到幸運車庫首頁">
+        <span class="brand-mark">YU</span>
+        <span class="brand-copy">
+          <span class="eyebrow">小宇微電</span>
+          <strong>幸運車庫</strong>
+        </span>
+      </a>
+      <div class="header-actions">
+        <span class="live-pill"><i></i> 活動進行中</span>
+        <button id="soundToggle" class="icon-btn" type="button" aria-label="切換音效" title="切換音效">🔊</button>
       </div>
-      <span class="status-pill">成交限定</span>
     </header>
 
+    <nav class="stepper" aria-label="抽獎流程">
+      <div class="step is-active" data-step="1"><span>1</span><b>驗證資格</b></div>
+      <i></i>
+      <div class="step" data-step="2"><span>2</span><b>選擇車庫</b></div>
+      <i></i>
+      <div class="step" data-step="3"><span>3</span><b>開出優惠</b></div>
+    </nav>
+
     <section id="setupView" class="panel setup-panel hidden" aria-live="polite">
-      <div class="setup-icon">🧩</div>
+      <div class="setup-icon">⚙️</div>
       <h2>尚未連接 Firebase</h2>
-      <p>請先把 Firebase Web 設定貼進 <code>firebase-config.js</code>，再重新上傳網站。</p>
+      <p>請先確認 <code>firebase-config.js</code> 設定與 Firestore 規則。</p>
     </section>
 
     <section id="entryView" class="panel hero-panel">
-      <div class="hero-icon" aria-hidden="true">⚡</div>
-      <p class="kicker">每位完成下訂的客戶</p>
-      <h2>都有一次開庫拿優惠的機會</h2>
-      <p class="subcopy">輸入小宇提供的抽獎碼，再挑一座車庫。每一庫都有獎，最高現折 NT$2,000。</p>
+      <div class="hero-topline">
+        <span class="limited-chip">成交限定</span>
+        <span class="secure-chip">SHA-256 公平開獎</span>
+      </div>
+
+      <div class="hero-emblem" aria-hidden="true">
+        <span class="emblem-core">⚡</span>
+        <span class="emblem-ring ring-a"></span>
+        <span class="emblem-ring ring-b"></span>
+      </div>
+
+      <p class="kicker">凡購車完成下訂，即可參加</p>
+      <h1>挑一座車庫<br><em>開出你的專屬優惠</em></h1>
+      <p class="subcopy">每一庫都有獎，最高現折 <strong>NT$3,000</strong>。輸入小宇提供的專屬抽獎碼，即可開始。</p>
+
+      <div class="jackpot-strip" aria-label="活動獎項">
+        <span>NT$500</span><i></i><span>NT$1,000</span><i></i><span>NT$2,000</span><i></i><strong>NT$3,000</strong>
+      </div>
 
       <form id="codeForm" class="code-form" novalidate>
-        <label for="drawCode">抽獎碼</label>
+        <label for="drawCode">專屬抽獎碼</label>
         <div class="input-wrap">
+          <span class="input-icon">✦</span>
           <input id="drawCode" name="drawCode" type="text" inputmode="text" autocomplete="one-time-code" maxlength="24" placeholder="例如：YU8K3M9Q" />
-          <button id="verifyBtn" type="submit" class="primary-btn">驗證資格</button>
+          <button id="verifyBtn" type="submit" class="primary-btn">
+            <span>驗證資格</span><b>→</b>
+          </button>
         </div>
         <p id="codeMessage" class="form-message" aria-live="polite"></p>
       </form>
 
       <div class="trust-row">
-        <span>🔒 全網一碼一次</span>
-        <span>☁️ Firebase 記錄</span>
-        <span>🎁 人人有獎</span>
+        <span><b>🔒</b> 全網一碼一次</span>
+        <span><b>☁️</b> Firebase 記錄</span>
+        <span><b>🎁</b> 人人有獎</span>
       </div>
     </section>
 
     <section id="garageView" class="panel garage-panel hidden" aria-labelledby="garageTitle">
       <div class="section-heading">
-        <p class="kicker">資格驗證成功</p>
-        <h2 id="garageTitle">請挑一座幸運車庫</h2>
-        <p>選定後由 Firebase 寫入抽獎時間，結果無法更換。</p>
+        <span class="success-dot">✓ 資格驗證成功</span>
+        <h2 id="garageTitle">挑一座你最有感覺的車庫</h2>
+        <p>選定後即寫入 Firebase 伺服器時間，結果無法更換。</p>
       </div>
 
       <div id="garageGrid" class="garage-grid" role="list"></div>
-      <p class="fairness-note">結果由抽獎碼、所選車庫與 Firebase 伺服器時間透過 SHA-256 計算，抽獎前無法預先知道。</p>
+
+      <div class="fairness-card">
+        <span>🔐</span>
+        <div>
+          <strong>結果無法預先知道</strong>
+          <p>由抽獎碼、所選車庫與 Firebase 伺服器時間共同計算。</p>
+        </div>
+      </div>
     </section>
 
     <section id="resultView" class="panel result-panel hidden" aria-live="polite">
-      <div class="result-glow"></div>
-      <p class="result-label">🎉 恭喜獲得</p>
+      <div class="result-aurora" aria-hidden="true"></div>
+      <div class="result-crown" aria-hidden="true">✦</div>
+      <p class="result-label">恭喜獲得</p>
       <h2 id="prizeTitle">現折 NT$500</h2>
-      <p id="prizeDescription" class="prize-description">本優惠限本次訂單使用。</p>
+      <p id="prizeDescription" class="prize-description">本優惠限本次購車訂單使用。</p>
 
       <div class="receipt-card">
-        <div>
-          <span>抽獎碼</span>
-          <strong id="resultCode">—</strong>
-        </div>
-        <div>
-          <span>車庫號碼</span>
-          <strong id="resultGarage">—</strong>
-        </div>
-        <div>
-          <span>兌換序號</span>
-          <strong id="resultSerial">—</strong>
-        </div>
-        <div>
-          <span>Firebase 時間</span>
-          <strong id="resultTime">—</strong>
-        </div>
+        <div><span>抽獎碼</span><strong id="resultCode">—</strong></div>
+        <div><span>車庫號碼</span><strong id="resultGarage">—</strong></div>
+        <div><span>兌換序號</span><strong id="resultSerial">—</strong></div>
+        <div><span>Firebase 時間</span><strong id="resultTime">—</strong></div>
       </div>
 
-      <button id="copyResultBtn" class="primary-btn wide-btn" type="button">複製兌換資訊</button>
-      <p class="screenshot-tip">請截圖並傳給小宇，確認後即可折抵。</p>
+      <button id="copyResultBtn" class="primary-btn wide-btn" type="button"><span>複製兌換資訊</span><b>⧉</b></button>
+      <p class="screenshot-tip">請截圖傳給小宇，確認後即可折抵本次購車訂單。</p>
       <a id="lineLink" class="line-link" href="https://line.me/R/ti/p/@762eqvlg" rel="noopener">開啟官方 LINE：@762eqvlg</a>
     </section>
 
     <section class="panel rules-panel">
       <details>
-        <summary>查看活動規則與公開機率</summary>
+        <summary><span>活動規則與公開機率</span><b>＋</b></summary>
         <div class="rules-content">
-          <p>本活動僅限完成下訂且取得抽獎碼的客戶參加。每組抽獎碼只能在 Firebase 成功登記一次；優惠不得折現、轉售或與其他優惠併用。</p>
-          <div id="oddsPlaceholder" class="odds-placeholder">輸入有效抽獎碼後，系統會顯示該活動的正式機率。</div>
+          <p>本活動限完成下訂並取得抽獎碼的客戶參加。每組抽獎碼僅能成功登記一次；優惠不得折現、轉售或與未經同意之其他優惠併用。</p>
+          <div id="oddsPlaceholder" class="odds-placeholder">輸入有效抽獎碼後，系統會顯示該活動正式機率。</div>
           <ul id="oddsList"></ul>
-          <p class="smallprint">主辦單位：小宇微電。抽獎演算法版本：SHA-256 v1。</p>
+          <p class="smallprint">主辦單位：小宇微電｜演算法：SHA-256 v1。</p>
         </div>
       </details>
     </section>
 
     <footer>
       <p>小宇微電｜找小宇買微電，不走彎路</p>
-      <div class="footer-links"><a href="warranty.html" class="admin-entry">保固查詢</a><span>・</span><a href="business.html" class="admin-entry">訂單管理</a><span>・</span><a href="garage-admin.html" class="admin-entry">抽獎管理</a></div>
+      <a href="owner.html?v=7" class="admin-entry">管理</a>
     </footer>
   </main>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="cinematicOverlay" class="cinematic-overlay hidden" aria-hidden="true">
+    <video id="veoCutscene" class="veo-cutscene hidden" playsinline preload="metadata"></video>
+    <canvas id="fxCanvas"></canvas>
+    <div class="cinematic-vignette"></div>
+    <div class="film-bar top"></div>
+    <div class="film-bar bottom"></div>
+    <div class="cinematic-copy">
+      <p id="cinematicEyebrow">正在鎖定幸運車庫</p>
+      <h2 id="cinematicTitle">第 5 號車庫</h2>
+      <div id="countdown" class="countdown">3</div>
+    </div>
+    <div class="cinematic-garage" id="cinematicGarage">
+      <div class="cinematic-light"></div>
+      <div class="cinematic-inside"><span class="cinematic-bolt">⚡</span></div>
+      <div class="cinematic-door">
+        <span id="cinematicGarageNumber">5</span>
+        <i></i><i></i><i></i><i></i><i></i><i></i>
+        <b></b>
+      </div>
+    </div>
+    <div id="cinematicPrize" class="cinematic-prize">
+      <small>恭喜獲得</small>
+      <strong>現折 NT$1,000</strong>
+    </div>
+    <div id="cinematicStatus" class="cinematic-status">伺服器驗證中…</div>
+  </div>
 
-  <script src="config.js?v=6"></script>
-  <script src="firebase-config.js?v=6"></script>
-  <script type="module" src="app.js?v=6"></script>
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="config.js?v=7"></script>
+  <script src="firebase-config.js?v=7"></script>
+  <script type="module" src="app.js?v=7"></script>
 </body>
 </html>
