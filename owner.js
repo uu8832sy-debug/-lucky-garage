@@ -51,6 +51,7 @@ const codeCampaignIdInput = $("#codeCampaignId");
 const createCampaignBtn = $("#createCampaignBtn");
 const campaignMessage = $("#campaignMessage");
 const prizePreview = $("#prizePreview");
+const expectedCost = $("#expectedCost");
 const codePrefixInput = $("#codePrefix");
 const codeCountInput = $("#codeCount");
 const generateCodesBtn = $("#generateCodesBtn");
@@ -60,12 +61,18 @@ const copyCodesBtn = $("#copyCodesBtn");
 const downloadCodesBtn = $("#downloadCodesBtn");
 const refreshBtn = $("#refreshBtn");
 const codeList = $("#codeList");
+const codeStats = $("#codeStats");
+const codeSearch = $("#codeSearch");
 const toast = $("#toast");
+const totalCodesMetric = $("#totalCodesMetric");
+const readyCodesMetric = $("#readyCodesMetric");
+const usedCodesMetric = $("#usedCodesMetric");
 
 let auth;
 let db;
 let currentUser = null;
 let currentCodes = [];
+let latestRows = [];
 let clearingAnonymousUser = false;
 const campaignCache = new Map();
 
@@ -140,15 +147,28 @@ async function showAdmin(user) {
   await refreshCodes();
 }
 
+function prizeAmount(prize) {
+  const match = String(prize?.title || "").replace(/,/g, "").match(/(?:NT\$)?(\d+)/i);
+  return match ? Number(match[1]) : 0;
+}
+
 function renderPrizePreview() {
   const prizes = uiConfig.defaultPrizes || [];
   const total = prizes.reduce((sum, prize) => sum + Number(prize.weight || 0), 0);
+  const expected = total > 0
+    ? prizes.reduce((sum, prize) => sum + prizeAmount(prize) * Number(prize.weight || 0), 0) / total
+    : 0;
+
   prizePreview.innerHTML = prizes.map((prize) => {
     const percent = total > 0
       ? ((Number(prize.weight || 0) / total) * 100).toFixed(1).replace(".0", "")
       : "0";
-    return `<div class="prize-item"><strong>${escapeHtml(prize.icon || "🎁")} ${escapeHtml(prize.title)}</strong><span>機率 ${percent}%</span></div>`;
+    return `<div class="prize-item"><strong>${escapeHtml(prize.icon || "🎁")} ${escapeHtml(prize.title)}</strong><span>後台機率 ${percent}%</span></div>`;
   }).join("");
+
+  if (expectedCost) {
+    expectedCost.textContent = `平均折扣成本：約 NT$${Math.round(expected).toLocaleString("zh-TW")}／次`;
+  }
 }
 
 async function beginGoogleLogin() {
@@ -303,6 +323,83 @@ downloadCodesBtn.addEventListener("click", () => {
   URL.revokeObjectURL(link.href);
 });
 
+function updateStats(rows) {
+  if (!codeStats) return;
+  const total = rows.length;
+  const used = rows.filter((row) => row.status.used).length;
+  const ready = rows.filter((row) => !row.status.used && row.status.active).length;
+  const disabled = rows.filter((row) => !row.status.used && !row.status.active).length;
+  codeStats.innerHTML = `<strong>共 ${total} 碼</strong><span>可用 ${ready}</span><span>已使用 ${used}</span><span>已停用 ${disabled}</span>`;
+  if (totalCodesMetric) totalCodesMetric.textContent = total.toLocaleString("zh-TW");
+  if (readyCodesMetric) readyCodesMetric.textContent = ready.toLocaleString("zh-TW");
+  if (usedCodesMetric) usedCodesMetric.textContent = used.toLocaleString("zh-TW");
+}
+
+function bindCodeRowActions() {
+  codeList.querySelectorAll(".copy-one-btn").forEach((button) => {
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.code || "");
+        showToast("抽獎碼已複製");
+      } catch {
+        showToast("請長按抽獎碼手動複製");
+      }
+    });
+  });
+
+  codeList.querySelectorAll(".disable-btn").forEach((button) => {
+    button.addEventListener("click", async () => {
+      button.disabled = true;
+      try {
+        await updateDoc(doc(db, "drawCodes", button.dataset.hash), {
+          active: button.dataset.active !== "true"
+        });
+        await refreshCodes();
+      } catch (error) {
+        console.error(error);
+        showToast("更新失敗");
+        button.disabled = false;
+      }
+    });
+  });
+}
+
+function renderCodeRows() {
+  const keyword = String(codeSearch?.value || "").trim().toLowerCase();
+  const filtered = latestRows.filter(({ status, resultText }) => {
+    if (!keyword) return true;
+    return String(status.code || "").toLowerCase().includes(keyword)
+      || String(resultText || "").toLowerCase().includes(keyword)
+      || String(status.campaignId || "").toLowerCase().includes(keyword);
+  });
+
+  updateStats(latestRows);
+
+  if (!filtered.length) {
+    codeList.innerHTML = '<p class="empty">找不到符合的抽獎碼。</p>';
+    return;
+  }
+
+  codeList.innerHTML = filtered.map(({ hash, status, resultText }) => `
+    <div class="code-row">
+      <div class="code-main">
+        <code>${escapeHtml(status.code)}</code>
+        <small>${escapeHtml(status.campaignId || "")}</small>
+      </div>
+      <span class="badge ${status.used ? "used" : "ready"}">${status.used ? "已使用" : (status.active ? "可使用" : "已停用")}</span>
+      <small class="result">${escapeHtml(resultText)}</small>
+      <div class="row-actions">
+        <button class="copy-one-btn" data-code="${escapeHtml(status.code)}">複製</button>
+        ${!status.used ? `<button class="disable-btn" data-hash="${hash}" data-active="${status.active}">${status.active ? "停用" : "啟用"}</button>` : ""}
+      </div>
+    </div>
+  `).join("");
+
+  bindCodeRowActions();
+}
+
+if (codeSearch) codeSearch.addEventListener("input", renderCodeRows);
+
 refreshBtn.addEventListener("click", refreshCodes);
 
 async function refreshCodes() {
@@ -311,10 +408,12 @@ async function refreshCodes() {
 
   try {
     const snapshot = await getDocs(
-      query(collection(db, "drawCodes"), orderBy("createdAt", "desc"), limit(50))
+      query(collection(db, "drawCodes"), orderBy("createdAt", "desc"), limit(200))
     );
 
     if (snapshot.empty) {
+      latestRows = [];
+      updateStats([]);
       codeList.innerHTML = '<p class="empty">尚無抽獎碼。</p>';
       return;
     }
@@ -336,30 +435,8 @@ async function refreshCodes() {
       return { hash: documentSnapshot.id, status, resultText };
     }));
 
-    codeList.innerHTML = rows.map(({ hash, status, resultText }) => `
-      <div class="code-row">
-        <code>${escapeHtml(status.code)}</code>
-        <span class="badge ${status.used ? "used" : "ready"}">${status.used ? "已使用" : (status.active ? "可使用" : "已停用")}</span>
-        <small class="result">${escapeHtml(resultText)}</small>
-        ${!status.used ? `<button class="disable-btn" data-hash="${hash}" data-active="${status.active}">${status.active ? "停用" : "啟用"}</button>` : ""}
-      </div>
-    `).join("");
-
-    codeList.querySelectorAll(".disable-btn").forEach((button) => {
-      button.addEventListener("click", async () => {
-        button.disabled = true;
-        try {
-          await updateDoc(doc(db, "drawCodes", button.dataset.hash), {
-            active: button.dataset.active !== "true"
-          });
-          await refreshCodes();
-        } catch (error) {
-          console.error(error);
-          showToast("更新失敗");
-          button.disabled = false;
-        }
-      });
-    });
+    latestRows = rows;
+    renderCodeRows();
   } catch (error) {
     console.error(error);
     codeList.innerHTML = `<p class="empty">讀取失敗：${escapeHtml(error?.message || "請檢查規則")}</p>`;
