@@ -16,7 +16,8 @@ import {
   getFirestore,
   serverTimestamp,
   setDoc,
-  updateDoc
+  updateDoc,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 const OWNER_EMAIL = "uu8832sr@gmail.com";
@@ -30,6 +31,8 @@ const elements = {
   appArea: $("#appArea"), adminEmail: $("#adminEmail"), logoutBtn: $("#logoutBtn"), orderForm: $("#orderForm"),
   editingId: $("#editingId"), formTitle: $("#formTitle"), formMessage: $("#formMessage"), resetBtn: $("#resetBtn"),
   saveAndReceiptBtn: $("#saveAndReceiptBtn"), unpaidPreview: $("#unpaidPreview"), searchInput: $("#searchInput"),
+  bulkOrdersInput: $("#bulkOrdersInput"), clearBulkBtn: $("#clearBulkBtn"), previewBulkBtn: $("#previewBulkBtn"), importBulkBtn: $("#importBulkBtn"),
+  bulkPreview: $("#bulkPreview"), bulkMessage: $("#bulkMessage"),
   statusFilter: $("#statusFilter"), refreshOrdersBtn: $("#refreshOrdersBtn"), exportCsvBtn: $("#exportCsvBtn"), orderList: $("#orderList"),
   statOrders: $("#statOrders"), statPending: $("#statPending"), statDeposits: $("#statDeposits"), statBalance: $("#statBalance"),
   documentDialog: $("#documentDialog"), documentCanvas: $("#documentCanvas"), dialogTitle: $("#dialogTitle"),
@@ -147,6 +150,10 @@ async function isAdminUser(user) {
   }
 }
 async function beginGoogleLogin() {
+  if (!auth) {
+    elements.loginMessage.textContent = "登入程式尚未完成載入，請重新整理頁面後再試。";
+    return;
+  }
   elements.loginMessage.textContent = "正在開啟 Google 登入…";
   elements.loginBtn.disabled = true;
   try {
@@ -188,6 +195,133 @@ async function showApp(user) {
   elements.deniedCard.classList.add("hidden");
   elements.appArea.classList.remove("hidden");
   await loadOrders();
+}
+
+
+function splitBulkLine(line) {
+  const trimmed = String(line || "").trim();
+  if (!trimmed) return [];
+  if (trimmed.includes("\t")) return trimmed.split("\t").map((part) => part.trim());
+  return trimmed.split(/\s*(?:,|，|、|\||｜)\s*/).map((part) => part.trim());
+}
+function parseBulkOrders() {
+  const lines = String(elements.bulkOrdersInput?.value || "").split(/\r?\n/);
+  const valid = [];
+  const invalid = [];
+  lines.forEach((line, index) => {
+    if (!line.trim()) return;
+    const parts = splitBulkLine(line);
+    const looksLikeHeader = index === 0 && parts.some((part) => /車主|姓名|電話|手機|車款/.test(part));
+    if (looksLikeHeader) return;
+    const [customerName = "", phone = "", model = ""] = parts;
+    if (!customerName || !phone || !model) {
+      invalid.push({ lineNo: index + 1, line, reason: "需包含車主姓名、電話、車款" });
+      return;
+    }
+    valid.push({ customerName, phone, model, lineNo: index + 1 });
+  });
+  return { valid, invalid };
+}
+function renderBulkPreview() {
+  const { valid, invalid } = parseBulkOrders();
+  if (!valid.length && !invalid.length) {
+    elements.bulkPreview.innerHTML = '<p class="empty">尚未輸入批量資料。</p>';
+    elements.bulkMessage.textContent = "";
+    elements.bulkMessage.classList.remove("success");
+    return { valid, invalid };
+  }
+  const validHtml = valid.map((item) => `
+    <article class="order-row">
+      <div class="order-main"><strong>${escapeHtml(item.customerName)}</strong><small>${escapeHtml(item.phone)}</small></div>
+      <div class="order-car"><strong>${escapeHtml(item.model)}</strong><small>顏色、地址等資料可之後編輯補上</small></div>
+      <div class="order-money"><span class="badge">可新增</span><small>第 ${item.lineNo} 行</small></div>
+    </article>`).join("");
+  const invalidHtml = invalid.map((item) => `
+    <article class="order-row">
+      <div class="order-main"><strong>第 ${item.lineNo} 行資料不完整</strong><small>${escapeHtml(item.line)}</small></div>
+      <div class="order-car"><strong>${escapeHtml(item.reason)}</strong></div>
+      <div class="order-money"><span class="badge">略過</span></div>
+    </article>`).join("");
+  elements.bulkPreview.innerHTML = validHtml + invalidHtml;
+  elements.bulkMessage.textContent = `可新增 ${valid.length} 筆${invalid.length ? `，另有 ${invalid.length} 筆會略過` : ""}。`;
+  elements.bulkMessage.classList.toggle("success", valid.length > 0 && invalid.length === 0);
+  return { valid, invalid };
+}
+function bulkOrderDefaults(item) {
+  return {
+    customerName: item.customerName,
+    phone: item.phone,
+    model: item.model,
+    address: "待補資料",
+    lineName: "",
+    color: "待確認",
+    battery: "鉛酸",
+    chassisNo: "",
+    batteryNo: "",
+    licenseMode: "自行領牌",
+    deliveryMode: "到府交車",
+    price: 0,
+    deposit: 0,
+    balancePaid: 0,
+    paymentMethod: "轉帳",
+    status: "待訂金",
+    deliveryDate: "",
+    deliveredAt: "",
+    documentStatus: "尚未準備",
+    notes: "批量新增，地址與顏色待補"
+  };
+}
+async function importBulkOrders() {
+  const { valid, invalid } = renderBulkPreview();
+  if (!valid.length) {
+    elements.bulkMessage.textContent = "沒有可新增的完整資料。";
+    elements.bulkMessage.classList.remove("success");
+    return;
+  }
+  if (valid.length > 300) {
+    elements.bulkMessage.textContent = "一次最多新增 300 筆，請分批匯入。";
+    elements.bulkMessage.classList.remove("success");
+    return;
+  }
+  elements.importBulkBtn.disabled = true;
+  elements.previewBulkBtn.disabled = true;
+  elements.bulkMessage.textContent = `正在新增 ${valid.length} 筆訂單…`;
+  elements.bulkMessage.classList.add("success");
+  try {
+    const batch = writeBatch(db);
+    const generatedIds = new Set();
+    valid.forEach((item) => {
+      let id = createOrderId();
+      while (generatedIds.has(id)) id = createOrderId();
+      generatedIds.add(id);
+      const data = bulkOrderDefaults(item);
+      batch.set(doc(db, "orders", id), {
+        ...data,
+        orderNo: id,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        createdBy: currentUser.uid,
+        updatedBy: currentUser.uid,
+        importMode: "bulk"
+      });
+    });
+    await batch.commit();
+    elements.bulkOrdersInput.value = "";
+    elements.bulkPreview.innerHTML = '<p class="empty">批量新增完成。</p>';
+    elements.bulkMessage.textContent = `已成功新增 ${valid.length} 筆訂單${invalid.length ? `，略過 ${invalid.length} 筆不完整資料` : ""}。`;
+    elements.bulkMessage.classList.add("success");
+    showToast(`已新增 ${valid.length} 筆訂單`);
+    await loadOrders();
+  } catch (error) {
+    console.error(error);
+    elements.bulkMessage.textContent = String(error?.code || "").includes("permission-denied")
+      ? "批量新增失敗：請確認 Firestore 規則已發布。"
+      : (error?.message || "批量新增失敗。");
+    elements.bulkMessage.classList.remove("success");
+  } finally {
+    elements.importBulkBtn.disabled = false;
+    elements.previewBulkBtn.disabled = false;
+  }
 }
 
 async function saveOrder({ openDepositReceipt = false } = {}) {
@@ -471,6 +605,16 @@ async function handleOrderAction(button) {
 }
 
 // 事件
+elements.previewBulkBtn?.addEventListener("click", renderBulkPreview);
+elements.importBulkBtn?.addEventListener("click", importBulkOrders);
+elements.clearBulkBtn?.addEventListener("click", () => {
+  elements.bulkOrdersInput.value = "";
+  renderBulkPreview();
+});
+elements.bulkOrdersInput?.addEventListener("input", () => {
+  elements.bulkMessage.textContent = "";
+  elements.bulkMessage.classList.remove("success");
+});
 fields.price.addEventListener("input", updateUnpaidPreview);
 fields.deposit.addEventListener("input", updateUnpaidPreview);
 fields.balancePaid.addEventListener("input", updateUnpaidPreview);
@@ -544,7 +688,7 @@ async function withDocumentImage(button, action) {
   }
 }
 
-elements.savePhotoBtn.addEventListener("click", async () => {
+elements.savePhotoBtn?.addEventListener("click", async () => {
   await withDocumentImage(elements.savePhotoBtn, async (file) => {
     const shareData = { files: [file], title: currentDocumentName };
     if (navigator.share && (!navigator.canShare || navigator.canShare(shareData))) {
@@ -596,23 +740,36 @@ elements.copyTextBtn.addEventListener("click", async () => {
 elements.closeTextDialogBtn.addEventListener("click", () => elements.textDialog.close());
 
 async function start() {
-  resetForm();
-  if (!hasRealFirebaseConfig(firebaseConfig)) {
-    elements.configWarning.classList.remove("hidden");
-    elements.loginCard.classList.add("hidden");
-    return;
-  }
-  const app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) return showLoggedOut();
-    if (user.isAnonymous) {
-      await signOut(auth);
+  try {
+    resetForm();
+    if (!hasRealFirebaseConfig(firebaseConfig)) {
+      elements.configWarning.classList.remove("hidden");
+      elements.loginCard.classList.add("hidden");
       return;
     }
-    if (!(await isAdminUser(user))) return showDenied(user);
-    await showApp(user);
-  });
+    const app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    onAuthStateChanged(auth, async (user) => {
+      try {
+        if (!user) return showLoggedOut();
+        if (user.isAnonymous) {
+          await signOut(auth);
+          return;
+        }
+        if (!(await isAdminUser(user))) return showDenied(user);
+        await showApp(user);
+      } catch (error) {
+        console.error(error);
+        showLoggedOut();
+        elements.loginMessage.textContent = error?.message || "登入狀態讀取失敗，請重新整理後再試。";
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    elements.loginCard.classList.remove("hidden");
+    elements.loginBtn.disabled = false;
+    elements.loginMessage.textContent = error?.message || "系統載入失敗，請重新整理頁面。";
+  }
 }
 start();

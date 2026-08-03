@@ -114,6 +114,26 @@
       </section>
 
       <section class="card">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">快速匯入</p>
+            <h2>批量新增訂單</h2>
+          </div>
+          <button id="clearBulkBtn" class="secondary compact" type="button">清空內容</button>
+        </div>
+        <p class="note">每行一筆，依序輸入「車主姓名、電話、車款」。可直接從 Excel／試算表複製三欄貼上，也支援逗號、頓號或直線分隔。</p>
+        <textarea id="bulkOrdersInput" rows="8" spellcheck="false" placeholder="王小明	0912-345-678	小偉士
+陳小姐,0988-123-456,神盾
+林先生｜0977-888-999｜正9號"></textarea>
+        <div class="actions sticky-actions">
+          <button id="previewBulkBtn" class="secondary" type="button">檢查資料</button>
+          <button id="importBulkBtn" class="primary" type="button">批量新增訂單</button>
+        </div>
+        <div id="bulkPreview" class="order-list"><p class="empty">尚未輸入批量資料。</p></div>
+        <p id="bulkMessage" class="message"></p>
+      </section>
+
+      <section class="card">
         <div class="section-head list-toolbar">
           <div>
             <p class="eyebrow">訂單管理</p>
@@ -157,6 +177,6 @@
   <script src="firebase-config.js?v=6"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script type="module" src="business.js?v=4"></script>
+  <script type="module" src="business.js?v=5"></script>
 </body>
 </html>
