@@ -1,5 +1,5 @@
 /* 小宇微電｜幸運車庫介面設定 v5 */
-window.LUCKY_GARAGE_UI_CONFIG = {
+window.LUCKY_GARAGE_UI_CONFIG.cinematicVideoUrl = "garage-open.mp4";
   brandName: "小宇微電",
   campaignName: "幸運車庫",
   lineId: "@762eqvlg",
@@ -45,4 +45,4 @@ window.LUCKY_GARAGE_UI_CONFIG = {
    不放影片時留空，網站會使用內建即時 3D / 粒子 / 音效動畫。
    若要接 Veo，將影片上傳為 assets/garage-open.mp4，再填入該路徑。
    Veo 影片只建議當「通用開庫過場」，真正獎項仍由 Firebase 即時計算並由網頁顯示。 */
-window.LUCKY_GARAGE_UI_CONFIG.cinematicVideoUrl = "";
+window.LUCKY_GARAGE_UI_CONFIG.cinematicVideoUrl = "garage-open.mp4";
