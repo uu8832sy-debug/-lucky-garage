@@ -8,7 +8,9 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 import {
+  addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -51,7 +53,6 @@ const codeCampaignIdInput = $("#codeCampaignId");
 const createCampaignBtn = $("#createCampaignBtn");
 const campaignMessage = $("#campaignMessage");
 const prizePreview = $("#prizePreview");
-const expectedCost = $("#expectedCost");
 const codePrefixInput = $("#codePrefix");
 const codeCountInput = $("#codeCount");
 const generateCodesBtn = $("#generateCodesBtn");
@@ -61,20 +62,81 @@ const copyCodesBtn = $("#copyCodesBtn");
 const downloadCodesBtn = $("#downloadCodesBtn");
 const refreshBtn = $("#refreshBtn");
 const codeList = $("#codeList");
-const codeStats = $("#codeStats");
-const codeSearch = $("#codeSearch");
+const saleForm = $("#saleForm");
+const saleCustomerInput = $("#saleCustomer");
+const saleDeliveryDateInput = $("#saleDeliveryDate");
+const saleVehicleModelInput = $("#saleVehicleModel");
+const saleVehicleVariantInput = $("#saleVehicleVariant");
+const saleVehicleNoteInput = $("#saleVehicleNote");
+const saleInsuranceHandlingInput = $("#saleInsuranceHandling");
+const saleCostHintInput = $("#saleCostHint");
+const salePriceInput = $("#salePrice");
+const saleCostInput = $("#saleCost");
+const saleProfitInput = $("#saleProfit");
+const saveSaleBtn = $("#saveSaleBtn");
+const cancelSaleEditBtn = $("#cancelSaleEditBtn");
+const refreshSalesBtn = $("#refreshSalesBtn");
+const saleMessage = $("#saleMessage");
+const saleList = $("#saleList");
+const saleCount = $("#saleCount");
+const totalRevenue = $("#totalRevenue");
+const totalCost = $("#totalCost");
+const totalProfit = $("#totalProfit");
 const toast = $("#toast");
-const totalCodesMetric = $("#totalCodesMetric");
-const readyCodesMetric = $("#readyCodesMetric");
-const usedCodesMetric = $("#usedCodesMetric");
 
 let auth;
 let db;
 let currentUser = null;
 let currentCodes = [];
-let latestRows = [];
+let editingSaleId = null;
 let clearingAnonymousUser = false;
 const campaignCache = new Map();
+
+
+const VEHICLE_COSTS = {
+  "大偉士改裝版": [
+    { label: "鉛酸版", cost: 29000 },
+    { label: "鋰鐵30Ah", cost: 49000 }
+  ],
+  "小偉士": [
+    { label: "鉛酸版", cost: 23000 },
+    { label: "鋰鐵30Ah", cost: 38000 }
+  ],
+  "神盾": [
+    { label: "鉛酸版", cost: 24000 },
+    { label: "鋰鐵30Ah", cost: 40000 }
+  ],
+  "Z3": [
+    { label: "普通版（鉛酸）", cost: 30000 },
+    { label: "暗魂版（鉛酸）", cost: 32000 },
+    { label: "普通版（鋰鐵30Ah）", cost: 49000 },
+    { label: "暗魂版（鋰鐵30Ah）", cost: 51000 }
+  ],
+  "正9號": [
+    { label: "鉛酸版", cost: 29000 },
+    { label: "鋰鐵30Ah", cost: 49000 }
+  ],
+  "小可愛（拿鐵）": [
+    { label: "鉛酸版（無鋰鐵版）", cost: 25000 }
+  ],
+  "QC": [
+    { label: "鉛酸版", cost: 27000 },
+    { label: "鋰鐵30Ah", cost: 47000 }
+  ],
+  "小酷龍": [
+    { label: "鉛酸版（無鋰鐵版）", cost: 16000 }
+  ],
+  "微型三輪": [
+    { label: "鉛酸版（無鋰鐵版）", cost: 28000 }
+  ],
+  "Dio": [
+    { label: "鉛酸版", cost: 25000 },
+    { label: "鋰鐵30Ah", cost: 40000 }
+  ],
+  "其他車款": [
+    { label: "自訂成本", cost: 0 }
+  ]
+};
 
 function hasRealFirebaseConfig(config) {
   return Boolean(
@@ -144,31 +206,324 @@ async function showAdmin(user) {
   loginCard.classList.add("hidden");
   deniedCard.classList.add("hidden");
   adminArea.classList.remove("hidden");
-  await refreshCodes();
+  await Promise.all([refreshCodes(), refreshSales()]);
 }
 
-function prizeAmount(prize) {
-  const match = String(prize?.title || "").replace(/,/g, "").match(/(?:NT\$)?(\d+)/i);
-  return match ? Number(match[1]) : 0;
+
+function formatMoney(value) {
+  const amount = Number(value || 0);
+  return `NT$${new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 0 }).format(amount)}`;
+}
+
+function readAmount(input) {
+  const amount = Number(input.value || 0);
+  return Number.isFinite(amount) ? Math.round(amount) : 0;
+}
+
+function renderVehicleModelOptions() {
+  const options = Object.keys(VEHICLE_COSTS)
+    .map((model) => `<option value="${escapeHtml(model)}">${escapeHtml(model)}</option>`)
+    .join("");
+  saleVehicleModelInput.innerHTML = `<option value="">請選擇車款</option>${options}`;
+}
+
+function getSelectedVehicleOption() {
+  const model = saleVehicleModelInput.value;
+  const variant = saleVehicleVariantInput.value;
+  return (VEHICLE_COSTS[model] || []).find((item) => item.label === variant) || null;
+}
+
+function updateVehicleVariants(selectedVariant = "", keepCurrentCost = false) {
+  const model = saleVehicleModelInput.value;
+  const variants = VEHICLE_COSTS[model] || [];
+
+  if (variants.length === 0) {
+    saleVehicleVariantInput.innerHTML = '<option value="">請先選擇車款</option>';
+    saleVehicleVariantInput.disabled = true;
+    saleCostHintInput.value = "請先選擇車款與版本";
+    if (!keepCurrentCost) saleCostInput.value = "";
+    updateSaleProfitPreview();
+    return;
+  }
+
+  saleVehicleVariantInput.disabled = false;
+  saleVehicleVariantInput.innerHTML = variants
+    .map((item) => `<option value="${escapeHtml(item.label)}">${escapeHtml(item.label)}｜${escapeHtml(formatMoney(item.cost))}</option>`)
+    .join("");
+
+  if (selectedVariant && variants.some((item) => item.label === selectedVariant)) {
+    saleVehicleVariantInput.value = selectedVariant;
+  }
+
+  applySelectedVehicleCost(keepCurrentCost);
+}
+
+function applySelectedVehicleCost(keepCurrentCost = false) {
+  const option = getSelectedVehicleOption();
+  if (!option) {
+    saleCostHintInput.value = "請先選擇車款與版本";
+    if (!keepCurrentCost) saleCostInput.value = "";
+    updateSaleProfitPreview();
+    return;
+  }
+
+  saleCostHintInput.value = `${saleVehicleModelInput.value}｜${option.label}｜成本 ${formatMoney(option.cost)}`;
+  if (!keepCurrentCost) saleCostInput.value = String(option.cost);
+  updateSaleProfitPreview();
+}
+
+function updateSaleProfitPreview() {
+  const profit = readAmount(salePriceInput) - readAmount(saleCostInput);
+  saleProfitInput.value = formatMoney(profit);
+  saleProfitInput.style.color = profit < 0 ? "#ff7373" : "#ffd34d";
+}
+
+function resetSaleForm() {
+  editingSaleId = null;
+  saleForm.reset();
+  saleVehicleModelInput.value = "";
+  updateVehicleVariants();
+  saleInsuranceHandlingInput.value = "代辦";
+  saleProfitInput.value = "NT$0";
+  saleProfitInput.style.color = "#ffd34d";
+  saveSaleBtn.textContent = "新增成交紀錄";
+  cancelSaleEditBtn.classList.add("hidden");
+  setMessage(saleMessage, "");
+}
+
+function formatSaleDate(timestamp) {
+  try {
+    const date = timestamp?.toDate ? timestamp.toDate() : null;
+    if (!date) return "時間讀取中";
+    return new Intl.DateTimeFormat("zh-TW", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(date);
+  } catch {
+    return "—";
+  }
+}
+
+function formatDeliveryDate(value) {
+  if (!value) return "尚未交車";
+  const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return match ? `${match[1]}/${match[2]}/${match[3]}` : String(value);
+}
+
+function buildVehicleDisplay(model, variant, note) {
+  const main = [model, variant].filter(Boolean).join("｜");
+  return note ? `${main}｜${note}` : main;
+}
+
+saleVehicleModelInput.addEventListener("change", () => updateVehicleVariants());
+saleVehicleVariantInput.addEventListener("change", () => applySelectedVehicleCost());
+salePriceInput.addEventListener("input", updateSaleProfitPreview);
+saleCostInput.addEventListener("input", updateSaleProfitPreview);
+cancelSaleEditBtn.addEventListener("click", resetSaleForm);
+refreshSalesBtn.addEventListener("click", refreshSales);
+
+saleForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!currentUser || !isGoogleOwner(currentUser)) return;
+
+  const customer = saleCustomerInput.value.trim();
+  const deliveryDate = saleDeliveryDateInput.value;
+  const vehicleModel = saleVehicleModelInput.value;
+  const vehicleVariant = saleVehicleVariantInput.value;
+  const vehicleNote = saleVehicleNoteInput.value.trim();
+  const insuranceHandling = saleInsuranceHandlingInput.value;
+  const vehicle = buildVehicleDisplay(vehicleModel, vehicleVariant, vehicleNote);
+  const salePrice = readAmount(salePriceInput);
+  const cost = readAmount(saleCostInput);
+  const netProfit = salePrice - cost;
+  const wasEditing = Boolean(editingSaleId);
+  const normalButtonText = wasEditing ? "儲存修改" : "新增成交紀錄";
+
+  if (!customer) {
+    setMessage(saleMessage, "請輸入客戶姓名或備註。", false);
+    saleCustomerInput.focus();
+    return;
+  }
+  if (!vehicleModel || !vehicleVariant) {
+    setMessage(saleMessage, "請選擇車款與版本。", false);
+    saleVehicleModelInput.focus();
+    return;
+  }
+  if (!["代辦", "自行辦理"].includes(insuranceHandling)) {
+    setMessage(saleMessage, "請選擇領牌強制險辦理方式。", false);
+    saleInsuranceHandlingInput.focus();
+    return;
+  }
+  if (salePrice <= 0) {
+    setMessage(saleMessage, "成交價必須大於 0。", false);
+    salePriceInput.focus();
+    return;
+  }
+  if (cost < 0) {
+    setMessage(saleMessage, "成本不可小於 0。", false);
+    saleCostInput.focus();
+    return;
+  }
+
+  setButtonBusy(saveSaleBtn, true, "儲存中…", normalButtonText);
+  setMessage(saleMessage, "正在儲存成交資料…", true);
+
+  try {
+    const payload = {
+      customer,
+      deliveryDate,
+      vehicle,
+      vehicleModel,
+      vehicleVariant,
+      vehicleNote,
+      insuranceHandling,
+      salePrice,
+      cost,
+      netProfit,
+      updatedAt: serverTimestamp()
+    };
+
+    if (editingSaleId) {
+      await updateDoc(doc(db, "sales", editingSaleId), payload);
+      showToast("成交紀錄已更新");
+    } else {
+      await addDoc(collection(db, "sales"), {
+        ...payload,
+        createdAt: serverTimestamp(),
+        createdBy: currentUser.uid
+      });
+      showToast("成交紀錄已新增");
+    }
+
+    resetSaleForm();
+    await refreshSales();
+  } catch (error) {
+    console.error(error);
+    setMessage(saleMessage, error?.message || "儲存失敗，請檢查 Firestore 規則。", false);
+  } finally {
+    setButtonBusy(saveSaleBtn, false, "儲存中…", wasEditing ? "儲存修改" : "新增成交紀錄");
+  }
+});
+
+async function refreshSales() {
+  if (!currentUser || !isGoogleOwner(currentUser)) return;
+  saleList.innerHTML = '<p class="empty">讀取中…</p>';
+
+  try {
+    const snapshot = await getDocs(
+      query(collection(db, "sales"), orderBy("createdAt", "desc"))
+    );
+
+    const rows = snapshot.docs.map((documentSnapshot) => ({
+      id: documentSnapshot.id,
+      ...documentSnapshot.data()
+    }));
+
+    const revenueSum = rows.reduce((sum, row) => sum + Number(row.salePrice || 0), 0);
+    const costSum = rows.reduce((sum, row) => sum + Number(row.cost || 0), 0);
+    const profitSum = revenueSum - costSum;
+
+    saleCount.textContent = String(rows.length);
+    totalRevenue.textContent = formatMoney(revenueSum);
+    totalCost.textContent = formatMoney(costSum);
+    totalProfit.textContent = formatMoney(profitSum);
+    totalProfit.style.color = profitSum < 0 ? "#ff7373" : "#ffd34d";
+
+    if (rows.length === 0) {
+      saleList.innerHTML = '<p class="empty">尚無成交紀錄。</p>';
+      return;
+    }
+
+    saleList.innerHTML = rows.map((row) => {
+      const profit = Number(row.salePrice || 0) - Number(row.cost || 0);
+      const vehicleText = row.vehicle || buildVehicleDisplay(row.vehicleModel, row.vehicleVariant, row.vehicleNote);
+      const insuranceText = row.insuranceHandling || "未設定";
+      return `
+        <div class="sale-row">
+          <div class="sale-main">
+            <strong>${escapeHtml(row.customer || "未填客戶")}${vehicleText ? `｜${escapeHtml(vehicleText)}` : ""}</strong>
+            <small>實際交車日：${escapeHtml(formatDeliveryDate(row.deliveryDate))}｜領牌強制險：${escapeHtml(insuranceText)}</small>
+            ${!row.deliveryDate && !row.insuranceHandling ? `<small>舊紀錄建檔時間：${escapeHtml(formatSaleDate(row.createdAt))}</small>` : ""}
+          </div>
+          <div class="sale-money">
+            <span>成交價</span>
+            <strong>${escapeHtml(formatMoney(row.salePrice))}</strong>
+          </div>
+          <div class="sale-money">
+            <span>成本</span>
+            <strong>${escapeHtml(formatMoney(row.cost))}</strong>
+          </div>
+          <div class="sale-money profit ${profit < 0 ? "negative" : ""}">
+            <span>淨利</span>
+            <strong>${escapeHtml(formatMoney(profit))}</strong>
+          </div>
+          <div class="sale-actions">
+            <button class="secondary compact edit-sale-btn" type="button" data-id="${row.id}">修改</button>
+            <button class="secondary compact danger delete-sale-btn" type="button" data-id="${row.id}">刪除</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    const rowMap = new Map(rows.map((row) => [row.id, row]));
+
+    saleList.querySelectorAll(".edit-sale-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        const row = rowMap.get(button.dataset.id);
+        if (!row) return;
+        editingSaleId = row.id;
+        saleCustomerInput.value = row.customer || "";
+        saleDeliveryDateInput.value = row.deliveryDate || "";
+
+        const knownModel = row.vehicleModel && VEHICLE_COSTS[row.vehicleModel];
+        saleVehicleModelInput.value = knownModel ? row.vehicleModel : "其他車款";
+        updateVehicleVariants(knownModel ? (row.vehicleVariant || "") : "自訂成本", true);
+        saleVehicleNoteInput.value = row.vehicleNote || (!knownModel ? (row.vehicle || "") : "");
+        saleInsuranceHandlingInput.value = row.insuranceHandling === "自行辦理" ? "自行辦理" : "代辦";
+        salePriceInput.value = Number(row.salePrice || 0);
+        saleCostInput.value = Number(row.cost || 0);
+        applySelectedVehicleCost(true);
+        updateSaleProfitPreview();
+        saveSaleBtn.textContent = "儲存修改";
+        cancelSaleEditBtn.classList.remove("hidden");
+        saleForm.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+
+    saleList.querySelectorAll(".delete-sale-btn").forEach((button) => {
+      button.addEventListener("click", async () => {
+        if (!window.confirm("確定要刪除這筆成交紀錄嗎？")) return;
+        button.disabled = true;
+        try {
+          await deleteDoc(doc(db, "sales", button.dataset.id));
+          if (editingSaleId === button.dataset.id) resetSaleForm();
+          showToast("成交紀錄已刪除");
+          await refreshSales();
+        } catch (error) {
+          console.error(error);
+          showToast("刪除失敗");
+          button.disabled = false;
+        }
+      });
+    });
+  } catch (error) {
+    console.error(error);
+    saleList.innerHTML = `<p class="empty">讀取失敗：${escapeHtml(error?.message || "請檢查規則")}</p>`;
+  }
 }
 
 function renderPrizePreview() {
   const prizes = uiConfig.defaultPrizes || [];
   const total = prizes.reduce((sum, prize) => sum + Number(prize.weight || 0), 0);
-  const expected = total > 0
-    ? prizes.reduce((sum, prize) => sum + prizeAmount(prize) * Number(prize.weight || 0), 0) / total
-    : 0;
-
   prizePreview.innerHTML = prizes.map((prize) => {
     const percent = total > 0
       ? ((Number(prize.weight || 0) / total) * 100).toFixed(1).replace(".0", "")
       : "0";
-    return `<div class="prize-item"><strong>${escapeHtml(prize.icon || "🎁")} ${escapeHtml(prize.title)}</strong><span>後台機率 ${percent}%</span></div>`;
+    return `<div class="prize-item"><strong>${escapeHtml(prize.icon || "🎁")} ${escapeHtml(prize.title)}</strong><span>機率 ${percent}%</span></div>`;
   }).join("");
-
-  if (expectedCost) {
-    expectedCost.textContent = `平均折扣成本：約 NT$${Math.round(expected).toLocaleString("zh-TW")}／次`;
-  }
 }
 
 async function beginGoogleLogin() {
@@ -323,83 +678,6 @@ downloadCodesBtn.addEventListener("click", () => {
   URL.revokeObjectURL(link.href);
 });
 
-function updateStats(rows) {
-  if (!codeStats) return;
-  const total = rows.length;
-  const used = rows.filter((row) => row.status.used).length;
-  const ready = rows.filter((row) => !row.status.used && row.status.active).length;
-  const disabled = rows.filter((row) => !row.status.used && !row.status.active).length;
-  codeStats.innerHTML = `<strong>共 ${total} 碼</strong><span>可用 ${ready}</span><span>已使用 ${used}</span><span>已停用 ${disabled}</span>`;
-  if (totalCodesMetric) totalCodesMetric.textContent = total.toLocaleString("zh-TW");
-  if (readyCodesMetric) readyCodesMetric.textContent = ready.toLocaleString("zh-TW");
-  if (usedCodesMetric) usedCodesMetric.textContent = used.toLocaleString("zh-TW");
-}
-
-function bindCodeRowActions() {
-  codeList.querySelectorAll(".copy-one-btn").forEach((button) => {
-    button.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(button.dataset.code || "");
-        showToast("抽獎碼已複製");
-      } catch {
-        showToast("請長按抽獎碼手動複製");
-      }
-    });
-  });
-
-  codeList.querySelectorAll(".disable-btn").forEach((button) => {
-    button.addEventListener("click", async () => {
-      button.disabled = true;
-      try {
-        await updateDoc(doc(db, "drawCodes", button.dataset.hash), {
-          active: button.dataset.active !== "true"
-        });
-        await refreshCodes();
-      } catch (error) {
-        console.error(error);
-        showToast("更新失敗");
-        button.disabled = false;
-      }
-    });
-  });
-}
-
-function renderCodeRows() {
-  const keyword = String(codeSearch?.value || "").trim().toLowerCase();
-  const filtered = latestRows.filter(({ status, resultText }) => {
-    if (!keyword) return true;
-    return String(status.code || "").toLowerCase().includes(keyword)
-      || String(resultText || "").toLowerCase().includes(keyword)
-      || String(status.campaignId || "").toLowerCase().includes(keyword);
-  });
-
-  updateStats(latestRows);
-
-  if (!filtered.length) {
-    codeList.innerHTML = '<p class="empty">找不到符合的抽獎碼。</p>';
-    return;
-  }
-
-  codeList.innerHTML = filtered.map(({ hash, status, resultText }) => `
-    <div class="code-row">
-      <div class="code-main">
-        <code>${escapeHtml(status.code)}</code>
-        <small>${escapeHtml(status.campaignId || "")}</small>
-      </div>
-      <span class="badge ${status.used ? "used" : "ready"}">${status.used ? "已使用" : (status.active ? "可使用" : "已停用")}</span>
-      <small class="result">${escapeHtml(resultText)}</small>
-      <div class="row-actions">
-        <button class="copy-one-btn" data-code="${escapeHtml(status.code)}">複製</button>
-        ${!status.used ? `<button class="disable-btn" data-hash="${hash}" data-active="${status.active}">${status.active ? "停用" : "啟用"}</button>` : ""}
-      </div>
-    </div>
-  `).join("");
-
-  bindCodeRowActions();
-}
-
-if (codeSearch) codeSearch.addEventListener("input", renderCodeRows);
-
 refreshBtn.addEventListener("click", refreshCodes);
 
 async function refreshCodes() {
@@ -408,12 +686,10 @@ async function refreshCodes() {
 
   try {
     const snapshot = await getDocs(
-      query(collection(db, "drawCodes"), orderBy("createdAt", "desc"), limit(200))
+      query(collection(db, "drawCodes"), orderBy("createdAt", "desc"), limit(50))
     );
 
     if (snapshot.empty) {
-      latestRows = [];
-      updateStats([]);
       codeList.innerHTML = '<p class="empty">尚無抽獎碼。</p>';
       return;
     }
@@ -435,8 +711,30 @@ async function refreshCodes() {
       return { hash: documentSnapshot.id, status, resultText };
     }));
 
-    latestRows = rows;
-    renderCodeRows();
+    codeList.innerHTML = rows.map(({ hash, status, resultText }) => `
+      <div class="code-row">
+        <code>${escapeHtml(status.code)}</code>
+        <span class="badge ${status.used ? "used" : "ready"}">${status.used ? "已使用" : (status.active ? "可使用" : "已停用")}</span>
+        <small class="result">${escapeHtml(resultText)}</small>
+        ${!status.used ? `<button class="disable-btn" data-hash="${hash}" data-active="${status.active}">${status.active ? "停用" : "啟用"}</button>` : ""}
+      </div>
+    `).join("");
+
+    codeList.querySelectorAll(".disable-btn").forEach((button) => {
+      button.addEventListener("click", async () => {
+        button.disabled = true;
+        try {
+          await updateDoc(doc(db, "drawCodes", button.dataset.hash), {
+            active: button.dataset.active !== "true"
+          });
+          await refreshCodes();
+        } catch (error) {
+          console.error(error);
+          showToast("更新失敗");
+          button.disabled = false;
+        }
+      });
+    });
   } catch (error) {
     console.error(error);
     codeList.innerHTML = `<p class="empty">讀取失敗：${escapeHtml(error?.message || "請檢查規則")}</p>`;
@@ -445,6 +743,8 @@ async function refreshCodes() {
 
 function start() {
   renderPrizePreview();
+  renderVehicleModelOptions();
+  resetSaleForm();
 
   if (!hasRealFirebaseConfig(firebaseConfig)) {
     configWarning.classList.remove("hidden");

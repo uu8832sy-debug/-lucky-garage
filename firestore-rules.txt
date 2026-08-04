@@ -1,0 +1,125 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email == 'uu8832sr@gmail.com'
+        && request.auth.token.email_verified == true
+        && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+
+    match /campaigns/{campaignId} {
+      allow get: if signedIn();
+      allow list: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /drawCodes/{codeHash} {
+      allow get: if signedIn() && (
+        resource.data.used == false
+        || resource.data.usedBy == request.auth.uid
+        || isAdmin()
+      );
+
+      allow list, create: if isAdmin();
+
+      allow update: if isAdmin() || (
+        signedIn()
+        && resource.data.active == true
+        && resource.data.used == false
+        && request.resource.data.used == true
+        && request.resource.data.usedBy == request.auth.uid
+        && request.resource.data.usedAt == request.time
+        && request.resource.data.selectedGarage is int
+        && request.resource.data.selectedGarage >= 1
+        && request.resource.data.selectedGarage <= 9
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'used',
+          'usedBy',
+          'usedAt',
+          'selectedGarage'
+        ])
+      );
+
+      allow delete: if false;
+    }
+
+
+    match /sales/{saleId} {
+      allow read: if isAdmin();
+
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasAll([
+          'customer', 'deliveryDate', 'vehicle', 'vehicleModel',
+          'vehicleVariant', 'vehicleNote', 'insuranceHandling',
+          'salePrice', 'cost', 'netProfit',
+          'createdAt', 'updatedAt', 'createdBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'customer', 'deliveryDate', 'vehicle', 'vehicleModel',
+          'vehicleVariant', 'vehicleNote', 'insuranceHandling',
+          'salePrice', 'cost', 'netProfit',
+          'createdAt', 'updatedAt', 'createdBy'
+        ])
+        && request.resource.data.customer is string
+        && request.resource.data.deliveryDate is string
+        && request.resource.data.vehicle is string
+        && request.resource.data.vehicleModel is string
+        && request.resource.data.vehicleVariant is string
+        && request.resource.data.vehicleNote is string
+        && request.resource.data.insuranceHandling in ['代辦', '自行辦理']
+        && request.resource.data.salePrice is int
+        && request.resource.data.salePrice > 0
+        && request.resource.data.cost is int
+        && request.resource.data.cost >= 0
+        && request.resource.data.netProfit is int
+        && request.resource.data.netProfit == request.resource.data.salePrice - request.resource.data.cost
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isAdmin()
+        && request.resource.data.keys().hasAll([
+          'customer', 'deliveryDate', 'vehicle', 'vehicleModel',
+          'vehicleVariant', 'vehicleNote', 'insuranceHandling',
+          'salePrice', 'cost', 'netProfit',
+          'createdAt', 'updatedAt', 'createdBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'customer', 'deliveryDate', 'vehicle', 'vehicleModel',
+          'vehicleVariant', 'vehicleNote', 'insuranceHandling',
+          'salePrice', 'cost', 'netProfit',
+          'createdAt', 'updatedAt', 'createdBy'
+        ])
+        && request.resource.data.customer is string
+        && request.resource.data.deliveryDate is string
+        && request.resource.data.vehicle is string
+        && request.resource.data.vehicleModel is string
+        && request.resource.data.vehicleVariant is string
+        && request.resource.data.vehicleNote is string
+        && request.resource.data.insuranceHandling in ['代辦', '自行辦理']
+        && request.resource.data.salePrice is int
+        && request.resource.data.salePrice > 0
+        && request.resource.data.cost is int
+        && request.resource.data.cost >= 0
+        && request.resource.data.netProfit is int
+        && request.resource.data.netProfit == request.resource.data.salePrice - request.resource.data.cost
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
