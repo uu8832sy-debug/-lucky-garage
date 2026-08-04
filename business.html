@@ -8,7 +8,7 @@
   <title>小宇微電｜訂單與保固管理</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="business.css?v=9" />
+  <link rel="stylesheet" href="business.css?v=10" />
 </head>
 <body>
   <main class="shell">
@@ -18,7 +18,7 @@
         <h1>訂單・收據・保固管理</h1>
       </div>
       <nav class="topnav" aria-label="管理選單">
-        <a href="owner.html?v=9">抽獎管理</a>
+        <a href="owner.html?v=10">抽獎管理</a>
         <a href="index.html">客人前台</a>
       </nav>
     </header>
@@ -62,20 +62,23 @@
       </section>
 
       <section class="card month-card">
-        <div class="section-head">
+        <div class="section-head summary-head">
           <div>
-            <p class="eyebrow">每月交車統計</p>
+            <p id="summaryEyebrow" class="eyebrow">每月交車統計</p>
             <h2>成交與淨利</h2>
           </div>
-          <label class="month-picker"><span>查看月份</span><input id="monthPicker" type="month" /></label>
+          <div class="summary-controls">
+            <label class="scope-picker"><span>統計範圍</span><select id="summaryScope"><option value="month">指定月份</option><option value="all">所有訂單</option></select></label>
+            <label id="monthPickerWrap" class="month-picker"><span>查看月份</span><input id="monthPicker" type="month" /></label>
+          </div>
         </div>
-        <section class="stats-grid monthly-stats" aria-label="每月成交統計">
-          <article class="stat"><span>交車台數</span><strong id="statMonthDelivered">0</strong></article>
+        <section class="stats-grid monthly-stats" aria-label="成交統計">
+          <article class="stat"><span id="statMonthCountLabel">交車台數</span><strong id="statMonthDelivered">0</strong></article>
           <article class="stat"><span>成交總額</span><strong id="statMonthRevenue">NT$0</strong></article>
           <article class="stat"><span>總成本</span><strong id="statMonthCost">NT$0</strong></article>
           <article class="stat profit-stat"><span>總淨利</span><strong id="statMonthProfit">NT$0</strong></article>
         </section>
-        <p class="note">每月統計只計入已填寫「實際交車日」的訂單；切換月份即可查看過去紀錄。</p>
+        <p id="summaryNote" class="note">每月統計只計入已填寫「實際交車日」的訂單；切換月份即可查看過去紀錄。</p>
         <div id="monthOrderList" class="month-order-list"><p class="empty">該月份尚無實際交車紀錄。</p></div>
       </section>
 
@@ -202,10 +205,10 @@
 
   <div id="toast" class="toast" role="status"></div>
 
-  <script src="config.js?v=9"></script>
-  <script src="firebase-config.js?v=9"></script>
+  <script src="config.js?v=10"></script>
+  <script src="firebase-config.js?v=10"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script type="module" src="business.js?v=9"></script>
+  <script type="module" src="business.js?v=10"></script>
 </body>
 </html>

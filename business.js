@@ -36,7 +36,9 @@ const elements = {
   statusFilter: $("#statusFilter"), refreshOrdersBtn: $("#refreshOrdersBtn"), exportCsvBtn: $("#exportCsvBtn"), orderList: $("#orderList"),
   selectVisibleBtn: $("#selectVisibleBtn"), clearSelectionBtn: $("#clearSelectionBtn"), deleteSelectedBtn: $("#deleteSelectedBtn"), selectionCount: $("#selectionCount"),
   statOrders: $("#statOrders"), statPending: $("#statPending"), statDeposits: $("#statDeposits"), statBalance: $("#statBalance"),
-  monthPicker: $("#monthPicker"), statMonthDelivered: $("#statMonthDelivered"), statMonthRevenue: $("#statMonthRevenue"),
+  summaryScope: $("#summaryScope"), summaryEyebrow: $("#summaryEyebrow"), summaryNote: $("#summaryNote"),
+  monthPickerWrap: $("#monthPickerWrap"), monthPicker: $("#monthPicker"), statMonthCountLabel: $("#statMonthCountLabel"),
+  statMonthDelivered: $("#statMonthDelivered"), statMonthRevenue: $("#statMonthRevenue"),
   statMonthCost: $("#statMonthCost"), statMonthProfit: $("#statMonthProfit"), monthOrderList: $("#monthOrderList"),
   documentDialog: $("#documentDialog"), documentCanvas: $("#documentCanvas"), dialogTitle: $("#dialogTitle"),
   savePhotoBtn: $("#savePhotoBtn"), downloadPngBtn: $("#downloadPngBtn"), printBtn: $("#printBtn"), closeDialogBtn: $("#closeDialogBtn"),
@@ -682,28 +684,51 @@ function currentMonthString() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
-function monthlyDeliveredOrders() {
+function summaryOrders() {
+  const showAll = elements.summaryScope?.value === "all";
+  if (showAll) return [...currentOrders];
   const month = elements.monthPicker.value || currentMonthString();
   return currentOrders.filter((order) => order.status !== "取消" && String(order.deliveredAt || "").startsWith(month));
 }
+function orderTimestamp(order) {
+  if (order.deliveredAt) return new Date(`${order.deliveredAt}T00:00:00`).getTime() || 0;
+  if (typeof order.updatedAt?.toMillis === "function") return order.updatedAt.toMillis();
+  if (typeof order.createdAt?.toMillis === "function") return order.createdAt.toMillis();
+  return (order.updatedAt?.seconds || order.createdAt?.seconds || 0) * 1000;
+}
 function renderMonthlySummary() {
   if (!elements.monthPicker.value) elements.monthPicker.value = currentMonthString();
-  const orders = monthlyDeliveredOrders();
-  const revenue = orders.reduce((sum, order) => sum + numberValue(order.price), 0);
-  const cost = orders.reduce((sum, order) => sum + effectiveCost(order), 0);
-  const profit = orders.reduce((sum, order) => sum + calculateNetProfit(order), 0);
+  const showAll = elements.summaryScope?.value === "all";
+  elements.monthPicker.disabled = showAll;
+  elements.monthPickerWrap?.classList.toggle("disabled", showAll);
+  elements.summaryEyebrow.textContent = showAll ? "所有訂單統計" : "每月交車統計";
+  elements.statMonthCountLabel.textContent = showAll ? "訂單筆數" : "交車台數";
+  elements.summaryNote.textContent = showAll
+    ? "顯示全部訂單；取消訂單仍會列出，但不計入成交總額、成本與淨利。"
+    : "每月統計只計入已填寫「實際交車日」的訂單；切換月份即可查看過去紀錄。";
+
+  const orders = summaryOrders();
+  const financialOrders = showAll ? orders.filter((order) => order.status !== "取消") : orders;
+  const revenue = financialOrders.reduce((sum, order) => sum + numberValue(order.price), 0);
+  const cost = financialOrders.reduce((sum, order) => sum + effectiveCost(order), 0);
+  const profit = financialOrders.reduce((sum, order) => sum + calculateNetProfit(order), 0);
   elements.statMonthDelivered.textContent = orders.length.toLocaleString("zh-TW");
   elements.statMonthRevenue.textContent = formatMoney(revenue);
   elements.statMonthCost.textContent = formatMoney(cost);
   elements.statMonthProfit.textContent = formatProfit(profit);
   elements.statMonthProfit.classList.toggle("negative", profit < 0);
   if (!orders.length) {
-    elements.monthOrderList.innerHTML = '<p class="empty">該月份尚無實際交車紀錄。</p>';
+    elements.monthOrderList.innerHTML = `<p class="empty">${showAll ? "目前尚無訂單。" : "該月份尚無實際交車紀錄。"}</p>`;
     return;
   }
   elements.monthOrderList.innerHTML = orders
-    .sort((a, b) => String(b.deliveredAt).localeCompare(String(a.deliveredAt)))
-    .map((order) => `<div class="month-order-row"><span>${displayDate(order.deliveredAt)}</span><strong>${escapeHtml(order.customerName || "未命名")}｜${escapeHtml(order.color || "")} ${escapeHtml(order.model || "")}</strong><span>淨利 ${formatProfit(calculateNetProfit(order))}</span></div>`)
+    .sort((a, b) => orderTimestamp(b) - orderTimestamp(a))
+    .map((order) => {
+      const dateText = order.deliveredAt ? displayDate(order.deliveredAt) : "尚未交車";
+      const statusText = order.status || "未設定";
+      const profitText = order.status === "取消" ? "取消訂單" : `淨利 ${formatProfit(calculateNetProfit(order))}`;
+      return `<div class="month-order-row"><span>${dateText}</span><strong>${escapeHtml(order.customerName || "未命名")}｜${escapeHtml(order.color || "")} ${escapeHtml(order.model || "")}<small class="summary-status">${escapeHtml(statusText)}</small></strong><span>${profitText}</span></div>`;
+    })
     .join("");
 }
 
@@ -907,6 +932,7 @@ elements.bulkOrdersInput?.addEventListener("input", () => {
 fields.model.addEventListener("change", () => updateVariantOptions());
 fields.vehicleVariant.addEventListener("change", applySelectedVariantCost);
 fields.cost.addEventListener("input", updateMoneyPreview);
+elements.summaryScope?.addEventListener("change", renderMonthlySummary);
 elements.monthPicker.addEventListener("change", renderMonthlySummary);
 fields.price.addEventListener("input", updateMoneyPreview);
 fields.deposit.addEventListener("input", updateMoneyPreview);

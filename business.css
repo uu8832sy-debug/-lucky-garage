@@ -156,3 +156,15 @@ input[readonly] { background: rgba(124,245,197,.07); color: var(--accent); font-
 /* v9：防重複與批量刪除 */
 .order-row.selected { border-color: rgba(124,245,197,.55); background: rgba(124,245,197,.055); }
 .duplicate-badge { background: rgba(255,126,138,.12); border-color: rgba(255,126,138,.35); color: #ffd8dc; }
+
+
+/* v10：指定月份／所有訂單切換 */
+.summary-controls { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; justify-content: flex-end; }
+.scope-picker { min-width: 150px; }
+.month-picker.disabled { opacity: .5; }
+.summary-status { display: inline-block; margin-left: 8px; color: var(--muted); font-size: .72rem; font-weight: 700; }
+@media (max-width: 560px) {
+  .summary-head { align-items: flex-start; flex-direction: column; }
+  .summary-controls { width: 100%; justify-content: stretch; }
+  .summary-controls label { width: 100%; }
+}
