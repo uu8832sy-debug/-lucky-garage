@@ -7,98 +7,19 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>小宇微電｜管理後台</title>
+  <title>小宇微電｜幸運車庫管理</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="stylesheet" href="admin.css?v=6" />
-
-  <style>
-    .sales-summary {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      margin: 18px 0;
-    }
-    .summary-box {
-      min-width: 0;
-      padding: 14px;
-      border: 1px solid rgba(255, 204, 51, .22);
-      border-radius: 16px;
-      background: rgba(255,255,255,.035);
-    }
-    .summary-box span {
-      display: block;
-      margin-bottom: 6px;
-      color: #aeb4c0;
-      font-size: 13px;
-    }
-    .summary-box strong {
-      display: block;
-      overflow-wrap: anywhere;
-      font-size: clamp(18px, 4vw, 28px);
-      color: #f7f8fa;
-    }
-    .summary-box.profit {
-      background: linear-gradient(145deg, rgba(255,196,31,.16), rgba(255,255,255,.035));
-      border-color: rgba(255, 205, 55, .55);
-    }
-    .summary-box.profit strong { color: #ffd34d; }
-    #saleProfit {
-      color: #ffd34d;
-      font-weight: 800;
-      background: rgba(255, 200, 32, .08);
-    }
-    .sale-list-title { margin-top: 22px; }
-    .sale-list {
-      display: grid;
-      gap: 10px;
-      margin-top: 12px;
-    }
-    .sale-row {
-      display: grid;
-      grid-template-columns: minmax(150px, 1.35fr) repeat(3, minmax(95px, .75fr)) auto;
-      gap: 10px;
-      align-items: center;
-      padding: 13px;
-      border: 1px solid rgba(255,255,255,.09);
-      border-radius: 15px;
-      background: rgba(255,255,255,.03);
-    }
-    .sale-main { min-width: 0; }
-    .sale-main strong,
-    .sale-main small { display: block; }
-    .sale-main strong { overflow-wrap: anywhere; }
-    .sale-main small { margin-top: 4px; color: #9199a7; }
-    .sale-money span {
-      display: block;
-      margin-bottom: 3px;
-      color: #8f97a5;
-      font-size: 12px;
-    }
-    .sale-money strong { font-size: 15px; }
-    .sale-money.profit strong { color: #62d98b; }
-    .sale-money.profit.negative strong { color: #ff7373; }
-    .sale-actions { display: flex; gap: 7px; }
-    .sale-actions button { white-space: nowrap; }
-    .danger {
-      border-color: rgba(255, 89, 89, .4) !important;
-      color: #ff8383 !important;
-    }
-    @media (max-width: 760px) {
-      .sales-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .sale-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .sale-main { grid-column: 1 / -1; }
-      .sale-actions { grid-column: 1 / -1; }
-      .sale-actions button { flex: 1; }
-    }
-  </style>
 </head>
 <body>
   <main class="admin-shell">
     <header class="topbar">
       <div>
         <p class="eyebrow">小宇微電</p>
-        <h1>小宇微電管理後台</h1>
+        <h1>幸運車庫管理</h1>
       </div>
-      <a href="index.html">回抽獎頁</a>
+      <nav class="topnav"><a href="business.html">訂單系統</a><a href="index.html">回抽獎頁</a></nav>
     </header>
 
     <section id="configWarning" class="card warning hidden">
@@ -127,113 +48,6 @@
           <strong id="adminEmail">—</strong>
         </div>
         <button id="logoutBtn" class="secondary compact" type="button">登出</button>
-      </section>
-
-
-      <section class="card sales-card">
-        <div class="section-row">
-          <div>
-            <h2>成交與淨利管理</h2>
-            <p class="note">選擇車款與電池版本後會自動帶入成本，並計算單筆淨利及全部成交的總淨利。</p>
-          </div>
-          <button id="refreshSalesBtn" class="secondary compact" type="button">重新整理</button>
-        </div>
-
-        <div class="sales-summary" aria-label="成交統計">
-          <div class="summary-box">
-            <span>成交筆數</span>
-            <strong id="saleCount">0</strong>
-          </div>
-          <div class="summary-box">
-            <span>總成交額</span>
-            <strong id="totalRevenue">NT$0</strong>
-          </div>
-          <div class="summary-box">
-            <span>總成本</span>
-            <strong id="totalCost">NT$0</strong>
-          </div>
-          <div class="summary-box profit">
-            <span>總淨利</span>
-            <strong id="totalProfit">NT$0</strong>
-          </div>
-        </div>
-
-        <form id="saleForm" autocomplete="off">
-          <div class="grid two">
-            <label>
-              <span>客戶姓名／備註</span>
-              <input id="saleCustomer" maxlength="60" placeholder="例如：陳佑維" required />
-            </label>
-            <label>
-              <span>實際交車日</span>
-              <input id="saleDeliveryDate" type="date" />
-            </label>
-          </div>
-
-          <div class="grid three">
-            <label>
-              <span>車款</span>
-              <select id="saleVehicleModel" required>
-                <option value="">請選擇車款</option>
-              </select>
-            </label>
-            <label>
-              <span>版本／電池</span>
-              <select id="saleVehicleVariant" required disabled>
-                <option value="">請先選擇車款</option>
-              </select>
-            </label>
-            <label>
-              <span>車色／其他備註</span>
-              <input id="saleVehicleNote" maxlength="60" placeholder="例如：白色、暗魂外觀" />
-            </label>
-          </div>
-
-          <div class="grid two">
-            <label>
-              <span>領牌強制險</span>
-              <select id="saleInsuranceHandling" required>
-                <option value="代辦">代辦</option>
-                <option value="自行辦理">自行辦理</option>
-              </select>
-            </label>
-            <label>
-              <span>成本說明</span>
-              <input id="saleCostHint" type="text" value="請先選擇車款與版本" readonly />
-            </label>
-          </div>
-
-          <div class="grid three">
-            <label>
-              <span>成交價</span>
-              <input id="salePrice" type="number" min="0" step="1" inputmode="numeric" placeholder="0" required />
-            </label>
-            <label>
-              <span>成本（自動帶入，可修改）</span>
-              <input id="saleCost" type="number" min="0" step="1" inputmode="numeric" placeholder="0" required />
-            </label>
-            <label>
-              <span>淨利（自動計算）</span>
-              <input id="saleProfit" type="text" value="NT$0" readonly />
-            </label>
-          </div>
-
-          <div class="actions">
-            <button id="saveSaleBtn" class="primary" type="submit">新增成交紀錄</button>
-            <button id="cancelSaleEditBtn" class="secondary hidden" type="button">取消修改</button>
-          </div>
-          <p id="saleMessage" class="message"></p>
-        </form>
-
-        <div class="section-row sale-list-title">
-          <div>
-            <h3>成交紀錄</h3>
-            <p class="note">可修改或刪除輸入錯誤的資料。</p>
-          </div>
-        </div>
-        <div id="saleList" class="sale-list">
-          <p class="empty">尚無成交紀錄。</p>
-        </div>
       </section>
 
       <section class="card">

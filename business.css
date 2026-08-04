@@ -65,7 +65,6 @@ textarea { resize: vertical; }
 .document-dialog, .text-dialog { width: min(900px, calc(100% - 20px)); max-height: 92vh; border: 1px solid var(--line); border-radius: 18px; background: #0e131d; color: var(--text); padding: 12px; }
 .document-dialog::backdrop, .text-dialog::backdrop { background: rgba(0,0,0,.76); }
 .dialog-toolbar { position: sticky; top: 0; z-index: 3; padding: 8px; background: #0e131d; }
-.dialog-toolbar .actions { width: auto; }
 .document-canvas { overflow: auto; padding: 16px; background: #1b2130; border-radius: 14px; }
 .text-dialog textarea { min-height: 320px; margin: 10px 0; }
 .text-tabs { display: flex; gap: 7px; flex-wrap: wrap; padding: 8px 0; }
@@ -119,12 +118,28 @@ textarea { resize: vertical; }
   .row-actions { grid-column: auto; }
   .document-dialog { padding: 7px; }
   .dialog-toolbar { align-items: flex-start; flex-direction: column; }
-  .dialog-toolbar .actions { width: 100%; }
-  .dialog-toolbar .actions button { flex: 1 1 auto; }
 }
 @media print {
   body * { visibility: hidden !important; }
   #documentCanvas, #documentCanvas * { visibility: visible !important; }
   #documentCanvas { position: absolute; inset: 0; padding: 0; background: #fff; }
   .doc-sheet { box-shadow: none; margin: 0; width: 100%; min-height: 100vh; }
+}
+
+
+/* v8：成交淨利與月份統計 */
+.month-card { margin-bottom: 16px; }
+.month-picker { min-width: 180px; }
+.month-picker input { width: 100%; }
+.monthly-stats { margin: 14px 0 0; }
+.profit-stat strong, #netProfitPreview { color: var(--accent); }
+.negative { color: #ff7e8a !important; }
+input[readonly] { background: rgba(124,245,197,.07); color: var(--accent); font-weight: 900; }
+.month-order-list { display: grid; gap: 8px; margin-top: 12px; }
+.month-order-row { display: grid; grid-template-columns: 110px 1fr auto; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.025); }
+.month-order-row span { color: var(--muted); font-size: .85rem; }
+.money-preview { flex-wrap: wrap; }
+@media (max-width: 560px) {
+  .month-order-row { grid-template-columns: 1fr; gap: 3px; }
+  .month-picker { width: 100%; }
 }

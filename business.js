@@ -30,11 +30,13 @@ const elements = {
   deniedCard: $("#deniedCard"), deniedEmail: $("#deniedEmail"), copyUidBtn: $("#copyUidBtn"), switchAccountBtn: $("#switchAccountBtn"),
   appArea: $("#appArea"), adminEmail: $("#adminEmail"), logoutBtn: $("#logoutBtn"), orderForm: $("#orderForm"),
   editingId: $("#editingId"), formTitle: $("#formTitle"), formMessage: $("#formMessage"), resetBtn: $("#resetBtn"),
-  saveAndReceiptBtn: $("#saveAndReceiptBtn"), unpaidPreview: $("#unpaidPreview"), searchInput: $("#searchInput"),
+  saveAndReceiptBtn: $("#saveAndReceiptBtn"), unpaidPreview: $("#unpaidPreview"), netProfitPreview: $("#netProfitPreview"), searchInput: $("#searchInput"),
   bulkOrdersInput: $("#bulkOrdersInput"), clearBulkBtn: $("#clearBulkBtn"), previewBulkBtn: $("#previewBulkBtn"), importBulkBtn: $("#importBulkBtn"),
   bulkPreview: $("#bulkPreview"), bulkMessage: $("#bulkMessage"),
   statusFilter: $("#statusFilter"), refreshOrdersBtn: $("#refreshOrdersBtn"), exportCsvBtn: $("#exportCsvBtn"), orderList: $("#orderList"),
   statOrders: $("#statOrders"), statPending: $("#statPending"), statDeposits: $("#statDeposits"), statBalance: $("#statBalance"),
+  monthPicker: $("#monthPicker"), statMonthDelivered: $("#statMonthDelivered"), statMonthRevenue: $("#statMonthRevenue"),
+  statMonthCost: $("#statMonthCost"), statMonthProfit: $("#statMonthProfit"), monthOrderList: $("#monthOrderList"),
   documentDialog: $("#documentDialog"), documentCanvas: $("#documentCanvas"), dialogTitle: $("#dialogTitle"),
   savePhotoBtn: $("#savePhotoBtn"), downloadPngBtn: $("#downloadPngBtn"), printBtn: $("#printBtn"), closeDialogBtn: $("#closeDialogBtn"),
   textDialog: $("#textDialog"), textDialogTitle: $("#textDialogTitle"), textTabs: $("#textTabs"), generatedText: $("#generatedText"),
@@ -42,9 +44,9 @@ const elements = {
 };
 
 const fieldIds = [
-  "customerName", "phone", "address", "lineName", "model", "color", "battery", "chassisNo", "batteryNo",
-  "licenseMode", "deliveryMode", "price", "deposit", "balancePaid", "paymentMethod", "status", "deliveryDate",
-  "deliveredAt", "documentStatus", "notes"
+  "customerName", "phone", "address", "lineName", "model", "color", "vehicleVariant", "battery", "chassisNo", "batteryNo",
+  "licenseMode", "deliveryMode", "price", "cost", "netProfit", "deposit", "balancePaid", "paymentMethod", "status",
+  "deliveredAt", "notes"
 ];
 const fields = Object.fromEntries(fieldIds.map((id) => [id, $("#" + id)]));
 
@@ -55,6 +57,60 @@ let currentOrders = [];
 let currentDocumentName = "小宇微電文件";
 let currentTextMap = {};
 
+
+const VEHICLE_COSTS = {
+  "大偉士改裝版": [
+    { label: "鉛酸版", battery: "鉛酸", cost: 29000 },
+    { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 49000 }
+  ],
+  "大偉士": [
+    { label: "鉛酸版", battery: "鉛酸", cost: 29000 },
+    { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 49000 }
+  ],
+  "小偉士": [
+    { label: "鉛酸版", battery: "鉛酸", cost: 23000 },
+    { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 38000 }
+  ],
+  "神盾": [
+    { label: "鉛酸版", battery: "鉛酸", cost: 24000 },
+    { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 40000 }
+  ],
+  "輕風": [
+    { label: "鉛酸版", battery: "鉛酸", cost: 24000 },
+    { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 40000 }
+  ],
+  "Z3": [
+    { label: "普通版（鉛酸）", battery: "鉛酸", cost: 30000 },
+    { label: "暗魂版（鉛酸）", battery: "鉛酸", cost: 32000 },
+    { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 49000 },
+    { label: "暗魂鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 51000 }
+  ],
+  "正9號": [
+    { label: "鉛酸版", battery: "鉛酸", cost: 29000 },
+    { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 49000 }
+  ],
+  "小可愛（拿鐵）": [
+    { label: "鉛酸版（無鋰電版）", battery: "鉛酸", cost: 25000 }
+  ],
+  "QC": [
+    { label: "鉛酸版", battery: "鉛酸", cost: 27000 },
+    { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 47000 }
+  ],
+  "小酷龍": [
+    { label: "鉛酸版（無鋰電版）", battery: "鉛酸", cost: 16000 }
+  ],
+  "微型三輪": [
+    { label: "鉛酸版（無鋰電版）", battery: "鉛酸", cost: 28000 }
+  ],
+  "Dio": [
+    { label: "鉛酸版", battery: "鉛酸", cost: 25000 },
+    { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 40000 }
+  ],
+  "其他": [
+    { label: "其他／手動輸入成本", battery: "其他", cost: 0 }
+  ]
+};
+
 function hasRealFirebaseConfig(config) {
   return Boolean(config.apiKey && config.projectId && config.appId && !Object.values(config).some((value) => String(value).includes("YOUR_")));
 }
@@ -63,7 +119,13 @@ function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
 }
 function numberValue(value) { const parsed = Number(value); return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : 0; }
+function integerValue(value) { const parsed = Number(value); return Number.isFinite(parsed) ? Math.round(parsed) : 0; }
 function formatMoney(value) { return `NT$${numberValue(value).toLocaleString("zh-TW")}`; }
+function formatProfit(value) {
+  const amount = integerValue(value);
+  const sign = amount < 0 ? "-" : "";
+  return `${sign}NT$${Math.abs(amount).toLocaleString("zh-TW")}`;
+}
 function todayString() { return new Date().toISOString().slice(0, 10); }
 function dateCompact() { return todayString().replaceAll("-", ""); }
 function randomCode(length = 4) {
@@ -104,37 +166,102 @@ function maskSerial(value) {
 function calculateUnpaid(order) {
   return Math.max(0, numberValue(order.price) - numberValue(order.deposit) - numberValue(order.balancePaid));
 }
+function calculateNetProfit(order) {
+  return numberValue(order.price) - effectiveCost(order);
+}
+function normalizeInsuranceHandling(value) {
+  return String(value || "").includes("代辦") ? "代辦" : "自行辦理";
+}
+function variantOptionsFor(model) {
+  return VEHICLE_COSTS[model] || VEHICLE_COSTS["其他"];
+}
+function selectedVariantInfo() {
+  return variantOptionsFor(fields.model.value).find((item) => item.label === fields.vehicleVariant.value) || variantOptionsFor(fields.model.value)[0];
+}
+function inferVariant(order) {
+  const variants = variantOptionsFor(order.model);
+  const text = `${order.vehicleVariant || ""} ${order.battery || ""}`;
+  if (order.model === "Z3" && text.includes("暗魂") && text.includes("鋰")) return "暗魂鋰鐵30Ah";
+  if (order.model === "Z3" && text.includes("暗魂")) return "暗魂版（鉛酸）";
+  if (text.includes("鋰")) return variants.find((item) => item.label.includes("鋰鐵"))?.label || variants[0].label;
+  return variants[0].label;
+}
+function normalizedOrderModel(order) {
+  if (VEHICLE_COSTS[order.model]) return order.model;
+  return interpretVehicleText(order.model).model;
+}
+function effectiveCost(order) {
+  const saved = numberValue(order.cost);
+  if (saved > 0) return saved;
+  const model = normalizedOrderModel(order);
+  const variants = variantOptionsFor(model);
+  const variant = inferVariant({ ...order, model });
+  return variants.find((item) => item.label === variant)?.cost || interpretVehicleText(order.model).cost || 0;
+}
+function updateVariantOptions({ savedVariant = "", savedCost = null } = {}) {
+  const variants = variantOptionsFor(fields.model.value);
+  fields.vehicleVariant.innerHTML = variants.map((item) => `<option value="${escapeHtml(item.label)}">${escapeHtml(item.label)}</option>`).join("");
+  const wanted = variants.some((item) => item.label === savedVariant) ? savedVariant : variants[0].label;
+  fields.vehicleVariant.value = wanted;
+  const info = selectedVariantInfo();
+  fields.battery.value = info.battery;
+  fields.cost.value = savedCost === null ? String(info.cost) : String(numberValue(savedCost));
+  updateMoneyPreview();
+}
+function applySelectedVariantCost() {
+  const info = selectedVariantInfo();
+  fields.battery.value = info.battery;
+  fields.cost.value = String(info.cost);
+  updateMoneyPreview();
+}
 function orderFromForm() {
   const data = Object.fromEntries(fieldIds.map((id) => [id, fields[id].value.trim ? fields[id].value.trim() : fields[id].value]));
   data.price = numberValue(fields.price.value);
+  data.cost = numberValue(fields.cost.value);
+  data.netProfit = calculateNetProfit(data);
   data.deposit = numberValue(fields.deposit.value);
   data.balancePaid = numberValue(fields.balancePaid.value);
+  data.licenseMode = normalizeInsuranceHandling(fields.licenseMode.value);
   return data;
 }
-function updateUnpaidPreview() {
-  elements.unpaidPreview.textContent = formatMoney(calculateUnpaid(orderFromForm()));
+function updateMoneyPreview() {
+  const data = orderFromForm();
+  fields.netProfit.value = String(data.netProfit);
+  elements.unpaidPreview.textContent = formatMoney(calculateUnpaid(data));
+  elements.netProfitPreview.textContent = formatProfit(data.netProfit);
+  elements.netProfitPreview.classList.toggle("negative", data.netProfit < 0);
 }
 function resetForm() {
   elements.orderForm.reset();
   elements.editingId.value = "";
   elements.formTitle.textContent = "建立訂單";
+  fields.model.value = "小偉士";
   fields.price.value = "0";
   fields.deposit.value = "0";
   fields.balancePaid.value = "0";
-  fields.battery.value = "鉛酸";
-  fields.licenseMode.value = "自行領牌";
+  fields.licenseMode.value = "代辦";
   fields.deliveryMode.value = "到府交車";
   fields.paymentMethod.value = "轉帳";
   fields.status.value = "待訂金";
-  fields.documentStatus.value = "尚未準備";
+  updateVariantOptions();
   setMessage("");
-  updateUnpaidPreview();
+  updateMoneyPreview();
 }
 function fillForm(order) {
   elements.editingId.value = order.id;
-  for (const id of fieldIds) fields[id].value = order[id] ?? "";
+  const simpleFields = fieldIds.filter((id) => !["model", "vehicleVariant", "battery", "cost", "netProfit", "licenseMode"].includes(id));
+  for (const id of simpleFields) fields[id].value = order[id] ?? "";
+  const formModel = normalizedOrderModel(order);
+  if (!Array.from(fields.model.options).some((option) => option.value === formModel)) {
+    fields.model.add(new Option(formModel || "其他", formModel || "其他"));
+  }
+  fields.model.value = formModel || "其他";
+  updateVariantOptions({ savedVariant: order.vehicleVariant || inferVariant({ ...order, model: formModel }), savedCost: effectiveCost(order) });
+  fields.battery.value = order.battery || selectedVariantInfo().battery;
+  fields.licenseMode.value = normalizeInsuranceHandling(order.licenseMode);
+  fields.netProfit.value = String(calculateNetProfit(order));
   elements.formTitle.textContent = `編輯訂單｜${order.id}`;
-  updateUnpaidPreview();
+  updateMoneyPreview();
   document.querySelector(".form-card").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -213,12 +340,12 @@ function parseBulkOrders() {
     const parts = splitBulkLine(line);
     const looksLikeHeader = index === 0 && parts.some((part) => /車主|姓名|電話|手機|車款/.test(part));
     if (looksLikeHeader) return;
-    const [customerName = "", phone = "", model = ""] = parts;
+    const [customerName = "", phone = "", model = "", address = ""] = parts;
     if (!customerName || !phone || !model) {
       invalid.push({ lineNo: index + 1, line, reason: "需包含車主姓名、電話、車款" });
       return;
     }
-    valid.push({ customerName, phone, model, lineNo: index + 1 });
+    valid.push({ customerName, phone, model, address, lineNo: index + 1 });
   });
   return { valid, invalid };
 }
@@ -233,7 +360,7 @@ function renderBulkPreview() {
   const validHtml = valid.map((item) => `
     <article class="order-row">
       <div class="order-main"><strong>${escapeHtml(item.customerName)}</strong><small>${escapeHtml(item.phone)}</small></div>
-      <div class="order-car"><strong>${escapeHtml(item.model)}</strong><small>顏色、地址等資料可之後編輯補上</small></div>
+      <div class="order-car"><strong>${escapeHtml(item.model)}</strong><small>${escapeHtml(item.address || "地址待補")}</small></div>
       <div class="order-money"><span class="badge">可新增</span><small>第 ${item.lineNo} 行</small></div>
     </article>`).join("");
   const invalidHtml = invalid.map((item) => `
@@ -247,28 +374,49 @@ function renderBulkPreview() {
   elements.bulkMessage.classList.toggle("success", valid.length > 0 && invalid.length === 0);
   return { valid, invalid };
 }
+function interpretVehicleText(rawText) {
+  const raw = String(rawText || "").trim();
+  const aliases = [
+    ["大偉士", "大偉士改裝版"], ["小偉士", "小偉士"], ["神盾", "神盾"], ["輕風", "輕風"],
+    ["Z3", "Z3"], ["正9號", "正9號"], ["9號", "正9號"], ["小可愛", "小可愛（拿鐵）"],
+    ["拿鐵", "小可愛（拿鐵）"], ["QC", "QC"], ["小酷龍", "小酷龍"], ["微型三輪", "微型三輪"], ["Dio", "Dio"]
+  ];
+  const found = aliases.find(([alias]) => raw.toLowerCase().includes(alias.toLowerCase()));
+  const model = found?.[1] || raw || "其他";
+  const variants = variantOptionsFor(model);
+  let variant = variants[0].label;
+  if (model === "Z3" && raw.includes("暗魂") && raw.includes("鋰")) variant = "暗魂鋰鐵30Ah";
+  else if (model === "Z3" && raw.includes("暗魂")) variant = "暗魂版（鉛酸）";
+  else if (raw.includes("鋰")) variant = variants.find((item) => item.label.includes("鋰鐵"))?.label || variant;
+  const info = variants.find((item) => item.label === variant) || variants[0];
+  const colors = ["消光黑", "鐵灰色", "鐵灰", "深灰", "淺灰", "紫色", "紫", "黑色", "黑", "白色", "白", "綠色", "綠", "紅色", "紅", "藍色", "藍", "灰色", "灰", "銀色", "銀", "粉色", "粉"];
+  const color = colors.find((item) => raw.includes(item)) || "待確認";
+  return { model, vehicleVariant: info.label, battery: info.battery, cost: info.cost, color };
+}
 function bulkOrderDefaults(item) {
+  const vehicle = interpretVehicleText(item.model);
   return {
     customerName: item.customerName,
     phone: item.phone,
-    model: item.model,
-    address: "待補資料",
+    model: vehicle.model,
+    vehicleVariant: vehicle.vehicleVariant,
+    address: item.address || "待補資料",
     lineName: "",
-    color: "待確認",
-    battery: "鉛酸",
+    color: vehicle.color,
+    battery: vehicle.battery,
     chassisNo: "",
     batteryNo: "",
-    licenseMode: "自行領牌",
+    licenseMode: "代辦",
     deliveryMode: "到府交車",
     price: 0,
+    cost: vehicle.cost,
+    netProfit: -vehicle.cost,
     deposit: 0,
     balancePaid: 0,
     paymentMethod: "轉帳",
     status: "待訂金",
-    deliveryDate: "",
     deliveredAt: "",
-    documentStatus: "尚未準備",
-    notes: "批量新增，地址與顏色待補"
+    notes: item.address ? "批量新增" : "批量新增，送車地址待補"
   };
 }
 async function importBulkOrders() {
@@ -371,6 +519,7 @@ async function loadOrders() {
     });
     renderOrders();
     renderStats();
+    renderMonthlySummary();
   } catch (error) {
     console.error(error);
     elements.orderList.innerHTML = `<p class="empty">讀取失敗：${escapeHtml(error?.message || "請檢查 Firestore 規則")}</p>`;
@@ -393,8 +542,8 @@ function renderOrders() {
   elements.orderList.innerHTML = orders.map((order) => `
     <article class="order-row" data-id="${escapeHtml(order.id)}">
       <div class="order-main"><strong>${escapeHtml(order.customerName || "未命名")}</strong><small>${escapeHtml(order.phone || "—")}｜${escapeHtml(order.id)}</small></div>
-      <div class="order-car"><strong>${escapeHtml(order.color || "")} ${escapeHtml(order.model || "")}</strong><small>${escapeHtml(order.battery || "")}｜${escapeHtml(order.licenseMode || "")}</small></div>
-      <div class="order-money"><span class="badge">${escapeHtml(order.status || "未設定")}</span><strong>${formatMoney(calculateUnpaid(order))}</strong><small>待收金額</small></div>
+      <div class="order-car"><strong>${escapeHtml(order.color || "")} ${escapeHtml(order.model || "")}</strong><small>${escapeHtml(order.vehicleVariant || order.battery || "")}｜領牌強制險：${escapeHtml(normalizeInsuranceHandling(order.licenseMode))}</small></div>
+      <div class="order-money"><span class="badge">${escapeHtml(order.status || "未設定")}</span><strong>${formatProfit(calculateNetProfit(order))}</strong><small>成交 ${formatMoney(order.price)}｜成本 ${formatMoney(effectiveCost(order))}｜待收 ${formatMoney(calculateUnpaid(order))}</small></div>
       <div class="row-actions">
         <button class="secondary" data-action="edit">編輯</button>
         <button class="secondary" data-action="deposit">訂金收據</button>
@@ -418,6 +567,35 @@ function renderStats() {
   elements.statBalance.textContent = formatMoney(unpaid);
 }
 
+function currentMonthString() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+function monthlyDeliveredOrders() {
+  const month = elements.monthPicker.value || currentMonthString();
+  return currentOrders.filter((order) => order.status !== "取消" && String(order.deliveredAt || "").startsWith(month));
+}
+function renderMonthlySummary() {
+  if (!elements.monthPicker.value) elements.monthPicker.value = currentMonthString();
+  const orders = monthlyDeliveredOrders();
+  const revenue = orders.reduce((sum, order) => sum + numberValue(order.price), 0);
+  const cost = orders.reduce((sum, order) => sum + effectiveCost(order), 0);
+  const profit = orders.reduce((sum, order) => sum + calculateNetProfit(order), 0);
+  elements.statMonthDelivered.textContent = orders.length.toLocaleString("zh-TW");
+  elements.statMonthRevenue.textContent = formatMoney(revenue);
+  elements.statMonthCost.textContent = formatMoney(cost);
+  elements.statMonthProfit.textContent = formatProfit(profit);
+  elements.statMonthProfit.classList.toggle("negative", profit < 0);
+  if (!orders.length) {
+    elements.monthOrderList.innerHTML = '<p class="empty">該月份尚無實際交車紀錄。</p>';
+    return;
+  }
+  elements.monthOrderList.innerHTML = orders
+    .sort((a, b) => String(b.deliveredAt).localeCompare(String(a.deliveredAt)))
+    .map((order) => `<div class="month-order-row"><span>${displayDate(order.deliveredAt)}</span><strong>${escapeHtml(order.customerName || "未命名")}｜${escapeHtml(order.color || "")} ${escapeHtml(order.model || "")}</strong><span>淨利 ${formatProfit(calculateNetProfit(order))}</span></div>`)
+    .join("");
+}
+
 function receiptHtml(order, type, receiptId) {
   const depositReceipt = type === "deposit";
   const amount = depositReceipt ? order.deposit : order.balancePaid;
@@ -436,7 +614,7 @@ function receiptHtml(order, type, receiptId) {
       </div>
       <div class="amount-box"><span>今收到款項</span><strong class="handwriting" style="--tilt:${tilt}">${formatMoney(amount)}</strong></div>
       <div class="doc-meta">
-        <div class="doc-field"><span>總車價</span><strong>${formatMoney(order.price)}</strong></div>
+        <div class="doc-field"><span>成交價</span><strong>${formatMoney(order.price)}</strong></div>
         <div class="doc-field"><span>累計已收</span><strong>${formatMoney(numberValue(order.deposit) + numberValue(order.balancePaid))}</strong></div>
         <div class="doc-field"><span>尚未收款</span><strong>${formatMoney(calculateUnpaid(order))}</strong></div>
         <div class="doc-field"><span>款項用途</span><strong>${depositReceipt ? "車輛訂金／保留車輛" : "交車尾款"}</strong></div>
@@ -545,16 +723,16 @@ function buildTextMap(order) {
   const vehicle = `${order.color || ""}${order.model || ""}`;
   const deliveryDone = order.status === "已交車" || Boolean(order.deliveredAt);
   const action = deliveryDone ? "順利完成交車" : "已完成下訂，準備安排交車";
-  const licenseText = order.licenseMode === "自行領牌" ? "領牌文件隨車提供，車主自行辦理" : (order.licenseMode === "代辦領牌" ? "可協助辦理領牌與強制險" : "領牌方式可依需求安排");
+  const licenseText = normalizeInsuranceHandling(order.licenseMode) === "代辦" ? "可協助代辦領牌與強制險" : "由車主自行辦理領牌與強制險";
   return {
     "Facebook": `🎉 ${vehicle} ${action}！\n\n感謝車主對小宇微電的信任😊\n這次選擇的是 ${order.model}｜${order.color}｜${order.battery || "電池版本依訂單"}。\n\n✔ 全台可安排配送\n✔ 家用插座即可充電\n✔ ${licenseText}\n✔ 完整售後與保固服務\n\n想了解車款、現貨或最新優惠，歡迎加入官方 LINE：${uiConfig.lineId || "@762eqvlg"}\n\n#小宇微電 #微型電動二輪 #電動車 #${String(order.model || "").replaceAll(" ", "")} #到府交車`,
-    "Instagram": `${vehicle} ${deliveryDone ? "交車成功" : "訂購完成"}🛵✨\n\n感謝車主支持！\n📍全台配送\n📍領牌文件／代辦服務\n📍售後保固\n\n官方 LINE：${uiConfig.lineId || "@762eqvlg"}\n\n#小宇微電 #微型電動二輪 #電動車 #交車日常`,
+    "Instagram": `${vehicle} ${deliveryDone ? "交車成功" : "訂購完成"}🛵✨\n\n感謝車主支持！\n📍全台配送\n📍領牌強制險可代辦／自行辦理\n📍售後保固\n\n官方 LINE：${uiConfig.lineId || "@762eqvlg"}\n\n#小宇微電 #微型電動二輪 #電動車 #交車日常`,
     "Threads": `今天${deliveryDone ? "交了一台" : "接到一台訂單"} ${vehicle}。\n\n${order.color}實車真的很好看，照片跟現場的感覺又不太一樣。想看其他顏色或車款的，也可以直接留言或私訊我。`,
     "限時動態": `🎉 ${deliveryDone ? "今日交車" : "訂購完成"}\n${vehicle}\n${order.deliveryMode || "全台配送"}\n找小宇買微電，不走彎路\nLINE：${uiConfig.lineId || "@762eqvlg"}`,
     "影片口白": `今天跟大家分享的是${order.color}的${order.model}。這台已經${deliveryDone ? "順利完成交車" : "完成下訂，接下來會安排備車與配送"}。感謝車主選擇小宇微電，有車款、續航、領牌或分期問題，都可以直接加入官方 LINE 詢問。`,
-    "收到訂金 LINE": `您好😊 已收到您的訂金，${order.color}${order.model}已正式為您保留。\n\n訂單編號：${order.id}\n已收訂金：${formatMoney(order.deposit)}\n待付尾款：${formatMoney(calculateUnpaid(order))}\n領牌方式：${order.licenseMode || "未確認"}\n\n後續文件或送車安排確認後，我會再提前通知您，請留意陌生來電，謝謝您的信任🙏`,
-    "送車提醒 LINE": `您好😊 您的${order.color}${order.model}即將安排送車。\n\n送車地址：${order.address}\n交車方式：${order.deliveryMode || "到府交車"}\n領牌方式：${order.licenseMode || "未確認"}\n\n送車前會有專人電話聯繫，還請您留意陌生來電，避免漏接，謝謝您🙏`,
-    "自行領牌 LINE": `您好😊 因您選擇自行領牌，領牌所需文件會於交車時一併提供。收到文件後，請依監理機關規定辦理領牌及強制險；如有資料問題可直接聯絡我協助確認。`
+    "收到訂金 LINE": `您好😊 已收到您的訂金，${order.color}${order.model}已正式為您保留。\n\n訂單編號：${order.id}\n已收訂金：${formatMoney(order.deposit)}\n待付尾款：${formatMoney(calculateUnpaid(order))}\n領牌強制險：${normalizeInsuranceHandling(order.licenseMode)}\n\n後續文件或送車安排確認後，我會再提前通知您，請留意陌生來電，謝謝您的信任🙏`,
+    "送車提醒 LINE": `您好😊 您的${order.color}${order.model}即將安排送車。\n\n送車地址：${order.address}\n交車方式：${order.deliveryMode || "到府交車"}\n領牌強制險：${normalizeInsuranceHandling(order.licenseMode)}\n\n送車前會有專人電話聯繫，還請您留意陌生來電，避免漏接，謝謝您🙏`,
+    "自行辦理領牌強制險 LINE": `您好😊 您本次選擇自行辦理領牌與強制險，請依監理機關規定完成辦理；如有資料問題可直接聯絡我協助確認。`
   };
 }
 function openTextDialog(order) {
@@ -568,8 +746,8 @@ function openTextDialog(order) {
 
 function exportCsv() {
   if (!currentOrders.length) return showToast("目前沒有訂單可匯出");
-  const headers = ["訂單編號","車主姓名","電話","送車地址","車款","顏色","電池","總車價","訂金","已收尾款","未收金額","付款方式","領牌方式","交車方式","狀態","預計交車日","實際交車日","車架號","電池編號","備註"];
-  const rows = currentOrders.map((order) => [order.id,order.customerName,order.phone,order.address,order.model,order.color,order.battery,order.price,order.deposit,order.balancePaid,calculateUnpaid(order),order.paymentMethod,order.licenseMode,order.deliveryMode,order.status,order.deliveryDate,order.deliveredAt,order.chassisNo,order.batteryNo,order.notes]);
+  const headers = ["訂單編號","車主姓名","電話","送車地址","車款","顏色","車款版本","電池","成交價","成本","淨利","訂金","已收尾款","未收金額","付款方式","領牌強制險","交車方式","狀態","實際交車日","車架號","電池編號","備註"];
+  const rows = currentOrders.map((order) => [order.id,order.customerName,order.phone,order.address,order.model,order.color,order.vehicleVariant || "",order.battery,order.price,effectiveCost(order),calculateNetProfit(order),order.deposit,order.balancePaid,calculateUnpaid(order),order.paymentMethod,normalizeInsuranceHandling(order.licenseMode),order.deliveryMode,order.status,order.deliveredAt,order.chassisNo,order.batteryNo,order.notes]);
   const quote = (value) => `"${String(value ?? "").replaceAll('"','""')}"`;
   const csv = [headers, ...rows].map((row) => row.map(quote).join(",")).join("\n");
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
@@ -615,9 +793,13 @@ elements.bulkOrdersInput?.addEventListener("input", () => {
   elements.bulkMessage.textContent = "";
   elements.bulkMessage.classList.remove("success");
 });
-fields.price.addEventListener("input", updateUnpaidPreview);
-fields.deposit.addEventListener("input", updateUnpaidPreview);
-fields.balancePaid.addEventListener("input", updateUnpaidPreview);
+fields.model.addEventListener("change", () => updateVariantOptions());
+fields.vehicleVariant.addEventListener("change", applySelectedVariantCost);
+fields.cost.addEventListener("input", updateMoneyPreview);
+elements.monthPicker.addEventListener("change", renderMonthlySummary);
+fields.price.addEventListener("input", updateMoneyPreview);
+fields.deposit.addEventListener("input", updateMoneyPreview);
+fields.balancePaid.addEventListener("input", updateMoneyPreview);
 elements.orderForm.addEventListener("submit", async (event) => { event.preventDefault(); await saveOrder(); });
 elements.saveAndReceiptBtn.addEventListener("click", async () => { await saveOrder({ openDepositReceipt: true }); });
 elements.resetBtn.addEventListener("click", resetForm);
