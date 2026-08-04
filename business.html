@@ -8,7 +8,7 @@
   <title>小宇微電｜訂單與保固管理</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="business.css?v=8" />
+  <link rel="stylesheet" href="business.css?v=9" />
 </head>
 <body>
   <main class="shell">
@@ -18,7 +18,7 @@
         <h1>訂單・收據・保固管理</h1>
       </div>
       <nav class="topnav" aria-label="管理選單">
-        <a href="owner.html?v=8">抽獎管理</a>
+        <a href="owner.html?v=9">抽獎管理</a>
         <a href="index.html">客人前台</a>
       </nav>
     </header>
@@ -167,6 +167,14 @@
             <button id="exportCsvBtn" class="secondary compact" type="button">匯出 CSV</button>
           </div>
         </div>
+        <div class="bulk-delete-bar">
+          <div class="actions">
+            <button id="selectVisibleBtn" class="secondary compact" type="button">全選目前畫面</button>
+            <button id="clearSelectionBtn" class="secondary compact" type="button">取消選取</button>
+            <button id="deleteSelectedBtn" class="secondary danger compact" type="button" disabled>刪除已選訂單</button>
+          </div>
+          <span id="selectionCount" class="selection-count">已選 0 筆</span>
+        </div>
         <div id="orderList" class="order-list"><p class="empty">讀取中…</p></div>
       </section>
     </div>
@@ -194,10 +202,10 @@
 
   <div id="toast" class="toast" role="status"></div>
 
-  <script src="config.js?v=8"></script>
-  <script src="firebase-config.js?v=8"></script>
+  <script src="config.js?v=9"></script>
+  <script src="firebase-config.js?v=9"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script type="module" src="business.js?v=8"></script>
+  <script type="module" src="business.js?v=9"></script>
 </body>
 </html>

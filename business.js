@@ -30,10 +30,11 @@ const elements = {
   deniedCard: $("#deniedCard"), deniedEmail: $("#deniedEmail"), copyUidBtn: $("#copyUidBtn"), switchAccountBtn: $("#switchAccountBtn"),
   appArea: $("#appArea"), adminEmail: $("#adminEmail"), logoutBtn: $("#logoutBtn"), orderForm: $("#orderForm"),
   editingId: $("#editingId"), formTitle: $("#formTitle"), formMessage: $("#formMessage"), resetBtn: $("#resetBtn"),
-  saveAndReceiptBtn: $("#saveAndReceiptBtn"), unpaidPreview: $("#unpaidPreview"), netProfitPreview: $("#netProfitPreview"), searchInput: $("#searchInput"),
+  saveOrderBtn: $("#saveOrderBtn"), saveAndReceiptBtn: $("#saveAndReceiptBtn"), unpaidPreview: $("#unpaidPreview"), netProfitPreview: $("#netProfitPreview"), searchInput: $("#searchInput"),
   bulkOrdersInput: $("#bulkOrdersInput"), clearBulkBtn: $("#clearBulkBtn"), previewBulkBtn: $("#previewBulkBtn"), importBulkBtn: $("#importBulkBtn"),
   bulkPreview: $("#bulkPreview"), bulkMessage: $("#bulkMessage"),
   statusFilter: $("#statusFilter"), refreshOrdersBtn: $("#refreshOrdersBtn"), exportCsvBtn: $("#exportCsvBtn"), orderList: $("#orderList"),
+  selectVisibleBtn: $("#selectVisibleBtn"), clearSelectionBtn: $("#clearSelectionBtn"), deleteSelectedBtn: $("#deleteSelectedBtn"), selectionCount: $("#selectionCount"),
   statOrders: $("#statOrders"), statPending: $("#statPending"), statDeposits: $("#statDeposits"), statBalance: $("#statBalance"),
   monthPicker: $("#monthPicker"), statMonthDelivered: $("#statMonthDelivered"), statMonthRevenue: $("#statMonthRevenue"),
   statMonthCost: $("#statMonthCost"), statMonthProfit: $("#statMonthProfit"), monthOrderList: $("#monthOrderList"),
@@ -56,6 +57,7 @@ let currentUser = null;
 let currentOrders = [];
 let currentDocumentName = "小宇微電文件";
 let currentTextMap = {};
+const selectedOrderIds = new Set();
 
 
 const VEHICLE_COSTS = {
@@ -115,6 +117,25 @@ function hasRealFirebaseConfig(config) {
   return Boolean(config.apiKey && config.projectId && config.appId && !Object.values(config).some((value) => String(value).includes("YOUR_")));
 }
 function normalizeEmail(value) { return String(value || "").trim().toLowerCase(); }
+function cleanName(value) {
+  return String(value || "").normalize("NFKC").trim().replace(/\s+/g, " ");
+}
+function normalizedNameKey(value) {
+  return cleanName(value).replace(/\s+/g, "").toLowerCase();
+}
+function cleanPhone(value) {
+  let digits = String(value || "").normalize("NFKC").replace(/\D/g, "");
+  if (digits.startsWith("886") && digits.length >= 11) digits = `0${digits.slice(3)}`;
+  return digits;
+}
+function customerKey(name, phone) {
+  return `${normalizedNameKey(name)}|${cleanPhone(phone)}`;
+}
+function findDuplicateOrder(name, phone, excludeId = "") {
+  const key = customerKey(name, phone);
+  if (!key || key === "|") return null;
+  return currentOrders.find((order) => order.id !== excludeId && customerKey(order.customerName, order.phone) === key) || null;
+}
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char]));
 }
@@ -216,6 +237,9 @@ function applySelectedVariantCost() {
 }
 function orderFromForm() {
   const data = Object.fromEntries(fieldIds.map((id) => [id, fields[id].value.trim ? fields[id].value.trim() : fields[id].value]));
+  data.customerName = cleanName(data.customerName);
+  data.phone = cleanPhone(data.phone);
+  data.address = String(data.address || "").normalize("NFKC").trim().replace(/\s+/g, " ");
   data.price = numberValue(fields.price.value);
   data.cost = numberValue(fields.cost.value);
   data.netProfit = calculateNetProfit(data);
@@ -335,44 +359,81 @@ function parseBulkOrders() {
   const lines = String(elements.bulkOrdersInput?.value || "").split(/\r?\n/);
   const valid = [];
   const invalid = [];
+  const duplicates = [];
+  const batchKeys = new Set();
+
   lines.forEach((line, index) => {
     if (!line.trim()) return;
     const parts = splitBulkLine(line);
     const looksLikeHeader = index === 0 && parts.some((part) => /車主|姓名|電話|手機|車款/.test(part));
     if (looksLikeHeader) return;
-    const [customerName = "", phone = "", model = "", address = ""] = parts;
+
+    const [rawName = "", rawPhone = "", rawModel = "", rawAddress = ""] = parts;
+    const customerName = cleanName(rawName);
+    const phone = cleanPhone(rawPhone);
+    const model = String(rawModel || "").normalize("NFKC").trim();
+    const address = String(rawAddress || "").normalize("NFKC").trim().replace(/\s+/g, " ");
+
     if (!customerName || !phone || !model) {
       invalid.push({ lineNo: index + 1, line, reason: "需包含車主姓名、電話、車款" });
       return;
     }
+
+    const key = customerKey(customerName, phone);
+    const existing = findDuplicateOrder(customerName, phone);
+    if (existing) {
+      duplicates.push({ customerName, phone, model, address, lineNo: index + 1, reason: `既有訂單 ${existing.id}` });
+      return;
+    }
+    if (batchKeys.has(key)) {
+      duplicates.push({ customerName, phone, model, address, lineNo: index + 1, reason: "本批資料內重複" });
+      return;
+    }
+
+    batchKeys.add(key);
     valid.push({ customerName, phone, model, address, lineNo: index + 1 });
   });
-  return { valid, invalid };
+
+  return { valid, invalid, duplicates };
 }
 function renderBulkPreview() {
-  const { valid, invalid } = parseBulkOrders();
-  if (!valid.length && !invalid.length) {
+  const { valid, invalid, duplicates } = parseBulkOrders();
+  if (!valid.length && !invalid.length && !duplicates.length) {
     elements.bulkPreview.innerHTML = '<p class="empty">尚未輸入批量資料。</p>';
     elements.bulkMessage.textContent = "";
     elements.bulkMessage.classList.remove("success");
-    return { valid, invalid };
+    return { valid, invalid, duplicates };
   }
+
   const validHtml = valid.map((item) => `
     <article class="order-row">
+      <div class="order-select-wrap"></div>
       <div class="order-main"><strong>${escapeHtml(item.customerName)}</strong><small>${escapeHtml(item.phone)}</small></div>
       <div class="order-car"><strong>${escapeHtml(item.model)}</strong><small>${escapeHtml(item.address || "地址待補")}</small></div>
       <div class="order-money"><span class="badge">可新增</span><small>第 ${item.lineNo} 行</small></div>
     </article>`).join("");
+  const duplicateHtml = duplicates.map((item) => `
+    <article class="order-row">
+      <div class="order-select-wrap"></div>
+      <div class="order-main"><strong>${escapeHtml(item.customerName)}｜重複</strong><small>${escapeHtml(item.phone)}</small></div>
+      <div class="order-car"><strong>${escapeHtml(item.reason)}</strong><small>第 ${item.lineNo} 行</small></div>
+      <div class="order-money"><span class="badge duplicate-badge">不新增</span></div>
+    </article>`).join("");
   const invalidHtml = invalid.map((item) => `
     <article class="order-row">
+      <div class="order-select-wrap"></div>
       <div class="order-main"><strong>第 ${item.lineNo} 行資料不完整</strong><small>${escapeHtml(item.line)}</small></div>
       <div class="order-car"><strong>${escapeHtml(item.reason)}</strong></div>
-      <div class="order-money"><span class="badge">略過</span></div>
+      <div class="order-money"><span class="badge duplicate-badge">略過</span></div>
     </article>`).join("");
-  elements.bulkPreview.innerHTML = validHtml + invalidHtml;
-  elements.bulkMessage.textContent = `可新增 ${valid.length} 筆${invalid.length ? `，另有 ${invalid.length} 筆會略過` : ""}。`;
-  elements.bulkMessage.classList.toggle("success", valid.length > 0 && invalid.length === 0);
-  return { valid, invalid };
+
+  elements.bulkPreview.innerHTML = validHtml + duplicateHtml + invalidHtml;
+  const messages = [`可新增 ${valid.length} 筆`];
+  if (duplicates.length) messages.push(`重複 ${duplicates.length} 筆`);
+  if (invalid.length) messages.push(`不完整 ${invalid.length} 筆`);
+  elements.bulkMessage.textContent = `${messages.join("，")}。重複資料不會建立。`;
+  elements.bulkMessage.classList.toggle("success", valid.length > 0 && invalid.length === 0 && duplicates.length === 0);
+  return { valid, invalid, duplicates };
 }
 function interpretVehicleText(rawText) {
   const raw = String(rawText || "").trim();
@@ -420,7 +481,7 @@ function bulkOrderDefaults(item) {
   };
 }
 async function importBulkOrders() {
-  const { valid, invalid } = renderBulkPreview();
+  const { valid, invalid, duplicates } = renderBulkPreview();
   if (!valid.length) {
     elements.bulkMessage.textContent = "沒有可新增的完整資料。";
     elements.bulkMessage.classList.remove("success");
@@ -456,7 +517,8 @@ async function importBulkOrders() {
     await batch.commit();
     elements.bulkOrdersInput.value = "";
     elements.bulkPreview.innerHTML = '<p class="empty">批量新增完成。</p>';
-    elements.bulkMessage.textContent = `已成功新增 ${valid.length} 筆訂單${invalid.length ? `，略過 ${invalid.length} 筆不完整資料` : ""}。`;
+    const skipped = invalid.length + duplicates.length;
+    elements.bulkMessage.textContent = `已成功新增 ${valid.length} 筆訂單${skipped ? `，略過 ${skipped} 筆重複或不完整資料` : ""}。`;
     elements.bulkMessage.classList.add("success");
     showToast(`已新增 ${valid.length} 筆訂單`);
     await loadOrders();
@@ -479,8 +541,15 @@ async function saveOrder({ openDepositReceipt = false } = {}) {
     return null;
   }
   const editingId = elements.editingId.value;
+  const duplicate = findDuplicateOrder(data.customerName, data.phone, editingId);
+  if (duplicate) {
+    setMessage(`此客戶已有訂單 ${duplicate.id}，請直接編輯原訂單，不會重複建立。`, false);
+    return null;
+  }
   const id = editingId || createOrderId();
   setMessage("正在儲存訂單…", true);
+  elements.saveOrderBtn.disabled = true;
+  elements.saveAndReceiptBtn.disabled = true;
   try {
     if (editingId) {
       await updateDoc(doc(db, "orders", id), { ...data, updatedAt: serverTimestamp(), updatedBy: currentUser.uid });
@@ -504,6 +573,9 @@ async function saveOrder({ openDepositReceipt = false } = {}) {
     console.error(error);
     setMessage(String(error?.code || "").includes("permission-denied") ? "儲存失敗：請先發布新版 Firestore 規則。" : (error?.message || "儲存失敗。"));
     return null;
+  } finally {
+    elements.saveOrderBtn.disabled = false;
+    elements.saveAndReceiptBtn.disabled = false;
   }
 }
 
@@ -512,11 +584,16 @@ async function loadOrders() {
   try {
     const snapshot = await getDocs(collection(db, "orders"));
     currentOrders = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+    const statusRank = { "待訂金": 1, "已付訂金": 2, "備車中": 3, "待交車": 4, "已交車": 5, "取消": 6 };
     currentOrders.sort((a, b) => {
+      const statusDiff = (statusRank[a.status] || 99) - (statusRank[b.status] || 99);
+      if (statusDiff !== 0) return statusDiff;
       const at = a.updatedAt?.seconds || a.createdAt?.seconds || 0;
       const bt = b.updatedAt?.seconds || b.createdAt?.seconds || 0;
       return bt - at;
     });
+    const currentIds = new Set(currentOrders.map((order) => order.id));
+    [...selectedOrderIds].forEach((id) => { if (!currentIds.has(id)) selectedOrderIds.delete(id); });
     renderOrders();
     renderStats();
     renderMonthlySummary();
@@ -533,14 +610,23 @@ function filteredOrders() {
     return (!keyword || haystack.includes(keyword)) && (!status || order.status === status);
   });
 }
+function updateSelectionUi() {
+  const count = selectedOrderIds.size;
+  elements.selectionCount.textContent = `已選 ${count} 筆`;
+  elements.deleteSelectedBtn.disabled = count === 0;
+}
 function renderOrders() {
   const orders = filteredOrders();
   if (!orders.length) {
     elements.orderList.innerHTML = '<p class="empty">目前沒有符合條件的訂單。</p>';
+    updateSelectionUi();
     return;
   }
-  elements.orderList.innerHTML = orders.map((order) => `
-    <article class="order-row" data-id="${escapeHtml(order.id)}">
+  elements.orderList.innerHTML = orders.map((order) => {
+    const selected = selectedOrderIds.has(order.id);
+    return `
+    <article class="order-row ${selected ? "selected" : ""}" data-id="${escapeHtml(order.id)}">
+      <label class="order-select-wrap" title="選取訂單"><input class="order-select" type="checkbox" data-order-id="${escapeHtml(order.id)}" ${selected ? "checked" : ""} aria-label="選取 ${escapeHtml(order.customerName || order.id)}" /></label>
       <div class="order-main"><strong>${escapeHtml(order.customerName || "未命名")}</strong><small>${escapeHtml(order.phone || "—")}｜${escapeHtml(order.id)}</small></div>
       <div class="order-car"><strong>${escapeHtml(order.color || "")} ${escapeHtml(order.model || "")}</strong><small>${escapeHtml(order.vehicleVariant || order.battery || "")}｜領牌強制險：${escapeHtml(normalizeInsuranceHandling(order.licenseMode))}</small></div>
       <div class="order-money"><span class="badge">${escapeHtml(order.status || "未設定")}</span><strong>${formatProfit(calculateNetProfit(order))}</strong><small>成交 ${formatMoney(order.price)}｜成本 ${formatMoney(effectiveCost(order))}｜待收 ${formatMoney(calculateUnpaid(order))}</small></div>
@@ -553,8 +639,33 @@ function renderOrders() {
         <button class="secondary" data-action="text">文案</button>
         <button class="secondary danger" data-action="delete">刪除</button>
       </div>
-    </article>
-  `).join("");
+    </article>`;
+  }).join("");
+  updateSelectionUi();
+}
+async function deleteSelectedOrders() {
+  const ids = [...selectedOrderIds];
+  if (!ids.length) return;
+  if (!confirm(`確定刪除已選取的 ${ids.length} 筆訂單？\n\n已開立的收據與保固卡不會自動刪除。`)) return;
+
+  elements.deleteSelectedBtn.disabled = true;
+  elements.deleteSelectedBtn.textContent = "刪除中…";
+  try {
+    for (let index = 0; index < ids.length; index += 450) {
+      const batch = writeBatch(db);
+      ids.slice(index, index + 450).forEach((id) => batch.delete(doc(db, "orders", id)));
+      await batch.commit();
+    }
+    selectedOrderIds.clear();
+    showToast(`已刪除 ${ids.length} 筆訂單`);
+    await loadOrders();
+  } catch (error) {
+    console.error(error);
+    showToast("批量刪除失敗，請重新整理後再試");
+  } finally {
+    elements.deleteSelectedBtn.textContent = "刪除已選訂單";
+    updateSelectionUi();
+  }
 }
 function renderStats() {
   const active = currentOrders.filter((order) => order.status !== "取消");
@@ -807,6 +918,23 @@ elements.refreshOrdersBtn.addEventListener("click", loadOrders);
 elements.searchInput.addEventListener("input", renderOrders);
 elements.statusFilter.addEventListener("change", renderOrders);
 elements.exportCsvBtn.addEventListener("click", exportCsv);
+elements.selectVisibleBtn.addEventListener("click", () => {
+  filteredOrders().forEach((order) => selectedOrderIds.add(order.id));
+  renderOrders();
+});
+elements.clearSelectionBtn.addEventListener("click", () => {
+  selectedOrderIds.clear();
+  renderOrders();
+});
+elements.deleteSelectedBtn.addEventListener("click", deleteSelectedOrders);
+elements.orderList.addEventListener("change", (event) => {
+  const checkbox = event.target.closest("input.order-select");
+  if (!checkbox) return;
+  if (checkbox.checked) selectedOrderIds.add(checkbox.dataset.orderId);
+  else selectedOrderIds.delete(checkbox.dataset.orderId);
+  checkbox.closest(".order-row")?.classList.toggle("selected", checkbox.checked);
+  updateSelectionUi();
+});
 elements.orderList.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-action]");
   if (button) handleOrderAction(button);
