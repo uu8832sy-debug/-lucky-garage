@@ -1,0 +1,23 @@
+小宇微電｜幸運車庫 v16 穩定版
+
+本版是完整專案，請將本資料夾內所有檔案與資料夾上傳到 GitHub 專案根目錄覆蓋。
+
+公開前台：
+/index.html        官方首頁
+/products.html     車款商品頁（含實車照片與訂單送出）
+/plate.html        紀念展示牌訂製
+/garage.html       客戶抽獎
+/warranty.html     客戶保固查詢
+
+獨立後台：
+/admin/index.html  後台首頁
+/admin/orders.html 訂單、收據、保固管理
+/admin/draw.html   抽獎碼管理
+
+重要：
+1. 前台沒有任何後台連結。
+2. 後台的「查看前台」使用 /index.html 絕對路徑，會另開新頁，不會留在後台。
+3. 商品照片已放入 assets/products，不依賴 Firebase Storage。
+4. 抽獎正式機率固定為 500=80%、1000=16%、2000=3%、3000=1%。
+5. 訂單、收據、保固、原 Firestore 規則與 Firebase 設定皆保留。
+6. 不要只上傳外層資料夾；要上傳資料夾裡面的內容到 GitHub 根目錄。

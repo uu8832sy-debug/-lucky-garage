@@ -1,0 +1,13 @@
+小宇微電｜幸運車庫 v17 正式穩定版
+
+1. 請把本資料夾「裡面的全部內容」上傳到 GitHub 專案最外層，不要把外層資料夾再套一層。
+2. 同名檔案全部覆蓋，Commit 到 main，等待 Vercel 顯示 Ready。
+3. 不需要修改 Firebase、Firestore Rules、活動或既有訂單／保固資料。
+
+前台：https://lucky-garage.vercel.app/index.html?v=17.0.0
+商品：https://lucky-garage.vercel.app/products.html?v=17.0.0
+抽獎：https://lucky-garage.vercel.app/garage.html?v=17.0.0
+保固：https://lucky-garage.vercel.app/warranty.html?v=17.0.0
+後台：https://lucky-garage.vercel.app/admin/index.html?v=17.0.0
+
+前台沒有後台入口。後台的「離開後台・查看前台」會在同一個頁面直接前往前台，不會留在後台分頁。

@@ -1,0 +1,49 @@
+小宇微電｜幸運車庫 v16 穩定版檢查報告
+
+一、公開前台與獨立後台
+- 公開頁：index.html、products.html、plate.html、garage.html、warranty.html
+- 後台頁：admin/index.html、admin/orders.html、admin/draw.html
+- 公開頁面未出現 admin/、admin.html、business.html、garage-admin.html、owner.html 連結：通過
+- 三個後台頁的「查看前台」皆為 /index.html?v=16 且另開頁面：通過
+
+二、商品與圖片
+- 內建車款：12 款
+- 已壓縮 WebP 實車照片：36 張
+- 商品頁先顯示內建資料；Firebase products 存在時只覆蓋價格、顯示等資料，空圖庫不會讓照片消失：通過
+
+三、抽獎
+- 正式權重：500=80、1000=16、2000=3、3000=1，總和 100
+- Firestore 活動內手動輸入的獎項文字、順序或數字型別不再阻擋；正式獎項由 config.js 固定：通過
+- SHA-256 模擬 300,000 次：500=80.094%、1000=15.945%、2000=2.952%、3000=1.009%
+- 抽獎碼仍為一次性，使用狀態、使用者、時間與車庫號碼仍寫回 drawCodes：保留
+
+四、訂單、收據與保固
+- 前台車款訂單仍寫入 orders，狀態為「待訂金」：保留
+- 紀念展示牌訂單仍寫入 orders：保留
+- admin/orders.js 完整訂單、收據、保固管理程式保留：通過
+- warranty.js 電子保固卡查詢程式保留：通過
+
+五、程式與資源
+- 全部 JavaScript 已通過 node --check 語法檢查
+- 公開／後台 HTML 的本機圖片、CSS、JS、頁面連結均存在
+- vercel.json 對主要 HTML 與後台設定 no-store，降低舊介面快取：已加入
+
+六、關鍵檔案 SHA-256
+- index.html: 64a4ceae0a7cc5c370c828e9283f7c1a74255d3ce37714f225c1c38fb67bdd0d
+- products.html: f38530b880bad55f60c1711629871d91edc8b1d6bd4d40a87f20abc7b1b56390
+- products.js: f85a20a19c5cc46dcbc6f0e16d4f2c44dc5dda9647710b6184b7e2f6ea9c4d4a
+- plate.html: 175fdd7963b55a01ffd5c65c4e501a6c492407a596d66f7b836ff385171b733c
+- plate.js: 2ac1ee76f85c25bea402a18ac1360ec03feeefc9496fd3b81e21c3c8baefece5
+- garage.html: 2f38ea3038cfe9ec495dd68569d50aa6643df4e16443f25b96d04fd8bf74c105
+- garage.js: 2b363f476fca3558dd7b604a50fbf7466c077f8075d69f578aaf85144db0d2f9
+- draw-core.js: 7fe4227729a747151c6542bcda86165178543697366518e6ee9497ddd37c4204
+- config.js: c85a1c2ba077d87021338d48faf9ab0e819802fe1ae6549a79a6d3a2c59a00d5
+- warranty.html: 29521aa0b1477a6ba8b2a290c9e363ea0a9c6854ea5fa32b196562c29469c431
+- warranty.js: b0fb9041a2c644ca35509ea23b159eb50f4ba8cc200b949c26b8791a317f6961
+- admin/index.html: fee35cf74a257ff9f30dbe79700b6c6c240fec60bdb9cd84b4ea5d11ad646b5a
+- admin/admin.js: fe233fb26eb69e7d0a2ecb8876789494a9aca28b38340bb578f61ccca612fb12
+- admin/orders.html: 3ae5bc49e1f172325274c3940796ed3bb7b7a47c033e778e1aed096a13f2c5c8
+- admin/orders.js: c5f0eb6472b9c7cdd06c78a72c4ae7c361ad496f5845ca508b388837dec27838
+- admin/draw.html: 5b2e628e56491b1d71d13965732ad4229a8e8d79ca0c8aee0e06031067e42481
+- admin/draw.js: 400a768356c233b86f90f5b34575d92db0326db7ce52ee4acb594c938d40ab14
+- firestore.rules: 927743cee68050a47d8091b3ef682da38f3b3c83c87fdffaafc6defb0af13272

@@ -674,7 +674,7 @@ window.addEventListener("resize", () => {
 async function start() {
   if (!codeForm || !codeInput || !verifyBtn || !entryView || !garageView || !resultView) {
     console.error("幸運車庫頁面檔案版本不一致：請同步覆蓋 garage.html、garage.js、garage.css。 ");
-    document.body.insertAdjacentHTML("afterbegin", `<div style="position:fixed;z-index:99999;inset:12px 12px auto;padding:14px;border-radius:12px;background:#7f1d1d;color:#fff;font-weight:800">網站檔案版本不一致，請重新上傳 v12.2 完整檔。</div>`);
+    document.body.insertAdjacentHTML("afterbegin", `<div style="position:fixed;z-index:99999;inset:12px 12px auto;padding:14px;border-radius:12px;background:#7f1d1d;color:#fff;font-weight:800">網站檔案版本不一致，請重新上傳 v16 完整穩定版。</div>`);
     return;
   }
   setCodeMessage("系統連線中，請稍候…", true);

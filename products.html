@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#070a0f"><meta name="description" content="小宇微電車款商品頁｜實車照片、價格、規格與線上訂購需求。">
+  <title>車款商品｜小宇微電</title>
+  <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="public.css?v=17.0.0">
+</head>
+<body>
+<header class="site-header"><div class="wrap header-row">
+  <a class="brand" href="/index.html"><span class="brand-mark">YU</span><span><small>YU ELECTRIC</small><strong>小宇微電官方網站</strong></span></a>
+  <nav class="public-nav" aria-label="前台選單"><a href="/index.html">首頁</a><a href="/products.html" aria-current="page">車款商品</a><a href="/plate.html">展示牌訂製</a><a href="/garage.html">幸運車庫</a><a href="/warranty.html">保固查詢</a><a class="line" href="https://line.me/R/ti/p/@762eqvlg" target="_blank" rel="noopener">官方 LINE</a></nav>
+</div></header>
+<main>
+  <section class="wrap page-hero"><p class="eyebrow">SCOOTER CATALOG</p><h1>微型電動車商品頁</h1><p>實車照片已內建於網站。售價與顯示狀態可由獨立後台更新；實際規格、現車顏色、交期、領牌及分期結果以客服最終確認為準。</p></section>
+  <section class="wrap section" style="padding-top:12px">
+    <div class="filters" aria-label="商品篩選"><button class="filter-btn active" data-filter="all">全部車款</button><button class="filter-btn" data-filter="72V">72V</button><button class="filter-btn" data-filter="60V">60V</button><button class="filter-btn" data-filter="48V">48V</button><button class="filter-btn" data-filter="展示">三輪／場域用</button></div>
+    <div class="notice" style="margin:14px 0 20px">微型電動二輪車須依台灣現行規定領牌、投保並遵守道路使用規範；「微型三輪」頁面已特別標註無法領牌。</div>
+    <div id="productGrid" class="product-grid"><div class="loading-skeleton">商品與照片載入中…</div></div>
+  </section>
+</main>
+<footer class="footer"><div class="wrap footer-row"><span>© 2026 小宇微電</span><span>官方 LINE：@762eqvlg</span></div></footer>
+
+<div id="productModal" class="modal" aria-hidden="true"><section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <header class="modal-head"><h2 id="modalTitle">車款詳情與訂購</h2><button id="closeModal" class="icon-btn" type="button" aria-label="關閉">✕</button></header>
+  <div class="modal-layout">
+    <div><div class="gallery-main"><img id="mainPhoto" src="" alt="車款照片"></div><div id="thumbs" class="thumbs"></div></div>
+    <div class="details"><p id="modalStyle" class="eyebrow"></p><h3 id="modalName"></h3><p id="modalNote" class="note"></p>
+      <div class="detail-list"><div><small>電池</small><strong id="modalBattery">—</strong></div><div><small>馬達</small><strong id="modalMotor">—</strong></div><div><small>速度</small><strong id="modalSpeed">—</strong></div><div><small>續航</small><strong id="modalRange">—</strong></div></div>
+      <form id="orderForm" class="order-form">
+        <div class="form-grid"><label class="field"><span>電池版本</span><select id="variant" required></select></label><label class="field"><span>顏色</span><select id="color" required></select></label></div>
+        <div class="form-grid"><label class="field"><span>姓名 *</span><input id="customerName" maxlength="40" autocomplete="name" required></label><label class="field"><span>手機 *</span><input id="phone" inputmode="tel" maxlength="20" autocomplete="tel" required></label></div>
+        <label class="field"><span>送車地址 *</span><input id="address" maxlength="180" autocomplete="street-address" required></label>
+        <label class="field"><span>備註</span><textarea id="customerNote" rows="2" maxlength="160" placeholder="例如：想了解無卡分期、指定顏色或交車時間"></textarea></label>
+        <input id="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+        <div class="form-grid"><label class="field"><span id="captchaQuestion">驗證</span><input id="captchaAnswer" inputmode="numeric" required></label><div class="total-box"><span>參考售價</span><strong id="total">NT$0</strong></div></div>
+        <button id="submitOrder" class="btn btn-primary" type="submit">送出訂單需求並開啟 LINE</button><small style="color:#94a3b8">送出後會建立「待訂金」訂單，實際訂金、交期及配備由客服再次確認。</small>
+      </form>
+    </div>
+  </div>
+</section></div>
+<div id="toast" class="toast" role="status"></div>
+<script src="config.js?v=17.0.0"></script><script src="firebase-config.js?v=17.0.0"></script><script src="catalog.js?v=17.0.0"></script><script type="module" src="products.js?v=17.0.0"></script>
+</body></html>

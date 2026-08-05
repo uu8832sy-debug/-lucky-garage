@@ -247,3 +247,6 @@ footer { padding: 22px 6px 0; color: #626b79; text-align: center; font-size: 10p
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; scroll-behavior:auto!important; transition-duration:.01ms!important; }
 }
+
+/* v16 公開前台導覽 */
+.public-switcher{width:min(1120px,calc(100% - 24px));margin:10px auto 0;display:flex;gap:6px;overflow-x:auto;padding:8px;background:rgba(7,10,15,.88);border:1px solid rgba(148,163,184,.16);border-radius:16px;scrollbar-width:none}.public-switcher::-webkit-scrollbar{display:none}.public-switcher a{white-space:nowrap;text-decoration:none;color:#cbd5e1;font-size:12px;font-weight:800;padding:8px 10px;border-radius:10px}.public-switcher a[href="/garage.html"]{background:#16202e;color:#fbbf24}.public-switcher a:last-child{color:#34d399}
