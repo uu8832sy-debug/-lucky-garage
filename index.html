@@ -1,166 +1,72 @@
 <!doctype html>
-<html lang="zh-Hant" class="h-full bg-[#080a0f] text-slate-100 selection:bg-emerald-500 selection:text-slate-950">
+<html lang="zh-Hant" class="h-full bg-[#080a0f] text-slate-100">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#080a0f" />
-  <meta name="description" content="小宇微電官方商城｜12款微型電動二輪車、紀念展示車牌、無卡分期與全台到府交車。" />
-  <title>小宇微電官方商城｜找小宇買微電，不走彎路</title>
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>小宇微電｜管理員後台</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    .ev-card{background:linear-gradient(145deg,rgba(20,26,38,.75),rgba(12,16,25,.94));backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.075)}
-    .ev-card:hover{border-color:rgba(16,185,129,.42);box-shadow:0 16px 50px -18px rgba(16,185,129,.35)}
-    .tab-content{animation:fade .22s ease-out}.plate-font{font-family:"Arial Black","Noto Sans TC",sans-serif;letter-spacing:.12em}
-    @keyframes fade{from{opacity:.25;transform:translateY(4px)}to{opacity:1;transform:none}}
+    .glass-card{background:rgba(15,23,42,.88);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}
     ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:99px}
   </style>
 </head>
 <body class="min-h-full flex flex-col antialiased">
-  <header class="sticky top-0 z-40 bg-[#080a0f]/92 backdrop-blur-xl border-b border-slate-800/70">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-      <button class="flex items-center gap-3 text-left" data-tab-target="home" aria-label="回品牌首頁">
-        <span class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 via-emerald-500 to-teal-300 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-emerald-500/20">YU</span>
-        <span><small class="text-[10px] font-bold tracking-[.2em] text-emerald-400 block">YU ELECTRIC</small><strong class="text-base text-white">小宇微電官方商城</strong></span>
-      </button>
-      <nav class="hidden lg:flex items-center gap-1 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800 text-xs font-bold">
-        <button class="nav-btn px-4 py-2 rounded-xl bg-slate-800 text-emerald-400" data-tab-target="home">品牌首頁</button>
-        <button class="nav-btn px-4 py-2 rounded-xl text-slate-400" data-tab-target="scooters">微型電動車</button>
-        <button class="nav-btn px-4 py-2 rounded-xl text-slate-400" data-tab-target="plates">紀念展示牌</button>
-        <button class="nav-btn px-4 py-2 rounded-xl text-slate-400" data-tab-target="installment">無卡分期試算</button>
-        <button class="nav-btn px-4 py-2 rounded-xl text-slate-400" data-tab-target="faq">常見問題</button>
-        <a class="px-4 py-2 rounded-xl text-amber-400" href="garage.html"><i class="fa-solid fa-gift mr-1"></i>幸運車庫</a>
-        <a class="px-4 py-2 rounded-xl text-slate-400" href="warranty.html">保固查詢</a>
-      </nav>
-      <div class="flex items-center gap-2">
-        <a href="https://line.me/R/ti/p/@762eqvlg" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-xl text-xs font-bold"><i class="fa-brands fa-line text-base"></i><span class="hidden sm:inline">官方 LINE</span></a>
-        <button id="mobileMenuBtn" class="lg:hidden p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300"><i class="fa-solid fa-bars"></i></button>
-      </div>
-    </div>
-    <div id="mobileMenu" class="lg:hidden hidden px-4 pb-3 grid grid-cols-2 gap-2 text-xs font-bold">
-      <button class="bg-slate-900 border border-slate-800 rounded-xl p-3" data-tab-target="home">品牌首頁</button>
-      <button class="bg-slate-900 border border-slate-800 rounded-xl p-3" data-tab-target="scooters">微型電動車</button>
-      <button class="bg-slate-900 border border-slate-800 rounded-xl p-3" data-tab-target="plates">紀念展示牌</button>
-      <button class="bg-slate-900 border border-slate-800 rounded-xl p-3" data-tab-target="installment">分期試算</button>
-      <button class="bg-slate-900 border border-slate-800 rounded-xl p-3" data-tab-target="faq">常見問題</button>
-      <a class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center text-amber-400" href="garage.html">幸運車庫</a>
-      <a class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center" href="warranty.html">保固查詢</a>
+  <header class="sticky top-0 z-40 bg-slate-900/92 border-b border-slate-800 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3"><span class="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 font-black flex items-center justify-center">YU</span><div><small class="text-[10px] text-emerald-400 font-bold block">ADMINISTRATION</small><h1 class="text-sm font-bold text-white">小宇微電後台管理系統</h1></div></div>
+      <div id="headerActions" class="hidden items-center gap-2 text-xs"><span id="adminIdentity" class="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 font-bold"></span><a href="../index.html" target="_blank" rel="noopener" class="bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">查看前台 ↗</a><button id="logoutBtn" class="bg-slate-800 px-3 py-1 rounded-full border border-slate-700">登出</button></div>
     </div>
   </header>
 
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-    <section id="tab-home" class="tab-content space-y-12">
-      <div class="ev-card rounded-3xl p-8 sm:p-14 relative overflow-hidden border-emerald-500/20">
-        <div class="absolute -right-20 -top-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
-        <div class="max-w-2xl relative z-10 space-y-5">
-          <span class="inline-flex items-center px-3.5 py-1 rounded-full text-xs font-extrabold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"><span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-pulse"></span>微型電動二輪車專賣・全台到府交車</span>
-          <h1 class="text-3xl sm:text-5xl font-black text-white leading-tight">找小宇買微電，<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-300">不走任何彎路</span></h1>
-          <p class="text-slate-300 text-sm sm:text-base">工廠直營、代辦領牌與強制險、售後保固，並提供無卡分期申請協助。</p>
-          <div class="flex flex-wrap gap-3 pt-2">
-            <button data-tab-target="scooters" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-7 py-3.5 rounded-2xl text-sm shadow-xl">瀏覽 12 款車款 <i class="fa-solid fa-arrow-right ml-1"></i></button>
-            <button data-tab-target="installment" class="bg-slate-900 text-slate-200 font-bold px-6 py-3.5 rounded-2xl text-sm border border-slate-700">無卡分期試算</button>
-          </div>
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+    <section id="loginCard" class="glass-card max-w-lg mx-auto mt-14 rounded-3xl p-8 text-center space-y-4">
+      <span class="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-2xl"><i class="fa-solid fa-lock"></i></span>
+      <div><h2 class="text-xl font-black">管理員登入</h2><p class="text-slate-400 text-sm mt-2">此頁不會出現在前台，只有授權 Google 帳號能讀取資料。</p></div>
+      <button id="loginBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl"><i class="fa-brands fa-google mr-2"></i>使用 Google 登入</button>
+      <p id="loginMessage" class="text-xs text-slate-400"></p>
+    </section>
+
+    <section id="deniedCard" class="hidden glass-card max-w-lg mx-auto mt-14 rounded-3xl p-8 text-center space-y-4">
+      <h2 class="text-xl font-black text-rose-400">此帳號沒有管理權限</h2><p id="deniedMessage" class="text-sm text-slate-400"></p><button id="switchAccountBtn" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-sm">切換帳號</button>
+    </section>
+
+    <div id="adminApp" class="hidden space-y-6">
+      <nav class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button class="admin-tab bg-emerald-500 text-slate-950 font-black rounded-xl p-3 text-xs" data-admin-tab="orders"><i class="fa-solid fa-file-invoice mr-1"></i>線上訂單</button>
+        <button class="admin-tab bg-slate-900 border border-slate-800 text-slate-300 font-bold rounded-xl p-3 text-xs" data-admin-tab="products"><i class="fa-solid fa-images mr-1"></i>商品與圖片</button>
+        <a href="orders.html" class="bg-slate-900 border border-slate-800 text-slate-300 font-bold rounded-xl p-3 text-xs text-center"><i class="fa-solid fa-chart-line mr-1"></i>完整訂單／淨利</a>
+        <a href="draw.html" class="bg-slate-900 border border-slate-800 text-amber-400 font-bold rounded-xl p-3 text-xs text-center"><i class="fa-solid fa-gift mr-1"></i>抽獎管理</a>
+      </nav>
+
+      <section id="admin-section-orders" class="space-y-4">
+        <div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-xs text-emerald-400 font-bold">ORDERS</p><h2 class="text-xl font-black">即時線上訂單</h2></div><div class="flex gap-2"><input id="orderSearch" placeholder="搜尋姓名、電話、車款" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs" /><button id="refreshOrdersBtn" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">重新整理</button></div></div>
+        <div class="glass-card rounded-2xl overflow-x-auto">
+          <table class="w-full text-left text-xs min-w-[920px]"><thead><tr class="border-b border-slate-800 text-slate-500"><th class="p-3">訂單編號</th><th class="p-3">客戶</th><th class="p-3">項目</th><th class="p-3">地址</th><th class="p-3">金額</th><th class="p-3">狀態</th><th class="p-3">建立時間</th></tr></thead><tbody id="adminOrderTableBody" class="divide-y divide-slate-800/80"></tbody></table>
         </div>
-      </div>
+      </section>
 
-      <div class="space-y-5">
-        <div class="flex items-end justify-between"><div><p class="text-xs text-emerald-400 font-bold">POPULAR MODELS</p><h2 class="text-2xl font-black text-white">熱門車款</h2></div><button data-tab-target="scooters" class="text-xs text-emerald-400 font-bold">查看全部 →</button></div>
-        <div id="homeScootersPreview" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
-      </div>
-
-      <div class="space-y-4">
-        <h2 class="text-xl font-black text-white"><i class="fa-solid fa-star text-amber-400 mr-2"></i>客戶交車回饋</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-          <article class="ev-card rounded-2xl p-5 space-y-2"><div class="text-amber-400">★★★★★</div><p class="text-slate-300">「領牌、保險和送車都有人協助，交車前也會先聯絡，流程很安心。」</p><span class="text-slate-500">— 北部車主｜大偉士</span></article>
-          <article class="ev-card rounded-2xl p-5 space-y-2"><div class="text-amber-400">★★★★★</div><p class="text-slate-300">「大樓不方便充電，選抽取式鋰鐵電池很方便，售後問題也有回覆。」</p><span class="text-slate-500">— 中部車主｜小偉士</span></article>
-          <article class="ev-card rounded-2xl p-5 space-y-2"><div class="text-amber-400">★★★★★</div><p class="text-slate-300">「紀念展示牌細節很好，製作完成會先拍照確認，收到實品很有質感。」</p><span class="text-slate-500">— 台北客戶｜紀念展示牌</span></article>
-        </div>
-      </div>
-    </section>
-
-    <section id="tab-scooters" class="tab-content hidden space-y-6">
-      <div class="border-b border-slate-800 pb-4"><p class="text-xs font-bold text-emerald-400">SCOOTER CATALOG</p><h1 class="text-2xl font-black text-white">微型電動車專區</h1><p class="text-sm text-slate-400 mt-1">價格與圖片由官方後台管理；實際規格、交期及分期結果以客服確認為準。</p></div>
-      <div id="scooterGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-    </section>
-
-    <section id="tab-plates" class="tab-content hidden space-y-6">
-      <div><p class="text-xs font-bold text-cyan-400">CUSTOM DISPLAY PLATE</p><h1 class="text-3xl font-black text-white">1:1 紀念展示鐵牌訂製</h1><p class="text-slate-400 text-sm mt-2">僅供紀念與展示，不可懸掛於車輛上路使用。</p></div>
-      <div class="grid lg:grid-cols-2 gap-6">
-        <div class="ev-card rounded-3xl p-6 space-y-5">
-          <div id="platePreview" class="aspect-[2/1] bg-white rounded-2xl border-[10px] border-slate-200 shadow-2xl flex flex-col justify-center items-center text-slate-900 relative overflow-hidden">
-            <span id="platePreviewNumber" class="plate-font text-4xl sm:text-6xl font-black">ABC-1234</span>
-            <span class="absolute bottom-2 text-[10px] tracking-[.3em] font-bold">紀念展示用</span>
-          </div>
-          <label class="block"><span class="text-xs font-bold text-slate-300">車牌號碼</span><input id="plateNumberInput" value="ABC-1234" maxlength="12" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3 uppercase" /></label>
-          <label class="block"><span class="text-xs font-bold text-slate-300">類型</span><select id="plateTypeInput" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3"><option>汽車紀念展示牌</option><option>機車紀念展示牌</option><option>重機紀念展示牌</option><option>營業用紀念展示牌</option></select></label>
-        </div>
-        <form id="plateOrderForm" class="ev-card rounded-3xl p-6 space-y-4">
-          <div class="grid grid-cols-3 gap-3 text-center"><div class="bg-slate-950 rounded-xl p-3"><small class="text-slate-500 block">售價</small><strong id="platePriceText">NT$9,500</strong></div><div class="bg-slate-950 rounded-xl p-3"><small class="text-slate-500 block">訂金</small><strong id="plateDepositText">NT$5,500</strong></div><div class="bg-slate-950 rounded-xl p-3"><small class="text-slate-500 block">尾款（貨到付款）</small><strong id="plateBalanceText">NT$4,000</strong></div></div>
-          <input id="plateCustName" required placeholder="訂購人姓名 *" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" />
-          <input id="plateCustPhone" required inputmode="tel" placeholder="手機號碼 *" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" />
-          <input id="plateCustAddress" required placeholder="收件地址／取貨門市 *" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" />
-          <input id="plateHpSecurityCheck" class="hidden" tabindex="-1" autocomplete="off" aria-hidden="true" />
-          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 space-y-2">
-            <div class="flex justify-between items-center text-xs"><span class="font-bold text-amber-400"><i class="fa-solid fa-shield-virus mr-1.5"></i>防垃圾單人類驗證</span><span id="plateMathCaptchaQuestion" class="font-mono text-emerald-400 font-black text-sm">7 + 5 = ?</span></div>
-            <input type="number" id="plateMathCaptchaAnswer" required placeholder="請輸入算術結果 *" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white font-mono text-sm" />
-          </div>
-          <div class="bg-amber-500/10 border border-amber-500/30 text-amber-200 rounded-xl p-3 text-xs leading-relaxed">本商品為客製化紀念展示品，總價 NT$9,500；訂金 NT$5,500，尾款 NT$4,000 貨到付款。僅供紀念展示，不可上路使用。</div>
-          <button class="w-full bg-cyan-400 text-slate-950 font-black py-3.5 rounded-2xl">送出訂製需求</button>
-        </form>
-      </div>
-    </section>
-
-    <section id="tab-installment" class="tab-content hidden space-y-6">
-      <div class="max-w-3xl mx-auto text-center"><p class="text-xs font-bold text-violet-400">INSTALLMENT CALCULATOR</p><h1 class="text-3xl font-black text-white">無卡分期試算</h1><p class="text-slate-400 text-sm mt-2">試算僅供參考，實際期數、費率、額度與核准結果依分期公司審核。</p></div>
-      <div class="max-w-2xl mx-auto ev-card rounded-3xl p-6 space-y-5">
-        <div class="grid sm:grid-cols-3 gap-3">
-          <label><span class="text-xs font-bold">申請金額</span><input id="financeAmount" type="number" value="35000" min="1000" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
-          <label><span class="text-xs font-bold">期數</span><select id="financeTerm" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3"><option>6</option><option selected>12</option><option>18</option><option>24</option><option>30</option></select></label>
-          <label><span class="text-xs font-bold">預估總費率 %</span><input id="financeRate" type="number" value="16" min="0" step="0.1" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
-        </div>
-        <div class="grid grid-cols-2 gap-4"><div class="bg-slate-950 rounded-2xl p-5 text-center"><small class="text-slate-500">預估月付</small><strong id="financeMonthly" class="block text-3xl text-emerald-400 mt-2">NT$0</strong></div><div class="bg-slate-950 rounded-2xl p-5 text-center"><small class="text-slate-500">預估總繳</small><strong id="financeTotal" class="block text-3xl text-white mt-2">NT$0</strong></div></div>
-        <a href="https://line.me/R/ti/p/@762eqvlg" target="_blank" rel="noopener" class="block text-center bg-emerald-500 text-slate-950 font-black py-3.5 rounded-2xl">加入 LINE 申請評估</a>
-      </div>
-    </section>
-
-    <section id="tab-faq" class="tab-content hidden space-y-6">
-      <div class="text-center"><p class="text-xs font-bold text-cyan-400">FAQ</p><h1 class="text-3xl font-black text-white">常見問題</h1></div>
-      <div class="max-w-3xl mx-auto space-y-3 text-sm">
-        <details class="ev-card rounded-2xl p-4"><summary class="font-bold cursor-pointer">微型電動二輪車需要駕照嗎？</summary><p class="text-slate-400 mt-3 leading-relaxed">符合微型電動二輪車規範的車輛免考駕照，但仍須依法完成領牌、投保強制險並遵守道路交通規則，騎乘年齡與使用資格依現行法規。</p></details>
-        <details class="ev-card rounded-2xl p-4"><summary class="font-bold cursor-pointer">送車時間如何安排？</summary><p class="text-slate-400 mt-3 leading-relaxed">車趟以地區集中安排，一天配送同一區域。完成訂金後才會正式排入車趟，日期確認後會通知，司機出發前也會先電話聯絡。</p></details>
-        <details class="ev-card rounded-2xl p-4"><summary class="font-bold cursor-pointer">鉛酸與鋰鐵電池有什麼差別？</summary><p class="text-slate-400 mt-3 leading-relaxed">鉛酸成本較低；鋰鐵通常較輕且可做抽取式，方便大樓住戶帶回室內充電。實際容量、續航與保固依車款方案確認。</p></details>
-        <details class="ev-card rounded-2xl p-4"><summary class="font-bold cursor-pointer">微型三輪可以領牌嗎？</summary><p class="text-slate-400 mt-3 leading-relaxed">目前販售的微型三輪為非領牌版本，僅適合私人場域或非道路區域使用。</p></details>
-        <details class="ev-card rounded-2xl p-4"><summary class="font-bold cursor-pointer">為什麼要先付訂金？</summary><p class="text-slate-400 mt-3 leading-relaxed">訂金用於確認訂單、保留車輛、準備文件及安排配送。未完成訂金前不會正式排入車趟。</p></details>
-      </div>
-    </section>
+      <section id="admin-section-products" class="hidden space-y-4">
+        <div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-xs text-emerald-400 font-bold">PRODUCTS</p><h2 class="text-xl font-black">商品、售價與實車圖庫</h2></div><div class="flex gap-2"><button id="seedProductsBtn" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">建立／補齊 12 款預設商品</button><button id="refreshProductsBtn" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">重新整理</button></div></div>
+        <div class="glass-card rounded-2xl overflow-x-auto"><table class="w-full text-left text-xs min-w-[800px]"><thead><tr class="border-b border-slate-800 text-slate-500"><th class="p-3">圖庫</th><th class="p-3">車款</th><th class="p-3">款式</th><th class="p-3">鉛酸售價</th><th class="p-3">鋰鐵售價</th><th class="p-3">前台</th><th class="p-3 text-right">操作</th></tr></thead><tbody id="adminProductTableBody" class="divide-y divide-slate-800/80"></tbody></table></div>
+      </section>
+    </div>
   </main>
 
-  <footer class="border-t border-slate-800/70 mt-8"><div class="max-w-7xl mx-auto p-6 text-xs text-slate-500 flex flex-wrap justify-between gap-2"><span>小宇微電｜找小宇買微電，不走彎路</span><span>LINE @762eqvlg</span></div></footer>
-
-  <div id="checkoutModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-    <div class="ev-card max-w-2xl w-full max-h-[92vh] overflow-y-auto rounded-3xl p-6 sm:p-8 border-emerald-500/40 space-y-5 text-xs">
-      <div class="flex justify-between items-start border-b border-slate-800 pb-3"><div><p class="text-emerald-400 font-bold">車款訂購／諮詢</p><h2 id="modalItemTitle" class="text-2xl font-black text-white">車款名稱</h2></div><button id="closeCheckoutBtn" class="text-slate-400 p-2"><i class="fa-solid fa-xmark text-xl"></i></button></div>
-      <div id="modalPhotoSwiper" class="w-full h-60 bg-slate-950 rounded-2xl border border-slate-800 relative overflow-hidden flex items-center justify-center"></div>
-      <div id="modalThumbs" class="flex gap-2 overflow-x-auto"></div>
-      <div class="grid sm:grid-cols-2 gap-3">
-        <label><span class="font-bold">電池規格</span><select id="modalBatteryOpt" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3"></select></label>
-        <label><span class="font-bold">顏色</span><select id="modalColorOpt" class="mt-1 w-full bg-slate-950 border border-slate-700 rounded-xl p-3"></select></label>
-      </div>
-      <div class="bg-gradient-to-r from-slate-950 to-slate-900 p-4 rounded-2xl border border-emerald-500/30 flex justify-between items-center"><div><span class="text-slate-400 block">目前方案</span><span id="modalVariantText" class="text-sm font-bold text-emerald-400"></span></div><strong id="modalFinalTotalText" class="text-3xl text-white font-black">NT$0</strong></div>
-      <form id="checkoutSubmitForm" class="space-y-3">
-        <input id="hpSecurityCheck" class="hidden" tabindex="-1" autocomplete="off" />
-        <div class="grid grid-cols-2 gap-2"><input id="formCustName" required placeholder="訂購人姓名 *" class="bg-slate-950 border border-slate-700 rounded-xl p-3" /><input id="formCustPhone" required inputmode="tel" placeholder="手機號碼 *" class="bg-slate-950 border border-slate-700 rounded-xl p-3" /></div>
-        <input id="formCustAddress" required placeholder="配送地址 *" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" />
-        <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-center gap-3"><span class="font-bold text-amber-400 shrink-0">人類驗證</span><span id="mathCaptchaQuestion" class="font-mono text-emerald-400 font-black text-sm"></span><input id="mathCaptchaAnswer" type="number" required placeholder="答案" class="ml-auto w-20 bg-slate-900 border border-slate-700 rounded-lg p-2 text-center" /></div>
-        <p class="text-slate-500 leading-relaxed">送出後會建立訂單並開啟官方 LINE。訂單成立與配送日期仍以客服確認及完成訂金為準。</p>
-        <button class="w-full bg-emerald-500 text-slate-950 font-black py-3.5 rounded-2xl">送出訂單並開啟 LINE</button>
-      </form>
+  <div id="editProductModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+    <div class="glass-card max-w-2xl w-full max-h-[92vh] overflow-y-auto rounded-3xl p-6 space-y-5 text-xs">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3"><h3 id="editModalProductTitle" class="text-lg font-bold">管理商品</h3><button id="closeProductModalBtn" class="text-slate-400 p-2"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+      <div class="grid sm:grid-cols-2 gap-3"><label><span class="font-bold block mb-1">車款名稱</span><input id="editNameInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">款式</span><input id="editStyleInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">標籤</span><input id="editTagInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">顏色（逗號分隔）</span><input id="editColorsInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">鉛酸版售價</span><input id="editPriceLeadInput" type="number" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">鋰鐵版售價</span><input id="editPriceLithiumInput" type="number" placeholder="不提供請留空" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label></div>
+      <label class="flex items-center gap-2"><input id="editVisibleInput" type="checkbox" class="accent-emerald-500" /><span class="font-bold">顯示於前台商城</span></label>
+      <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3"><div class="flex justify-between items-center"><label class="font-bold"><i class="fa-solid fa-cloud-arrow-up text-emerald-400 mr-2"></i>Firebase Storage 圖庫</label><span id="uploadProgressText" class="text-slate-400 text-[10px]"></span></div><input type="file" id="imageFileInput" multiple accept="image/*" class="hidden" /><button id="chooseImagesBtn" class="bg-slate-800 text-emerald-400 border border-emerald-500/30 font-bold px-4 py-2 rounded-xl"><i class="fa-solid fa-images mr-1"></i>選擇照片上傳</button><div id="productGalleryGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-2"></div></div>
+      <button id="saveProductBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl">儲存商品設定</button>
     </div>
   </div>
 
-  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-slate-100 text-slate-950 px-5 py-3 rounded-full shadow-2xl text-xs font-bold translate-y-20 opacity-0 transition-all"><span id="toastMsg"></span></div>
-  <script src="config.js?v=12.2"></script>
-  <script src="firebase-config.js?v=12.2"></script>
-  <script type="module" src="store.js?v=12.2"></script>
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] bg-slate-100 text-slate-950 px-5 py-3 rounded-full shadow-2xl text-xs font-bold translate-y-20 opacity-0 transition-all"><span id="toastMsg"></span></div>
+  <script src="../config.js?v=12.2"></script>
+  <script src="../firebase-config.js?v=12.2"></script>
+  <script type="module" src="admin.js?v=12.2"></script>
 </body>
 </html>
