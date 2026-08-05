@@ -1,49 +1,32 @@
-# Cloud Functions｜LINE + Gmail 訂單通知
+# 小宇微電官方商城 v12.2 FINAL
 
-本版只會通知前台官方商城建立的訂單：
+## 本版重點
 
-- `source = official-store`
-- `source = official-store-plate`
+- 前台與管理後台網址分開，前台不顯示後台入口。
+- 保留既有 Firestore 訂單、收據、保固、抽獎碼與管理員資料。
+- 紀念展示車牌總價 NT$9,500：訂金 NT$5,500、尾款 NT$4,000 貨到付款。
+- 幸運車庫正式活動 ID：`main-2026-v12-final`。
+- 獎項固定：500 元 80%、1,000 元 16%、2,000 元 3%、3,000 元 1%。
+- 抽獎保留 9 座車庫、3-2-1 倒數、車庫門、火花、彩帶、音效、震動與結果頁。
+- Cloud Functions 只通知官方商城訂單，略過後台手動／批量新增。
+- Cloud Functions 使用事件去重紀錄，避免同一 CloudEvent 重複推播。
+- LINE Token 與 Gmail 應用程式密碼只存 Firebase Secrets，專案內沒有真實密碼。
 
-後台手動新增、批量匯入及舊資料不會觸發 LINE／Email 通知。
-系統會在 `_notificationEvents` 建立事件紀錄，同一 CloudEvent 只處理一次。
+## 資料相容
 
-## 重要安全事項
+繼續使用原本 Collection：
 
-LINE Channel Access Token 與 Gmail 應用程式密碼不得放進程式碼、GitHub 或聊天內容。
-若 Token 曾經外洩，請先到 LINE Developers 重新發行，再設定新的 Secret。
+- `orders`
+- `receipts`
+- `warranties`
+- `drawCodes`
+- `campaigns`
+- `admins`
+- `sales`
+- `products`
 
-## 第一次部署
+`_notificationEvents` 是 Functions 新增的去重紀錄，客戶端無權讀寫。
 
-在專案根目錄執行：
+## 更新
 
-```bash
-firebase login
-firebase use project-972903718947247651
-firebase functions:secrets:set LINE_CHANNEL_ACCESS_TOKEN
-firebase functions:secrets:set ADMIN_LINE_USER_ID
-firebase functions:secrets:set GMAIL_APP_PASSWORD
-firebase deploy --only functions
-```
-
-設定內容：
-
-- `LINE_CHANNEL_ACCESS_TOKEN`：重新發行後的新 Token
-- `ADMIN_LINE_USER_ID`：接收通知的管理員 LINE User ID
-- `GMAIL_APP_PASSWORD`：Google 帳號開啟兩步驟驗證後建立的 16 碼應用程式密碼
-
-Email 固定寄到：`uu8832sr@gmail.com`
-
-## 之後只更新 Functions
-
-```bash
-firebase deploy --only functions
-```
-
-## 查看紀錄
-
-```bash
-firebase functions:log --only notifyNewOrder
-```
-
-Cloud Functions 使用 Node.js 20，區域為 `asia-east1`。
+請直接閱讀：`部署步驟_請照順序.txt`
