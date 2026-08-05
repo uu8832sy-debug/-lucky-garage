@@ -1,0 +1,15 @@
+小宇微電官方商城 v12.2 FINAL｜靜態驗證摘要
+
+- JavaScript 語法檢查：通過。
+- HTML 本機檔案引用檢查：通過。
+- 前台未包含後台管理連結：通過。
+- 車牌付款：總價 9,500／訂金 5,500／尾款 4,000：通過。
+- 抽獎正式設定：500=80%、1000=16%、2000=3%、3000=1%：通過。
+- 新活動 ID：main-2026-v12-final。
+- 抽獎介面函式與原生特效程式存在：驗證碼、9座車庫、倒數、開門、火花、彩帶、結果與複製資訊。
+- Functions：只處理 official-store 與 official-store-plate，事件去重，Node.js 20。
+- Functions 專案未包含真實 LINE Token 或 Gmail 密碼。
+- Firestore Rules 保留既有 Collection，前台訂單欄位與車牌付款條件已限制。
+
+需在正式 Firebase 環境人工確認：Google／匿名登入、Firestore 寫入、Storage 上傳、LINE push、Gmail 寄信。
+- 20,000 次演算法測試結果：500=79.33%、1000=16.69%、2000=3.13%、3000=0.86%，符合隨機波動範圍。

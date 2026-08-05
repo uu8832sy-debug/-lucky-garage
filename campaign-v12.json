@@ -1,0 +1,12 @@
+{
+  "campaignId": "main-2026-v12-final",
+  "name": "小宇微電幸運車庫 v12.2 FINAL 正式活動",
+  "algorithm": "sha256-v1",
+  "active": true,
+  "prizes": [
+    {"id":"discount-500","title":"現折 NT$500","description":"本優惠限本次購車訂單使用。","icon":"🎁","weight":80},
+    {"id":"discount-1000","title":"現折 NT$1,000","description":"本優惠限本次購車訂單使用。","icon":"⚡","weight":16},
+    {"id":"discount-2000","title":"現折 NT$2,000","description":"幸運升級！本優惠限本次購車訂單使用。","icon":"🏁","weight":3},
+    {"id":"discount-3000","title":"現折 NT$3,000","description":"本活動最高獎！本優惠限本次購車訂單使用。","icon":"🏆","weight":1}
+  ]
+}

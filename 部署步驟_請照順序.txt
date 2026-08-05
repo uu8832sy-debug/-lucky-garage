@@ -1,0 +1,75 @@
+小宇微電官方商城 v12.2 FINAL｜一次覆蓋與 Firebase 修改步驟
+
+【更新前：只做備份，不刪資料】
+1. 先到原本訂單後台匯出 CSV，作為備份。
+2. 不要刪除 Firestore 的 orders、receipts、warranties、drawCodes、campaigns、admins、sales。
+3. 覆蓋網站檔案與發布 Rules 不會刪除既有訂單。
+
+【第一步：先撤銷已曝光的 LINE Token】
+1. 到 LINE Developers 重新發行 Channel Access Token。
+2. 舊 Token 不再使用，也不要放進 GitHub 或任何程式碼。
+
+【第二步：GitHub / Vercel 一次覆蓋】
+1. 解壓縮本 ZIP。
+2. 打開 yuwei-official-store-v12.2-final 資料夾。
+3. 將資料夾內所有檔案與資料夾，上傳到原本 GitHub Repository 根目錄。
+4. 選擇覆蓋同名檔案；不要刪除 firebase-config.js，也不要更換 Firebase projectId。
+5. admin、functions 兩個資料夾也要完整上傳。
+6. Commit 後等待 Vercel Deployment 顯示 Ready。
+
+【第三步：Firestore Rules】
+1. Firebase Console → Firestore Database → Rules。
+2. 打開 Firestore規則_完整可直接複製_v12.2.txt。
+3. 全選規則頁原內容，貼上本檔內容並按發布。
+4. 新規則保留既有 Collection；只限制前台新增資料格式，不會刪除舊訂單。
+
+【第四步：Storage Rules】
+1. Firebase Console → Storage → Rules。
+2. 貼上 storage.rules 全部內容並發布。
+
+【第五步：Authentication】
+1. Google 登入：啟用。
+2. Anonymous 匿名登入：啟用（幸運車庫需要）。
+3. Authorized domains 必須包含：lucky-garage.vercel.app
+
+【第六步：建立新的正式抽獎活動】
+1. 開啟：https://lucky-garage.vercel.app/admin/draw.html
+2. 使用管理員 Google 帳號登入。
+3. 活動 ID 必須是：main-2026-v12-final
+4. 確認獎項：500=80%、1000=16%、2000=3%、3000=1%。
+5. 按「建立活動」。
+6. 之後只使用 main-2026-v12-final 產生的新抽獎碼。
+7. 舊活動與舊抽獎碼不會被刪除，但前台會拒絕舊活動碼，避免再次出現 800 元。
+
+【第七步：Cloud Functions 通知】
+在電腦的專案根目錄執行：
+
+firebase login
+firebase use project-972903718947247651
+firebase functions:secrets:set LINE_CHANNEL_ACCESS_TOKEN
+firebase functions:secrets:set ADMIN_LINE_USER_ID
+firebase functions:secrets:set GMAIL_APP_PASSWORD
+firebase deploy --only functions
+
+注意：
+- LINE Token 請使用重新發行的新 Token。
+- Gmail 請使用應用程式密碼，不是 Gmail 一般登入密碼。
+- Functions 只通知官方商城下單；後台手動與批量新增不會洗版。
+- 同一 CloudEvent 會建立去重紀錄，避免重複推播。
+
+【第八步：正式測試】
+1. 前台測試一筆微電車訂單，確認 Firestore、後台、LINE、Email。
+2. 前台測試一筆紀念展示車牌訂單，確認顯示：
+   總價 NT$9,500／訂金 NT$5,500／尾款 NT$4,000 貨到付款。
+3. 後台手動新增一筆測試訂單，確認不會推播 LINE／Email。
+4. 建立一組新抽獎碼，以無痕視窗測試：驗證、9座車庫、3-2-1倒數、開門、火花、彩帶、結果與複製資訊。
+
+【正式網址】
+前台商城：https://lucky-garage.vercel.app/
+幸運車庫：https://lucky-garage.vercel.app/garage.html
+保固查詢：https://lucky-garage.vercel.app/warranty.html
+管理後台：https://lucky-garage.vercel.app/admin/
+完整訂單：https://lucky-garage.vercel.app/admin/orders.html
+抽獎管理：https://lucky-garage.vercel.app/admin/draw.html
+
+前台沒有任何按鈕連到後台；後台網址需自行保存。

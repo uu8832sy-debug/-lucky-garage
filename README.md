@@ -1,31 +1,32 @@
-# 小宇微電完整後台 v10
+# 小宇微電官方商城 v12.2 FINAL
 
-> 最新增：成交與淨利統計可切換「指定月份」與「所有訂單」。
+## 本版重點
 
-# 小宇微電｜幸運車庫＋訂單保固系統
+- 前台與管理後台網址分開，前台不顯示後台入口。
+- 保留既有 Firestore 訂單、收據、保固、抽獎碼與管理員資料。
+- 紀念展示車牌總價 NT$9,500：訂金 NT$5,500、尾款 NT$4,000 貨到付款。
+- 幸運車庫正式活動 ID：`main-2026-v12-final`。
+- 獎項固定：500 元 80%、1,000 元 16%、2,000 元 3%、3,000 元 1%。
+- 抽獎保留 9 座車庫、3-2-1 倒數、車庫門、火花、彩帶、音效、震動與結果頁。
+- Cloud Functions 只通知官方商城訂單，略過後台手動／批量新增。
+- Cloud Functions 使用事件去重紀錄，避免同一 CloudEvent 重複推播。
+- LINE Token 與 Gmail 應用程式密碼只存 Firebase Secrets，專案內沒有真實密碼。
 
-這是一套可直接部署到 GitHub Pages、共用同一個 Firebase 免費專案的前後台系統。
+## 資料相容
 
-## 前台
+繼續使用原本 Collection：
 
-- `index.html`：成交限定幸運車庫抽獎。
-- `warranty.html`：電子保固卡查詢。
+- `orders`
+- `receipts`
+- `warranties`
+- `drawCodes`
+- `campaigns`
+- `admins`
+- `sales`
+- `products`
 
-## 後台
+`_notificationEvents` 是 Functions 新增的去重紀錄，客戶端無權讀寫。
 
-- `business.html`：訂單、收據、保固卡、交車卡、文案及統計。
-- `garage-admin.html`：抽獎活動與一次性抽獎碼管理。
+## 更新
 
-## 主要功能
-
-- Firestore 全網一次性抽獎碼。
-- Google 管理員登入。
-- 訂單與付款管理。
-- 手寫風格訂金／尾款收據。
-- 保固卡、QR Code 與公開查詢。
-- 交車卡。
-- FB／IG／Threads／LINE 智慧模板文案。
-- CSV 匯出。
-- 不使用 Cloud Functions、Storage 或付費 AI API。
-
-部署前請閱讀 `系統升級說明.md`，並將新版 `firestore.rules` 發布到 Firebase。
+請直接閱讀：`部署步驟_請照順序.txt`

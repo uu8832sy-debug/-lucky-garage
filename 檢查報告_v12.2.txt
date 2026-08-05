@@ -1,0 +1,33 @@
+小宇微電官方商城 v12.2 FINAL｜檢查報告
+
+1. 車牌付款
+- 總價：NT$9,500
+- 訂金：NT$5,500
+- 尾款：NT$4,000（貨到付款）
+- 前台顯示、Firestore 訂單 paymentTerms、LINE 複製文案與 Rules 已同步。
+
+2. 幸運車庫
+- 新活動 ID：main-2026-v12-final
+- 正式機率：500=80%、1000=16%、2000=3%、3000=1%
+- 9 座車庫、3-2-1 倒數、車庫門、火花、彩帶、音效、震動、結果頁與複製資訊程式均保留。
+- 前台、抽獎後台與 Firestore Rules 均核對正式獎項。
+
+3. 訂單資料
+- 未包含刪除或搬移既有 orders 的程式。
+- Firestore Collection 名稱維持不變。
+- 舊訂單缺少新欄位時，完整訂單後台仍使用相容讀取邏輯。
+
+4. Cloud Functions
+- Node.js 20。
+- 僅通知 source=official-store 或 official-store-plate。
+- 後台手動與批量訂單不通知。
+- 使用 _notificationEvents 去重同一 CloudEvent。
+- 真實 LINE Token 與 Gmail 密碼未寫入專案。
+
+5. 靜態檢查
+- 所有 JavaScript 通過 node --check。
+- 本機 HTML/JS/CSS 引用存在。
+- 前台沒有後台管理連結。
+- ZIP 可正常解壓。
+
+正式 Firebase、LINE 與 Gmail 通知仍需部署後各送一筆測試訂單確認。
