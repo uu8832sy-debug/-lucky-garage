@@ -11,14 +11,14 @@
     .glass-card{background:rgba(15,23,42,.88);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}
     ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:99px}
   </style>
+  <link rel="stylesheet" href="admin-unified.css?v=17.0.0" />
 </head>
 <body class="min-h-full flex flex-col antialiased">
-  <header class="sticky top-0 z-40 bg-slate-900/92 border-b border-slate-800 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-3"><span class="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 font-black flex items-center justify-center">YU</span><div><small class="text-[10px] text-emerald-400 font-bold block">ADMINISTRATION</small><h1 class="text-sm font-bold text-white">小宇微電後台管理系統</h1></div></div>
-      <div id="headerActions" class="hidden items-center gap-2 text-xs"><span id="adminIdentity" class="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 font-bold"></span><a href="../index.html" target="_blank" rel="noopener" class="bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">查看前台 ↗</a><button id="logoutBtn" class="bg-slate-800 px-3 py-1 rounded-full border border-slate-700">登出</button></div>
-    </div>
-  </header>
+  <header class="backend-header"><div class="backend-wrap">
+    <a class="backend-brand" href="/admin/index.html"><span class="backend-mark">YU</span><span><small>ADMINISTRATION</small><strong>小宇微電後台管理系統</strong></span></a>
+    <nav class="backend-nav" aria-label="後台選單"><a class="active" href="/admin/index.html">後台首頁</a><a href="/admin/orders.html">訂單・收據・保固</a><a href="/admin/draw.html">抽獎管理</a><a class="front-link" href="/index.html?v=17.0.0">離開後台・查看前台 →</a></nav>
+    <div id="headerActions" class="backend-user-actions hidden"><span id="adminIdentity" class="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 font-bold"></span><button id="logoutBtn" class="bg-slate-800 px-3 py-1 rounded-full border border-slate-700">登出</button></div>
+  </div></header>
 
   <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
     <section id="loginCard" class="glass-card max-w-lg mx-auto mt-14 rounded-3xl p-8 text-center space-y-4">
@@ -36,8 +36,8 @@
       <nav class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <button class="admin-tab bg-emerald-500 text-slate-950 font-black rounded-xl p-3 text-xs" data-admin-tab="orders"><i class="fa-solid fa-file-invoice mr-1"></i>線上訂單</button>
         <button class="admin-tab bg-slate-900 border border-slate-800 text-slate-300 font-bold rounded-xl p-3 text-xs" data-admin-tab="products"><i class="fa-solid fa-images mr-1"></i>商品與圖片</button>
-        <a href="orders.html" class="bg-slate-900 border border-slate-800 text-slate-300 font-bold rounded-xl p-3 text-xs text-center"><i class="fa-solid fa-chart-line mr-1"></i>完整訂單／淨利</a>
-        <a href="draw.html" class="bg-slate-900 border border-slate-800 text-amber-400 font-bold rounded-xl p-3 text-xs text-center"><i class="fa-solid fa-gift mr-1"></i>抽獎管理</a>
+        <a href="/admin/orders.html" class="bg-slate-900 border border-slate-800 text-slate-300 font-bold rounded-xl p-3 text-xs text-center"><i class="fa-solid fa-chart-line mr-1"></i>完整訂單／淨利</a>
+        <a href="/admin/draw.html" class="bg-slate-900 border border-slate-800 text-amber-400 font-bold rounded-xl p-3 text-xs text-center"><i class="fa-solid fa-gift mr-1"></i>抽獎管理</a>
       </nav>
 
       <section id="admin-section-orders" class="space-y-4">
@@ -65,8 +65,8 @@
   </div>
 
   <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] bg-slate-100 text-slate-950 px-5 py-3 rounded-full shadow-2xl text-xs font-bold translate-y-20 opacity-0 transition-all"><span id="toastMsg"></span></div>
-  <script src="../config.js?v=12.2"></script>
-  <script src="../firebase-config.js?v=12.2"></script>
-  <script type="module" src="admin.js?v=12.2"></script>
+  <script src="../config.js?v=17.0.0"></script>
+  <script src="../firebase-config.js?v=17.0.0"></script>
+  <script type="module" src="admin.js?v=17.0.0"></script>
 </body>
 </html>

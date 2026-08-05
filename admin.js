@@ -54,6 +54,7 @@ let currentUser = null;
 let products = [];
 let orders = [];
 let editingProductId = null;
+let storedProductIds = new Set();
 
 function normalizeEmail(value) { return String(value || "").trim().toLowerCase(); }
 function money(value) { return `NT$${Math.max(0, Number(value) || 0).toLocaleString("zh-TW")}`; }
@@ -195,7 +196,12 @@ async function loadProducts() {
   tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">讀取商品中…</td></tr>';
   try {
     const snap = await getDocs(collection(db,"products"));
-    products = snap.docs.map((item) => ({ id:item.id, ...item.data() })).sort((a,b) => Number(a.order||999)-Number(b.order||999));
+    const remote = snap.docs.map((item) => ({ id:item.id, ...item.data() }));
+    storedProductIds = new Set(remote.map((item) => item.id));
+    const remoteMap = new Map(remote.map((item) => [item.id, item]));
+    products = DEFAULT_PRODUCTS.map((item) => ({ ...item, ...(remoteMap.get(item.id) || {}) }));
+    for (const item of remote) if (!products.some((product) => product.id === item.id)) products.push(item);
+    products.sort((a,b) => Number(a.order||999)-Number(b.order||999));
     renderProducts();
   } catch (error) {
     console.error(error);
@@ -213,7 +219,7 @@ function renderProducts() {
 }
 async function seedProducts() {
   const batch = writeBatch(db);
-  const existing = new Set(products.map((p) => p.id));
+  const existing = storedProductIds;
   let count = 0;
   for (const product of DEFAULT_PRODUCTS) {
     if (!existing.has(product.id)) {
@@ -269,7 +275,7 @@ async function uploadImages(files) {
     const url = await getDownloadURL(objectRef);
     product.images.push({ url, path, isPrimary:product.images.length===0 });
   }
-  await updateDoc(doc(db,"products",product.id), { images:product.images, updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
+  await setDoc(doc(db,"products",product.id), { images:product.images, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
   $("#uploadProgressText").textContent = "上傳完成";
   renderGallery(product); renderProducts();
 }
@@ -277,7 +283,7 @@ async function setPrimaryImage(index) {
   const product = products.find((p) => p.id === editingProductId);
   if (!product) return;
   product.images = (product.images || []).map((img,i) => ({...img,isPrimary:i===index}));
-  await updateDoc(doc(db,"products",product.id), { images:product.images, updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
+  await setDoc(doc(db,"products",product.id), { images:product.images, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
   renderGallery(product); renderProducts();
 }
 async function deleteImage(index) {
@@ -287,7 +293,7 @@ async function deleteImage(index) {
   if (image.path) { try { await deleteObject(ref(storage,image.path)); } catch (error) { console.warn(error); } }
   product.images.splice(index,1);
   if (product.images.length && !product.images.some((img) => img.isPrimary)) product.images[0].isPrimary = true;
-  await updateDoc(doc(db,"products",product.id), { images:product.images, updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
+  await setDoc(doc(db,"products",product.id), { images:product.images, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
   renderGallery(product); renderProducts();
 }
 async function saveProduct() {
@@ -305,7 +311,8 @@ async function saveProduct() {
     updatedAt:serverTimestamp(),
     updatedBy:currentUser.uid
   };
-  await updateDoc(doc(db,"products",product.id),update);
+  await setDoc(doc(db,"products",product.id),update,{ merge:true });
+  storedProductIds.add(product.id);
   Object.assign(product,update);
   renderProducts(); closeProductModal(); showToast("商品設定已儲存");
 }
