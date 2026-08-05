@@ -251,6 +251,31 @@ async function ensureAnonymousUser() {
   return credential.user;
 }
 
+const OFFICIAL_ODDS = Object.freeze({
+  "discount-500": 80,
+  "discount-1000": 16,
+  "discount-2000": 3,
+  "discount-3000": 1
+});
+
+function getOfficialPrizes() {
+  const prizes = Array.isArray(uiConfig.defaultPrizes) ? uiConfig.defaultPrizes : [];
+  const valid = prizes.length === 4 && prizes.every((prize) => (
+    OFFICIAL_ODDS[String(prize?.id || "")] === Number(prize?.weight)
+  ));
+  const total = prizes.reduce((sum, prize) => sum + Number(prize?.weight || 0), 0);
+  if (!valid || total !== 100) {
+    throw new Error("網站正式機率設定不完整，請聯絡小宇。");
+  }
+  return prizes.map((prize) => ({
+    id: String(prize.id),
+    title: String(prize.title),
+    description: String(prize.description || ""),
+    icon: String(prize.icon || "🎁"),
+    weight: Number(prize.weight)
+  }));
+}
+
 async function loadCampaign(campaignId) {
   const requiredCampaignId = String(uiConfig.activeCampaignId || "").trim();
   if (requiredCampaignId && campaignId !== requiredCampaignId) {
@@ -260,51 +285,21 @@ async function loadCampaign(campaignId) {
   if (!snapshot.exists()) throw new Error("找不到活動設定，請聯絡小宇。");
   const campaign = { id: snapshot.id, ...snapshot.data() };
   if (campaign.active === false) throw new Error("本活動目前已結束。");
-  return normalizeOfficialCampaign(campaign);
+
+  // Firestore 只保存活動身分、啟用狀態與固定種子；實際獎項及機率
+  // 一律取自隨網站部署的正式 config.js，避免手機手動建檔造成字串、ID、
+  // 順序或數字型別差異，卻又不會讓機率偏離 80 / 16 / 3 / 1。
+  return {
+    ...campaign,
+    algorithm: String(campaign.algorithm || "sha256-v1"),
+    seed: String(campaign.seed || campaign.id || requiredCampaignId || "yu-lucky-garage"),
+    prizes: getOfficialPrizes()
+  };
 }
 
 function prizeAmount(prize) {
   const match = String(prize?.title || "").replaceAll(",", "").match(/(?:NT\$)?(\d+)/i);
   return match ? Number(match[1]) : 0;
-}
-
-/*
- * Firestore 手機介面可能讓 title、description 或陣列順序出現細微差異。
- * 正式開獎只核對不可混淆的獎項 ID 與權重；核對成功後，統一使用
- * config.js 的官方文字與固定順序，確保機率永遠是 80 / 16 / 3 / 1。
- */
-function normalizeOfficialCampaign(campaign) {
-  const expected = Array.isArray(uiConfig.defaultPrizes) ? uiConfig.defaultPrizes : [];
-  const actual = Array.isArray(campaign?.prizes) ? campaign.prizes : [];
-
-  if (expected.length !== 4 || actual.length !== 4) {
-    throw new Error("活動獎項數量不正確，請聯絡小宇。");
-  }
-
-  const actualById = new Map(
-    actual.map((prize) => [String(prize?.id || "").trim(), prize])
-  );
-
-  const normalizedPrizes = expected.map((expectedPrize) => {
-    const current = actualById.get(String(expectedPrize.id));
-    if (!current || Number(current.weight) !== Number(expectedPrize.weight)) {
-      throw new Error("活動機率設定不正確，請聯絡小宇。");
-    }
-    return {
-      id: expectedPrize.id,
-      title: expectedPrize.title,
-      description: expectedPrize.description,
-      icon: expectedPrize.icon,
-      weight: Number(expectedPrize.weight)
-    };
-  });
-
-  const totalWeight = normalizedPrizes.reduce((sum, prize) => sum + prize.weight, 0);
-  if (totalWeight !== 100) {
-    throw new Error("活動總機率不是 100%，請聯絡小宇。");
-  }
-
-  return { ...campaign, prizes: normalizedPrizes };
 }
 
 function tierForPrize(prize) {
