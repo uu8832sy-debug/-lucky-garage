@@ -1,41 +1,49 @@
-# 小宇微電｜幸運車庫 V19 STABLE
+# Cloud Functions｜LINE + Gmail 訂單通知
 
-完整前台與統一後台專案，部署於 Vercel，資料使用 Firebase Authentication、Cloud Firestore，商品圖片上傳功能選用 Cloud Storage。
+本版只會通知前台官方商城建立的訂單：
 
-## 固定入口
+- `source = official-store`
+- `source = official-store-plate`
 
-- 公開首頁：`/index.html`
-- 車款商品：`/products.html`
-- 紀念展示牌：`/plate.html`
-- 客人抽獎：`/garage.html`
-- 保固查詢：`/warranty.html`
-- 統一後台：`/admin/index.html`
+後台手動新增、批量匯入及舊資料不會觸發 LINE／Email 通知。
+系統會在 `_notificationEvents` 建立事件紀錄，同一 CloudEvent 只處理一次。
 
-公開頁面不包含後台連結。舊管理頁面只保留重新導向，避免舊書籤再次開啟不同介面。
+## 重要安全事項
 
-## 後台功能
+LINE Channel Access Token 與 Gmail 應用程式密碼不得放進程式碼、GitHub 或聊天內容。
+若 Token 曾經外洩，請先到 LINE Developers 重新發行，再設定新的 Secret。
 
-`admin/index.html` 是唯一後台外殼：
+## 第一次部署
 
-- 即時線上訂單
-- 完整訂單、批量匯入與淨利
-- 訂金收據、交車確認與電子保固卡
-- 商品、售價與圖片
-- 抽獎活動、一次性抽獎碼與使用紀錄
+在專案根目錄執行：
 
-## 抽獎正式機率
+```bash
+firebase login
+firebase use project-972903718947247651
+firebase functions:secrets:set LINE_CHANNEL_ACCESS_TOKEN
+firebase functions:secrets:set ADMIN_LINE_USER_ID
+firebase functions:secrets:set GMAIL_APP_PASSWORD
+firebase deploy --only functions
+```
 
-- NT$500：80%
-- NT$1,000：16%
-- NT$2,000：3%
-- NT$3,000：1%
+設定內容：
 
-客人領取結果時使用 Firestore transaction 將抽獎碼原子鎖定為已使用。
+- `LINE_CHANNEL_ACCESS_TOKEN`：重新發行後的新 Token
+- `ADMIN_LINE_USER_ID`：接收通知的管理員 LINE User ID
+- `GMAIL_APP_PASSWORD`：Google 帳號開啟兩步驟驗證後建立的 16 碼應用程式密碼
 
-## Firebase SDK
+Email 固定寄到：`uu8832sr@gmail.com`
 
-瀏覽器模組統一使用 Firebase JavaScript SDK `12.16.0`。
+## 之後只更新 Functions
 
-## 部署
+```bash
+firebase deploy --only functions
+```
 
-先閱讀 `README_V19_請先看.txt`，再將本資料夾內全部內容覆蓋到 GitHub Repository 根目錄。部署後依 `VALIDATION_V19.txt` 完成三項線上確認。
+## 查看紀錄
+
+```bash
+firebase functions:log --only notifyNewOrder
+```
+
+Cloud Functions 使用 Node.js 20，區域為 `asia-east1`。
