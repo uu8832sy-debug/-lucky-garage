@@ -260,8 +260,7 @@ async function loadCampaign(campaignId) {
   if (!snapshot.exists()) throw new Error("找不到活動設定，請聯絡小宇。");
   const campaign = { id: snapshot.id, ...snapshot.data() };
   if (campaign.active === false) throw new Error("本活動目前已結束。");
-  validateOfficialPrizeConfig(campaign);
-  return campaign;
+  return normalizeOfficialCampaign(campaign);
 }
 
 function prizeAmount(prize) {
@@ -269,18 +268,43 @@ function prizeAmount(prize) {
   return match ? Number(match[1]) : 0;
 }
 
-function validateOfficialPrizeConfig(campaign) {
+/*
+ * Firestore 手機介面可能讓 title、description 或陣列順序出現細微差異。
+ * 正式開獎只核對不可混淆的獎項 ID 與權重；核對成功後，統一使用
+ * config.js 的官方文字與固定順序，確保機率永遠是 80 / 16 / 3 / 1。
+ */
+function normalizeOfficialCampaign(campaign) {
   const expected = Array.isArray(uiConfig.defaultPrizes) ? uiConfig.defaultPrizes : [];
   const actual = Array.isArray(campaign?.prizes) ? campaign.prizes : [];
-  const valid = expected.length === 4 && actual.length === expected.length && expected.every((prize, index) => {
-    const current = actual[index] || {};
-    return String(current.id || "") === String(prize.id || "")
-      && String(current.title || "") === String(prize.title || "")
-      && Number(current.weight || 0) === Number(prize.weight || 0);
-  });
-  if (!valid) {
-    throw new Error("此活動的獎項或機率不是正式設定，系統已停止開獎，請聯絡小宇更新抽獎碼。");
+
+  if (expected.length !== 4 || actual.length !== 4) {
+    throw new Error("活動獎項數量不正確，請聯絡小宇。");
   }
+
+  const actualById = new Map(
+    actual.map((prize) => [String(prize?.id || "").trim(), prize])
+  );
+
+  const normalizedPrizes = expected.map((expectedPrize) => {
+    const current = actualById.get(String(expectedPrize.id));
+    if (!current || Number(current.weight) !== Number(expectedPrize.weight)) {
+      throw new Error("活動機率設定不正確，請聯絡小宇。");
+    }
+    return {
+      id: expectedPrize.id,
+      title: expectedPrize.title,
+      description: expectedPrize.description,
+      icon: expectedPrize.icon,
+      weight: Number(expectedPrize.weight)
+    };
+  });
+
+  const totalWeight = normalizedPrizes.reduce((sum, prize) => sum + prize.weight, 0);
+  if (totalWeight !== 100) {
+    throw new Error("活動總機率不是 100%，請聯絡小宇。");
+  }
+
+  return { ...campaign, prizes: normalizedPrizes };
 }
 
 function tierForPrize(prize) {
