@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -6,7 +6,7 @@ import {
   signInWithPopup,
   signInWithRedirect,
   signOut
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
   collection,
   doc,
@@ -17,14 +17,14 @@ import {
   setDoc,
   updateDoc,
   writeBatch
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import {
   deleteObject,
   getDownloadURL,
   getStorage,
   ref,
   uploadBytes
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-storage.js";
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-storage.js";
 
 const OWNER_EMAIL = "uu8832sr@gmail.com";
 const firebaseConfig = window.LUCKY_GARAGE_FIREBASE_CONFIG || {};
@@ -35,20 +35,14 @@ const storage = getStorage(app);
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
-const DEFAULT_PRODUCTS = [
-  { id:"scooter-1", order:1, name:"大偉士", style:"頂規改裝版", tag:"72V", visible:true, priceLead:35000, priceLithium:58800, colors:["黑色","白色","灰色"], images:[] },
-  { id:"scooter-2", order:2, name:"小偉士", style:"經典款", tag:"60V", visible:true, priceLead:28000, priceLithium:45600, colors:["白色","黑色","紅色"], images:[] },
-  { id:"scooter-3", order:3, name:"神盾", style:"鋼鐵戰艦版", tag:"60V", visible:true, priceLead:29000, priceLithium:48000, colors:["白色","黑色","綠色"], images:[] },
-  { id:"scooter-4", order:4, name:"Z3", style:"普通版", tag:"72V", visible:true, priceLead:35000, priceLithium:58800, colors:["白色","黑色","灰色"], images:[] },
-  { id:"scooter-5", order:5, name:"Z3", style:"暗魂版", tag:"72V", visible:true, priceLead:38000, priceLithium:62000, colors:["消光黑"], images:[] },
-  { id:"scooter-6", order:6, name:"正9號", style:"曠達版", tag:"72V", visible:true, priceLead:35000, priceLithium:58800, colors:["紫色","白色","黑色"], images:[] },
-  { id:"scooter-7", order:7, name:"正9號", style:"金大力版", tag:"72V", visible:true, priceLead:35000, priceLithium:58800, colors:["金色","黑色","白色"], images:[] },
-  { id:"scooter-8", order:8, name:"小可愛（拿鐵）", style:"可愛馬卡龍版", tag:"60V", visible:true, priceLead:30000, priceLithium:null, colors:["奶茶色","粉色","白色"], images:[] },
-  { id:"scooter-9", order:9, name:"Dio", style:"經典二行程外型", tag:"60V", visible:true, priceLead:30000, priceLithium:48000, colors:["白色","黑色"], images:[] },
-  { id:"scooter-10", order:10, name:"QC", style:"時尚 QC 款", tag:"72V", visible:true, priceLead:32000, priceLithium:56400, colors:["白色","黑色","灰色"], images:[] },
-  { id:"scooter-11", order:11, name:"小酷龍", style:"檔車造型款", tag:"48V", visible:true, priceLead:21000, priceLithium:null, colors:["黑色","紅色"], images:[] },
-  { id:"scooter-12", order:12, name:"微型三輪", style:"載物長者三輪版", tag:"非領牌版", visible:true, priceLead:33000, priceLithium:null, colors:["紅色","藍色"], images:[] }
-];
+const DEFAULT_PRODUCTS = (Array.isArray(window.YU_PRODUCT_CATALOG) ? window.YU_PRODUCT_CATALOG : []).map((product) => ({
+  ...structuredClone(product),
+  images: (Array.isArray(product.images) ? product.images : []).map((image, index) => (
+    typeof image === "string"
+      ? { url:image, path:"", isPrimary:index === 0, static:true }
+      : { ...image, isPrimary:image?.isPrimary === true || index === 0 }
+  ))
+}));
 
 let currentUser = null;
 let products = [];
@@ -199,8 +193,27 @@ async function loadProducts() {
     const remote = snap.docs.map((item) => ({ id:item.id, ...item.data() }));
     storedProductIds = new Set(remote.map((item) => item.id));
     const remoteMap = new Map(remote.map((item) => [item.id, item]));
-    products = DEFAULT_PRODUCTS.map((item) => ({ ...item, ...(remoteMap.get(item.id) || {}) }));
-    for (const item of remote) if (!products.some((product) => product.id === item.id)) products.push(item);
+    products = DEFAULT_PRODUCTS.map((item) => {
+      const remoteItem = remoteMap.get(item.id) || {};
+      const remoteImages = Array.isArray(remoteItem.images) ? remoteItem.images : [];
+      return {
+        ...item,
+        ...remoteItem,
+        images: (remoteImages.length ? remoteImages : item.images).map((image, index) => (
+          typeof image === "string"
+            ? { url:image, path:"", isPrimary:index === 0, static:true }
+            : { ...image, isPrimary:image?.isPrimary === true || (!remoteImages.some((candidate) => candidate?.isPrimary) && index === 0) }
+        ))
+      };
+    });
+    for (const item of remote) {
+      if (!products.some((product) => product.id === item.id)) {
+        products.push({
+          ...item,
+          images:(Array.isArray(item.images) ? item.images : []).map((image,index) => typeof image === "string" ? {url:image,path:"",isPrimary:index===0,static:true} : image)
+        });
+      }
+    }
     products.sort((a,b) => Number(a.order||999)-Number(b.order||999));
     renderProducts();
   } catch (error) {
@@ -257,7 +270,7 @@ function renderGallery(product) {
   const images = Array.isArray(product.images) ? product.images : [];
   const grid = $("#productGalleryGrid");
   if (!images.length) { grid.innerHTML = '<div class="col-span-full text-slate-500 text-center py-4">尚無圖片</div>'; return; }
-  grid.innerHTML = images.map((img,i) => `<div class="relative rounded-xl overflow-hidden border ${img.isPrimary?'border-emerald-500':'border-slate-800'}"><img src="${escapeHtml(img.url)}" class="w-full h-24 object-cover" /><div class="absolute inset-x-0 bottom-0 bg-slate-950/90 p-1 flex gap-1 justify-center">${img.isPrimary?'<span class="text-[9px] text-emerald-400 px-1">主圖</span>':`<button class="set-primary bg-emerald-500 text-slate-950 px-1.5 rounded text-[9px]" data-index="${i}">設主圖</button>`}<button class="delete-image bg-rose-500 text-white px-1.5 rounded text-[9px]" data-index="${i}">刪除</button></div></div>`).join("");
+  grid.innerHTML = images.map((img,i) => `<div class="relative rounded-xl overflow-hidden border ${img.isPrimary?'border-emerald-500':'border-slate-800'}"><img src="${escapeHtml(typeof img === "string" ? img : img.url)}" alt="${escapeHtml(product.name)} 圖片 ${i+1}" class="w-full h-24 object-cover" loading="lazy" /><div class="absolute inset-x-0 bottom-0 bg-slate-950/90 p-1 flex gap-1 justify-center">${img.isPrimary?'<span class="text-[9px] text-emerald-400 px-1">主圖</span>':`<button class="set-primary bg-emerald-500 text-slate-950 px-1.5 rounded text-[9px]" data-index="${i}">設主圖</button>`}<button class="delete-image bg-rose-500 text-white px-1.5 rounded text-[9px]" data-index="${i}">刪除</button></div></div>`).join("");
   $$(".set-primary").forEach((button) => button.addEventListener("click", () => setPrimaryImage(Number(button.dataset.index))));
   $$(".delete-image").forEach((button) => button.addEventListener("click", () => deleteImage(Number(button.dataset.index))));
 }
@@ -289,7 +302,7 @@ async function setPrimaryImage(index) {
 async function deleteImage(index) {
   const product = products.find((p) => p.id === editingProductId);
   const image = product?.images?.[index];
-  if (!product || !image || !confirm("確定刪除這張照片？")) return;
+  if (!product || !image || !confirm("確定從商品圖庫移除這張照片？")) return;
   if (image.path) { try { await deleteObject(ref(storage,image.path)); } catch (error) { console.warn(error); } }
   product.images.splice(index,1);
   if (product.images.length && !product.images.some((img) => img.isPrimary)) product.images[0].isPrimary = true;
@@ -317,12 +330,14 @@ async function saveProduct() {
   renderProducts(); closeProductModal(); showToast("商品設定已儲存");
 }
 function switchTab(tab) {
-  $("#admin-section-orders").classList.toggle("hidden",tab!=="orders");
-  $("#admin-section-products").classList.toggle("hidden",tab!=="products");
-  $$(".admin-tab").forEach((button) => {
-    const active = button.dataset.adminTab===tab;
-    button.className = `admin-tab ${active?'bg-emerald-500 text-slate-950 font-black':'bg-slate-900 border border-slate-800 text-slate-300 font-bold'} rounded-xl p-3 text-xs`;
+  const view = tab === "products" ? "products" : "dashboard";
+  document.querySelectorAll("[data-shell-panel]").forEach((panel) => {
+    panel.hidden = panel.dataset.shellPanel !== view;
   });
+  document.querySelectorAll("[data-shell-view]").forEach((button) => {
+    button.classList.toggle("is-shell-active", button.dataset.shellView === view);
+  });
+  history.replaceState(null, "", `#${view}`);
 }
 
 $("#loginBtn").addEventListener("click",beginLogin);

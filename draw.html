@@ -5,14 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <meta name="theme-color" content="#090b10" />
+  <script>
+    (() => {
+      const embed = new URLSearchParams(location.search).get("embed") === "1";
+      if (!embed) {
+        location.replace("./index.html?view=draw");
+        return;
+      }
+      document.documentElement.classList.add("embed-mode");
+    })();
+  </script>
   <title>小宇微電｜幸運車庫管理</title>
   <link rel="manifest" href="../manifest.webmanifest" />
   <link rel="apple-touch-icon" href="../icon-192.png" />
-  <link rel="stylesheet" href="draw.css?v=17.0.0" />
-  <link rel="stylesheet" href="admin-unified.css?v=17.0.0" />
+  <link rel="stylesheet" href="draw.css?v=19.0.0" />
+  <link rel="stylesheet" href="admin-unified.css?v=19.0.0" />
 </head>
 <body>
-<header class="backend-header"><div class="backend-wrap"><a class="backend-brand" href="/admin/index.html"><span class="backend-mark">YU</span><span><small>ADMINISTRATION</small><strong>小宇微電後台管理系統</strong></span></a><nav class="backend-nav"><a href="/admin/index.html">後台首頁</a><a href="/admin/orders.html">訂單・收據・保固</a><a class="active" href="/admin/draw.html">抽獎管理</a><a class="front-link" href="/index.html?v=17.0.0">離開後台・查看前台 →</a></nav></div></header>
+<header class="backend-header"><div class="backend-wrap"><a class="backend-brand" href="/admin/index.html"><span class="backend-mark">YU</span><span><small>ADMINISTRATION</small><strong>小宇微電後台管理系統</strong></span></a><nav class="backend-nav"><a href="/admin/index.html">後台首頁</a><a href="/admin/orders.html">訂單・收據・保固</a><a class="active" href="/admin/draw.html">抽獎管理</a><a class="front-link" href="/index.html?v=19.0.0">離開後台・查看前台 →</a></nav></div></header>
 
   <main class="admin-shell">
     <section id="configWarning" class="card warning hidden">
@@ -111,8 +121,8 @@
   </main>
 
   <div id="toast" class="toast"></div>
-  <script src="../config.js?v=17.0.0"></script>
-  <script src="../firebase-config.js?v=17.0.0"></script>
-  <script type="module" src="draw.js?v=17.0.0"></script>
+  <script src="../config.js?v=19.0.0"></script>
+  <script src="../firebase-config.js?v=19.0.0"></script>
+  <script type="module" src="draw.js?v=19.0.0"></script>
 </body>
 </html>

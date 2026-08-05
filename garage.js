@@ -1,17 +1,17 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   browserLocalPersistence,
   getAuth,
   setPersistence,
   signInAnonymously
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
   doc,
   getDoc,
   getFirestore,
-  serverTimestamp,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+  runTransaction,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import {
   deriveDrawResult,
   escapeHtml,
@@ -477,19 +477,33 @@ async function claimCodeAndDraw(selectedDoor, garageNumber) {
   try {
     const statusRef = doc(db, "drawCodes", activeHash);
     const firebasePromise = (async () => {
-      await updateDoc(statusRef, {
-        used: true,
-        usedBy: currentUser.uid,
-        usedAt: serverTimestamp(),
-        selectedGarage: garageNumber
+      await runTransaction(db, async (transaction) => {
+        const snapshot = await transaction.get(statusRef);
+        if (!snapshot.exists()) throw new Error("找不到這組抽獎碼。");
+        const latest = snapshot.data();
+        if (latest.code !== activeCode) throw new Error("抽獎碼驗證失敗。");
+        if (latest.active !== true) throw new Error("這組抽獎碼目前無法使用。");
+        if (latest.used === true) {
+          if (latest.usedBy === currentUser.uid) return;
+          throw new Error("這組抽獎碼已經使用過了。");
+        }
+        transaction.update(statusRef, {
+          used: true,
+          usedBy: currentUser.uid,
+          usedAt: serverTimestamp(),
+          selectedGarage: garageNumber
+        });
       });
+
       const statusSnapshot = await getDoc(statusRef);
+      if (!statusSnapshot.exists()) throw new Error("找不到開獎紀錄。");
       const completedStatus = statusSnapshot.data();
+      if (completedStatus.usedBy !== currentUser.uid) throw new Error("這組抽獎碼已被其他使用者使用。");
       activeStatus = completedStatus;
       const derived = await deriveDrawResult(activeCampaign, completedStatus);
       return {
         code: activeCode,
-        garage: garageNumber,
+        garage: completedStatus.selectedGarage,
         prize: derived.prize,
         serial: derived.serial,
         formattedTime: derived.formattedTime,
@@ -674,7 +688,7 @@ window.addEventListener("resize", () => {
 async function start() {
   if (!codeForm || !codeInput || !verifyBtn || !entryView || !garageView || !resultView) {
     console.error("幸運車庫頁面檔案版本不一致：請同步覆蓋 garage.html、garage.js、garage.css。 ");
-    document.body.insertAdjacentHTML("afterbegin", `<div style="position:fixed;z-index:99999;inset:12px 12px auto;padding:14px;border-radius:12px;background:#7f1d1d;color:#fff;font-weight:800">網站檔案版本不一致，請重新上傳 v16 完整穩定版。</div>`);
+    document.body.insertAdjacentHTML("afterbegin", `<div style="position:fixed;z-index:99999;inset:12px 12px auto;padding:14px;border-radius:12px;background:#7f1d1d;color:#fff;font-weight:800">網站檔案版本不一致，請重新上傳 v19 完整穩定版。</div>`);
     return;
   }
   setCodeMessage("系統連線中，請稍候…", true);

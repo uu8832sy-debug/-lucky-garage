@@ -1,5 +1,5 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
-import { doc, getFirestore, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+import { doc, getFirestore, serverTimestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 const firebaseConfig=window.LUCKY_GARAGE_FIREBASE_CONFIG||{}, config=window.YU_STORE_CONFIG||{}; const db=getFirestore(initializeApp(firebaseConfig)); const $=(s)=>document.querySelector(s);
 const money=(v)=>`NT$${Math.max(0,Number(v)||0).toLocaleString("zh-TW")}`; let captcha=0;
 function cleanPhone(v){let d=String(v||"").replace(/\D/g,"");if(d.startsWith("886"))d=`0${d.slice(3)}`;return d;} function makeId(){const d=new Date(),ymd=`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}`,chars="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",bytes=new Uint32Array(4);crypto.getRandomValues(bytes);return `PLATE-${ymd}-${[...bytes].map(v=>chars[v%chars.length]).join("")}`;} function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("show"),3200);} function newCaptcha(){const a=Math.floor(Math.random()*8)+2,b=Math.floor(Math.random()*8)+2;captcha=a+b;$("#captchaQuestion").textContent=`人類驗證：${a} + ${b} = ?`;$("#captchaAnswer").value="";}

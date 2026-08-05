@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -6,7 +6,7 @@ import {
   signInWithPopup,
   signInWithRedirect,
   signOut
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
   collection,
   deleteDoc,
@@ -18,7 +18,7 @@ import {
   setDoc,
   updateDoc,
   writeBatch
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const OWNER_EMAIL = "uu8832sr@gmail.com";
 const firebaseConfig = window.LUCKY_GARAGE_FIREBASE_CONFIG || {};

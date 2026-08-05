@@ -2,9 +2,58 @@
 .backend-header{position:sticky;top:0;z-index:90;background:rgba(8,10,15,.96);backdrop-filter:blur(18px);border-bottom:1px solid rgba(148,163,184,.16);color:var(--admin-text)}
 .backend-wrap{width:min(1220px,calc(100% - 24px));min-height:68px;margin:auto;display:flex;align-items:center;gap:18px}
 .backend-brand{display:flex;align-items:center;gap:10px;color:var(--admin-text);text-decoration:none;white-space:nowrap}.backend-mark{width:40px;height:40px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,#10b981,#5eead4);color:#052e25;font-weight:1000}.backend-brand small{display:block;color:var(--admin-green);font-size:9px;font-weight:900;letter-spacing:.15em}.backend-brand strong{display:block;font-size:14px}
-.backend-nav{margin-left:auto;display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}.backend-nav::-webkit-scrollbar{display:none}.backend-nav a{color:#cbd5e1;text-decoration:none;white-space:nowrap;padding:9px 12px;border-radius:11px;border:1px solid transparent;font-size:12px;font-weight:850}.backend-nav a:hover,.backend-nav a.active{color:var(--admin-green);background:#16202e;border-color:#263244}.backend-nav a.front-link{color:#fbbf24;border-color:rgba(251,191,36,.22);background:rgba(251,191,36,.07)}
+.backend-nav{margin-left:auto;display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none}.backend-nav::-webkit-scrollbar{display:none}.backend-nav a,.backend-nav button{appearance:none;background:transparent;color:#cbd5e1;text-decoration:none;white-space:nowrap;padding:9px 12px;border-radius:11px;border:1px solid transparent;font:inherit;font-size:12px;font-weight:850;line-height:1.2}.backend-nav a:hover,.backend-nav button:hover,.backend-nav a.active,.backend-nav button.active,.backend-nav [data-shell-view].is-shell-active{color:var(--admin-green);background:#16202e;border-color:#263244}.backend-nav a.front-link{color:#fbbf24;border-color:rgba(251,191,36,.22);background:rgba(251,191,36,.07)}
 .backend-user-actions{display:flex;align-items:center;gap:7px;font-size:11px}.backend-user-actions a,.backend-user-actions button,.backend-user-actions span{white-space:nowrap}
 body{background-color:var(--admin-bg)}
 .shell,.admin-shell{padding-top:22px}.shell>.topbar,.admin-shell>.topbar{display:none!important}
 .card,.glass-card{border-color:rgba(148,163,184,.14)!important}
 @media(max-width:850px){.backend-wrap{align-items:flex-start;flex-direction:column;padding:10px 0}.backend-nav{margin-left:0;width:100%;order:3}.backend-user-actions{width:100%;overflow-x:auto}.backend-header{position:relative}}
+
+/* v19：嵌入統一後台時，隱藏舊頁首與重複登入介面。 */
+html.embed-mode,
+html.embed-mode body{background:#080a0f!important;min-height:100%;}
+html.embed-mode .backend-header,
+html.embed-mode #loginCard,
+html.embed-mode #deniedCard,
+html.embed-mode #bootstrapCard,
+html.embed-mode .account-strip,
+html.embed-mode .account-card{display:none!important;}
+html.embed-mode main.shell,
+html.embed-mode main.admin-shell{max-width:none!important;margin:0!important;padding:10px!important;}
+html.embed-mode body{overflow-x:hidden;}
+
+/* v19 本機備援樣式：即使 Tailwind CDN 暫時無法載入，後台仍可正常操作。 */
+.hidden{display:none!important}.flex{display:flex}.grid{display:grid}.block{display:block}.fixed{position:fixed}.inset-0{inset:0}.w-full{width:100%}.min-h-full{min-height:100vh}.h-full{height:100%}.flex-1{flex:1}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}.items-end{align-items:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.text-center{text-align:center}.text-left{text-align:left}.text-right{text-align:right}.font-bold{font-weight:800}.font-black{font-weight:950}.text-xs{font-size:.75rem}.text-sm{font-size:.875rem}.text-lg{font-size:1.125rem}.text-xl{font-size:1.25rem}.text-2xl{font-size:1.5rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-4{padding:1rem}.p-6{padding:1.5rem}.p-8{padding:2rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-3{padding-top:.75rem;padding-bottom:.75rem}.mt-2{margin-top:.5rem}.mt-14{margin-top:3.5rem}.mb-1{margin-bottom:.25rem}.pb-3{padding-bottom:.75rem}.mx-auto{margin-left:auto;margin-right:auto}.space-y-3>*+*{margin-top:.75rem}.space-y-4>*+*{margin-top:1rem}.space-y-5>*+*{margin-top:1.25rem}.space-y-6>*+*{margin-top:1.5rem}.rounded-xl{border-radius:.75rem}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.border{border:1px solid rgba(148,163,184,.25)}.border-b{border-bottom:1px solid rgba(148,163,184,.2)}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.max-w-lg{max-width:32rem}.max-w-2xl{max-width:42rem}.max-w-7xl{max-width:80rem}.text-slate-100,.text-white{color:#f8fafc}.text-slate-300{color:#cbd5e1}.text-slate-400{color:#94a3b8}.text-slate-500{color:#64748b}.text-slate-950{color:#020617}.text-emerald-400{color:#34d399}.text-amber-400{color:#fbbf24}.text-rose-400{color:#fb7185}.bg-slate-950{background:#020617}.bg-slate-900{background:#0f172a}.bg-slate-800{background:#1e293b}.bg-emerald-500{background:#10b981}.bg-amber-500{background:#f59e0b}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;color:#f8fafc;background:#080a0f;line-height:1.5}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}main.max-w-7xl{width:min(1280px,calc(100% - 24px));margin:0 auto;padding:20px 0 42px}.glass-card{background:linear-gradient(145deg,rgba(15,23,42,.94),rgba(8,12,19,.98));border:1px solid rgba(148,163,184,.16);box-shadow:0 20px 45px rgba(0,0,0,.24)}
+#loginCard,#deniedCard{width:min(100%,520px)}#loginCard button,#deniedCard button{border:0}.backend-user-actions.hidden{display:none!important}.backend-user-actions.flex{display:flex}
+#adminApp>nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}#adminApp>nav button{min-height:48px;border:1px solid #263244;transition:transform .15s ease,background .15s ease}#adminApp>nav button:active{transform:scale(.98)}
+#shell-dashboard input,#shell-products input,#editProductModal input{background:#020617;color:#f8fafc;border:1px solid #334155;border-radius:12px;padding:10px 12px;outline:none}#shell-dashboard input:focus,#shell-products input:focus,#editProductModal input:focus{border-color:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.12)}
+table{border-collapse:collapse;width:100%}th,td{vertical-align:middle}tbody tr{border-top:1px solid rgba(51,65,85,.65)}select{background:#020617;color:#f8fafc;border:1px solid #334155;border-radius:9px;padding:8px}
+#editProductModal{background:rgba(2,6,23,.88);backdrop-filter:blur(12px)}#editProductModal>div{width:min(100%,720px)}#productGalleryGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}#productGalleryGrid img{display:block;width:100%;height:96px;object-fit:cover}
+#toast{position:fixed;left:50%;bottom:20px;z-index:70;transform:translate(-50%,90px);opacity:0;transition:.25s;background:#f8fafc;color:#020617;border-radius:999px;padding:10px 16px;box-shadow:0 16px 40px rgba(0,0,0,.4)}#toast:not(.translate-y-20){transform:translate(-50%,0);opacity:1}
+@media(min-width:640px){.sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.sm\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:760px){main.max-w-7xl{width:min(100% - 20px,1280px);padding-top:14px}#adminApp>nav{grid-template-columns:1fr 1fr}#productGalleryGrid{grid-template-columns:1fr 1fr}.backend-user-actions{flex-wrap:wrap}.backend-user-actions span{max-width:72vw;overflow:hidden;text-overflow:ellipsis}.admin-frame{min-height:620px}}
+
+/* v19.1：手機後台維持單一介面，查看前台永遠可見，訂單改成卡片閱讀。 */
+.header-front-link{display:inline-flex;align-items:center;justify-content:center;color:#052e25!important;background:#34d399;border:1px solid #34d399;border-radius:999px;padding:6px 11px;text-decoration:none;font-weight:900}
+@media(max-width:760px){
+  .backend-user-actions{display:flex;align-items:center;gap:7px;width:100%;overflow:visible}
+  .backend-user-actions span{flex:1;min-width:0;max-width:none!important}
+  .backend-user-actions .header-front-link,.backend-user-actions button{flex:0 0 auto}
+  #shell-dashboard .overflow-x-auto{overflow:visible}
+  #shell-dashboard table{min-width:0!important;display:block}
+  #shell-dashboard thead{display:none}
+  #adminOrderTableBody{display:grid;gap:10px;padding:1px}
+  #adminOrderTableBody tr{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:0;border:1px solid #263244;border-radius:16px;overflow:hidden;background:#0f1724}
+  #adminOrderTableBody td{display:block;min-width:0;padding:10px 12px!important;border-bottom:1px solid rgba(51,65,85,.55);word-break:break-word}
+  #adminOrderTableBody td:nth-child(1),#adminOrderTableBody td:nth-child(4),#adminOrderTableBody td:nth-child(7){grid-column:1/-1}
+  #adminOrderTableBody td:nth-last-child(-n+2){border-bottom:0}
+  #adminOrderTableBody td::before{display:block;margin-bottom:3px;color:#64748b;font-size:10px;font-weight:800;letter-spacing:.04em}
+  #adminOrderTableBody td:nth-child(1)::before{content:"訂單編號"}
+  #adminOrderTableBody td:nth-child(2)::before{content:"客戶"}
+  #adminOrderTableBody td:nth-child(3)::before{content:"項目"}
+  #adminOrderTableBody td:nth-child(4)::before{content:"地址"}
+  #adminOrderTableBody td:nth-child(5)::before{content:"金額"}
+  #adminOrderTableBody td:nth-child(6)::before{content:"狀態"}
+  #adminOrderTableBody td:nth-child(7)::before{content:"建立時間"}
+}

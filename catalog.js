@@ -1,4 +1,4 @@
-/* 小宇微電｜公開商品目錄 v17
+/* 小宇微電｜公開商品目錄 v19
    商品照片內建於專案，不依賴 Firebase Storage。後台價格與顯示設定可覆蓋本檔。 */
 window.YU_PRODUCT_CATALOG = [
   {

@@ -11,6 +11,7 @@ service firebase.storage {
         (request.auth.token.email_verified == true && request.auth.token.email == 'uu8832sr@gmail.com')
         || request.auth.uid == 'rN911472GUXjc1IYToSPhgf6zbs2'
         || request.auth.uid == 'iRdFBpDpXcNklIQ2tzP8kP1lDu42'
+        || request.auth.uid == 'azMaRtblP0VevIvEQQDG6OZj5wh1'
         || firestore.get(/databases/(default)/documents/admins/$(request.auth.uid)).data.enabled == true
       );
     }

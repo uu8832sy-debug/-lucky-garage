@@ -130,6 +130,36 @@
       "source": "/admin/",
       "destination": "/admin/index.html",
       "permanent": false
+    },
+    {
+      "source": "/admin.html",
+      "destination": "/admin/index.html",
+      "permanent": false
+    },
+    {
+      "source": "/business.html",
+      "destination": "/admin/index.html?view=orders-full",
+      "permanent": false
+    },
+    {
+      "source": "/owner.html",
+      "destination": "/admin/index.html?view=orders-full",
+      "permanent": false
+    },
+    {
+      "source": "/garage-admin.html",
+      "destination": "/admin/index.html?view=draw",
+      "permanent": false
+    },
+    {
+      "source": "/raffle-now.html",
+      "destination": "/admin/index.html?view=draw",
+      "permanent": false
+    },
+    {
+      "source": "/raffle-now-v2.html",
+      "destination": "/admin/index.html?view=draw",
+      "permanent": false
     }
   ]
 }

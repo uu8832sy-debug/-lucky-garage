@@ -1,4 +1,5 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -16,6 +17,7 @@ service cloud.firestore {
         isOwnerEmail()
         || request.auth.uid == 'rN911472GUXjc1IYToSPhgf6zbs2'
         || request.auth.uid == 'iRdFBpDpXcNklIQ2tzP8kP1lDu42'
+        || request.auth.uid == 'azMaRtblP0VevIvEQQDG6OZj5wh1'
         || (
           exists(/databases/$(database)/documents/admins/$(request.auth.uid))
           && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.enabled == true
@@ -23,11 +25,97 @@ service cloud.firestore {
       );
     }
 
+    function validPublicOrder() {
+      return request.resource.data.keys().hasAll([
+          'orderNo', 'orderId', 'source',
+          'customerName', 'custName', 'phone', 'custPhone',
+          'address', 'custAddress', 'model', 'itemName', 'color',
+          'vehicleVariant', 'battery', 'price', 'totalAmount',
+          'cost', 'netProfit', 'deposit', 'balancePaid',
+          'licenseMode', 'deliveryMode', 'paymentMethod', 'paymentTerms',
+          'status', 'deliveredAt', 'notes',
+          'createdAt', 'updatedAt', 'timestamp', 'createdBy', 'updatedBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'orderNo', 'orderId', 'source',
+          'customerName', 'custName', 'phone', 'custPhone',
+          'address', 'custAddress', 'model', 'itemName', 'color',
+          'vehicleVariant', 'battery', 'price', 'totalAmount',
+          'cost', 'netProfit', 'deposit', 'balancePaid',
+          'licenseMode', 'deliveryMode', 'paymentMethod', 'paymentTerms',
+          'status', 'deliveredAt', 'notes',
+          'createdAt', 'updatedAt', 'timestamp', 'createdBy', 'updatedBy'
+        ])
+        && request.resource.data.orderNo == orderId
+        && request.resource.data.orderId == orderId
+        && request.resource.data.orderNo is string
+        && request.resource.data.orderNo.size() >= 8
+        && request.resource.data.orderNo.size() <= 40
+        && request.resource.data.customerName is string
+        && request.resource.data.customerName.size() >= 1
+        && request.resource.data.customerName.size() <= 40
+        && request.resource.data.custName == request.resource.data.customerName
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() >= 9
+        && request.resource.data.phone.size() <= 20
+        && request.resource.data.custPhone == request.resource.data.phone
+        && request.resource.data.address is string
+        && request.resource.data.address.size() >= 3
+        && request.resource.data.address.size() <= 180
+        && request.resource.data.custAddress == request.resource.data.address
+        && request.resource.data.model is string
+        && request.resource.data.model.size() >= 1
+        && request.resource.data.model.size() <= 80
+        && request.resource.data.itemName is string
+        && request.resource.data.itemName.size() >= 1
+        && request.resource.data.itemName.size() <= 120
+        && request.resource.data.color is string
+        && request.resource.data.vehicleVariant is string
+        && request.resource.data.battery is string
+        && request.resource.data.source in ['official-store', 'official-store-plate']
+        && request.resource.data.status == '待訂金'
+        && request.resource.data.price is int
+        && request.resource.data.price >= 0
+        && request.resource.data.price <= 300000
+        && request.resource.data.totalAmount is string
+        && request.resource.data.cost == 0
+        && request.resource.data.netProfit == request.resource.data.price
+        && request.resource.data.deposit == 0
+        && request.resource.data.balancePaid == 0
+        && request.resource.data.deliveredAt == ''
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.timestamp == request.time
+        && request.resource.data.createdBy == 'public-store'
+        && request.resource.data.updatedBy == 'public-store'
+        && (
+          (
+            request.resource.data.source == 'official-store'
+            && request.resource.data.model != '紀念展示車牌'
+          )
+          || (
+            request.resource.data.source == 'official-store-plate'
+            && request.resource.data.model == '紀念展示車牌'
+            && request.resource.data.price == 9500
+            && request.resource.data.paymentTerms == '訂金 NT$5,500／尾款 NT$4,000（貨到付款）'
+            && request.resource.data.licenseMode == '自行辦理'
+            && request.resource.data.deliveryMode == '物流寄送'
+          )
+        );
+    }
+
     match /admins/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list, create, update, delete: if false;
     }
 
+    // 官方商城商品：前台可讀，只有管理員可變更。
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // 幸運車庫活動。活動建立後不可修改，避免機率被事後改動。
     match /campaigns/{campaignId} {
       allow get: if signedIn();
       allow list: if isAdmin();
@@ -38,7 +126,20 @@ service cloud.firestore {
         && request.resource.data.algorithm == 'sha256-v1'
         && request.resource.data.seed is string
         && request.resource.data.name is string
-        && request.resource.data.prizes is list;
+        && request.resource.data.prizes is list
+        && request.resource.data.prizes.size() == 4
+        && request.resource.data.prizes[0].id == 'discount-500'
+        && request.resource.data.prizes[0].title == '現折 NT$500'
+        && request.resource.data.prizes[0].weight == 80
+        && request.resource.data.prizes[1].id == 'discount-1000'
+        && request.resource.data.prizes[1].title == '現折 NT$1,000'
+        && request.resource.data.prizes[1].weight == 16
+        && request.resource.data.prizes[2].id == 'discount-2000'
+        && request.resource.data.prizes[2].title == '現折 NT$2,000'
+        && request.resource.data.prizes[2].weight == 3
+        && request.resource.data.prizes[3].id == 'discount-3000'
+        && request.resource.data.prizes[3].title == '現折 NT$3,000'
+        && request.resource.data.prizes[3].weight == 1;
       allow update, delete: if false;
     }
 
@@ -90,13 +191,13 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // 相容先前成交淨利測試資料：僅管理員可讀寫。
-    match /sales/{saleId} {
-      allow read, create, update, delete: if isAdmin();
+    // 原有訂單資料全部保留。前台只能新增，管理員可完整管理。
+    match /orders/{orderId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if isAdmin() || validPublicOrder();
     }
 
-    // 私人訂單與收據：僅管理員可讀寫。
-    match /orders/{orderId} {
+    match /sales/{saleId} {
       allow read, create, update, delete: if isAdmin();
     }
 
@@ -104,7 +205,6 @@ service cloud.firestore {
       allow read, create, update, delete: if isAdmin();
     }
 
-    // 電子保固卡：公開頁只可用正確編號讀取已發布資料；禁止公開列出全部保固卡。
     match /warranties/{warrantyId} {
       allow get: if isAdmin() || resource.data.published == true;
       allow list: if isAdmin();

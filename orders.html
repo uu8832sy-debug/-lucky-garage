@@ -6,14 +6,24 @@
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <meta name="theme-color" content="#090b10" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <script>
+    (() => {
+      const embed = new URLSearchParams(location.search).get("embed") === "1";
+      if (!embed) {
+        location.replace("./index.html?view=orders-full");
+        return;
+      }
+      document.documentElement.classList.add("embed-mode");
+    })();
+  </script>
   <title>小宇微電｜訂單與保固管理</title>
   <link rel="manifest" href="../manifest.webmanifest" />
   <link rel="apple-touch-icon" href="../icon-192.png" />
-  <link rel="stylesheet" href="orders.css?v=17.0.0" />
-  <link rel="stylesheet" href="admin-unified.css?v=17.0.0" />
+  <link rel="stylesheet" href="orders.css?v=19.0.0" />
+  <link rel="stylesheet" href="admin-unified.css?v=19.0.0" />
 </head>
 <body>
-<header class="backend-header"><div class="backend-wrap"><a class="backend-brand" href="/admin/index.html"><span class="backend-mark">YU</span><span><small>ADMINISTRATION</small><strong>小宇微電後台管理系統</strong></span></a><nav class="backend-nav"><a href="/admin/index.html">後台首頁</a><a class="active" href="/admin/orders.html">訂單・收據・保固</a><a href="/admin/draw.html">抽獎管理</a><a class="front-link" href="/index.html?v=17.0.0">離開後台・查看前台 →</a></nav></div></header>
+<header class="backend-header"><div class="backend-wrap"><a class="backend-brand" href="/admin/index.html"><span class="backend-mark">YU</span><span><small>ADMINISTRATION</small><strong>小宇微電後台管理系統</strong></span></a><nav class="backend-nav"><a href="/admin/index.html">後台首頁</a><a class="active" href="/admin/orders.html">訂單・收據・保固</a><a href="/admin/draw.html">抽獎管理</a><a class="front-link" href="/index.html?v=19.0.0">離開後台・查看前台 →</a></nav></div></header>
 
   <main class="shell">
     <section id="configWarning" class="card warning hidden">
@@ -198,10 +208,10 @@
 
   <div id="toast" class="toast" role="status"></div>
 
-  <script src="../config.js?v=17.0.0"></script>
-  <script src="../firebase-config.js?v=17.0.0"></script>
+  <script src="../config.js?v=19.0.0"></script>
+  <script src="../firebase-config.js?v=19.0.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script type="module" src="orders.js?v=17.0.0"></script>
+  <script type="module" src="orders.js?v=19.0.0"></script>
 </body>
 </html>

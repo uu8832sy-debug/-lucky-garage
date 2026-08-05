@@ -17,6 +17,7 @@ service cloud.firestore {
         isOwnerEmail()
         || request.auth.uid == 'rN911472GUXjc1IYToSPhgf6zbs2'
         || request.auth.uid == 'iRdFBpDpXcNklIQ2tzP8kP1lDu42'
+        || request.auth.uid == 'azMaRtblP0VevIvEQQDG6OZj5wh1'
         || (
           exists(/databases/$(database)/documents/admins/$(request.auth.uid))
           && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.enabled == true

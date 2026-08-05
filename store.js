@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   collection,
   doc,
@@ -6,7 +6,7 @@ import {
   getFirestore,
   serverTimestamp,
   setDoc
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 
 const firebaseConfig = window.LUCKY_GARAGE_FIREBASE_CONFIG || {};
 const storeConfig = window.YU_STORE_CONFIG || {};

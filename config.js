@@ -1,4 +1,4 @@
-/* 小宇微電｜官方商城與幸運車庫正式設定 v17 STABLE */
+/* 小宇微電｜官方商城與幸運車庫正式設定 v19 STABLE */
 window.YU_STORE_CONFIG = {
   brandName: "小宇微電",
   slogan: "找小宇買微電，不走彎路",
