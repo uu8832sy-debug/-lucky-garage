@@ -116,25 +116,38 @@ function renderPrizePreview() {
   }).join("");
 }
 
-function validateOfficialPrizeConfig(campaign) {
-  const expected = Array.isArray(uiConfig.defaultPrizes) ? uiConfig.defaultPrizes : [];
-  const actual = Array.isArray(campaign?.prizes) ? campaign.prizes : [];
-  if (expected.length !== 4 || actual.length !== 4) {
-    throw new Error("活動獎項數量不正確，禁止產生抽獎碼。");
-  }
+const OFFICIAL_ODDS = Object.freeze({
+  "discount-500": 80,
+  "discount-1000": 16,
+  "discount-2000": 3,
+  "discount-3000": 1
+});
 
-  const actualById = new Map(
-    actual.map((prize) => [String(prize?.id || "").trim(), prize])
-  );
-  const valid = expected.every((prize) => {
-    const current = actualById.get(String(prize.id));
-    return current && Number(current.weight) === Number(prize.weight);
-  });
-  const totalWeight = expected.reduce((sum, prize) => sum + Number(prize.weight || 0), 0);
-
-  if (!valid || totalWeight !== 100) {
-    throw new Error("活動機率必須為 500=80%、1000=16%、2000=3%、3000=1%，禁止產生抽獎碼。");
+function getOfficialPrizes() {
+  const prizes = Array.isArray(uiConfig.defaultPrizes) ? uiConfig.defaultPrizes : [];
+  const valid = prizes.length === 4 && prizes.every((prize) => (
+    OFFICIAL_ODDS[String(prize?.id || "")] === Number(prize?.weight)
+  ));
+  const total = prizes.reduce((sum, prize) => sum + Number(prize?.weight || 0), 0);
+  if (!valid || total !== 100) {
+    throw new Error("網站正式機率設定不完整，請重新上傳 config.js。");
   }
+  return prizes.map((prize) => ({
+    id: String(prize.id),
+    title: String(prize.title),
+    description: String(prize.description || ""),
+    icon: String(prize.icon || "🎁"),
+    weight: Number(prize.weight)
+  }));
+}
+
+function normalizeOfficialCampaign(campaign) {
+  return {
+    ...campaign,
+    algorithm: String(campaign?.algorithm || "sha256-v1"),
+    seed: String(campaign?.seed || campaign?.id || uiConfig.activeCampaignId || "yu-lucky-garage"),
+    prizes: getOfficialPrizes()
+  };
 }
 
 async function checkAdminAccess(user) {
@@ -219,8 +232,8 @@ async function loadCampaign(campaignId) {
   if (campaignCache.has(campaignId)) return campaignCache.get(campaignId);
   const snapshot = await getDoc(doc(db, "campaigns", campaignId));
   if (!snapshot.exists()) throw new Error("找不到活動 ID，請先建立活動。");
-  const data = { id: snapshot.id, ...snapshot.data() };
-  validateOfficialPrizeConfig(data);
+  const data = normalizeOfficialCampaign({ id: snapshot.id, ...snapshot.data() });
+  if (data.active === false) throw new Error("這個活動目前已停用。");
   campaignCache.set(campaignId, data);
   return data;
 }
@@ -257,7 +270,7 @@ generateCodesBtn.addEventListener("click", async () => {
 
     currentCodes = records.map((record) => record.code);
     generatedCodes.value = currentCodes.join("\n");
-    setMessage(codesMessage, `已建立 ${currentCodes.length} 組全網一次性抽獎碼。`, true);
+    setMessage(codesMessage, `已建立 ${currentCodes.length} 組一次性抽獎碼；正式機率固定為 500=80%、1000=16%、2000=3%、3000=1%。`, true);
     await refreshCodes();
   } catch (error) {
     console.error(error);
