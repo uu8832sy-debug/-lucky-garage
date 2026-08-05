@@ -68,7 +68,8 @@ let currentCodes = [];
 const campaignCache = new Map();
 const OWNER_UIDS = new Set([
   "rN911472GUXjc1IYToSPhgf6zbs2",
-  "iRdFBpDpXcNklIQ2tzP8kP1lDu42"
+  "iRdFBpDpXcNklIQ2tzP8kP1lDu42",
+  "azMaRtblP0VevIvEQQDG6OZj5wh1"
 ]);
 
 function hasRealFirebaseConfig(config) {
@@ -118,14 +119,21 @@ function renderPrizePreview() {
 function validateOfficialPrizeConfig(campaign) {
   const expected = Array.isArray(uiConfig.defaultPrizes) ? uiConfig.defaultPrizes : [];
   const actual = Array.isArray(campaign?.prizes) ? campaign.prizes : [];
-  const valid = expected.length === 4 && actual.length === expected.length && expected.every((prize, index) => {
-    const current = actual[index] || {};
-    return String(current.id || "") === String(prize.id || "")
-      && String(current.title || "") === String(prize.title || "")
-      && Number(current.weight || 0) === Number(prize.weight || 0);
+  if (expected.length !== 4 || actual.length !== 4) {
+    throw new Error("活動獎項數量不正確，禁止產生抽獎碼。");
+  }
+
+  const actualById = new Map(
+    actual.map((prize) => [String(prize?.id || "").trim(), prize])
+  );
+  const valid = expected.every((prize) => {
+    const current = actualById.get(String(prize.id));
+    return current && Number(current.weight) === Number(prize.weight);
   });
-  if (!valid) {
-    throw new Error("這個活動的獎項或機率不是 500=80%、1000=16%、2000=3%、3000=1%，禁止產生抽獎碼。");
+  const totalWeight = expected.reduce((sum, prize) => sum + Number(prize.weight || 0), 0);
+
+  if (!valid || totalWeight !== 100) {
+    throw new Error("活動機率必須為 500=80%、1000=16%、2000=3%、3000=1%，禁止產生抽獎碼。");
   }
 }
 
