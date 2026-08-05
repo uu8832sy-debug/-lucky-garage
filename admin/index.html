@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-Hant" class="h-full bg-[#080a0f] text-slate-100">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>小宇微電｜管理員後台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    .glass-card{background:rgba(15,23,42,.88);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}
+    ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#1e293b;border-radius:99px}
+  </style>
+</head>
+<body class="min-h-full flex flex-col antialiased">
+  <header class="sticky top-0 z-40 bg-slate-900/92 border-b border-slate-800 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3"><span class="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 font-black flex items-center justify-center">YU</span><div><small class="text-[10px] text-emerald-400 font-bold block">ADMINISTRATION</small><h1 class="text-sm font-bold text-white">小宇微電後台管理系統</h1></div></div>
+      <div id="headerActions" class="hidden items-center gap-2 text-xs"><span id="adminIdentity" class="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 font-bold"></span><a href="../index.html" target="_blank" rel="noopener" class="bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">查看前台 ↗</a><button id="logoutBtn" class="bg-slate-800 px-3 py-1 rounded-full border border-slate-700">登出</button></div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+    <section id="loginCard" class="glass-card max-w-lg mx-auto mt-14 rounded-3xl p-8 text-center space-y-4">
+      <span class="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-2xl"><i class="fa-solid fa-lock"></i></span>
+      <div><h2 class="text-xl font-black">管理員登入</h2><p class="text-slate-400 text-sm mt-2">此頁不會出現在前台，只有授權 Google 帳號能讀取資料。</p></div>
+      <button id="loginBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl"><i class="fa-brands fa-google mr-2"></i>使用 Google 登入</button>
+      <p id="loginMessage" class="text-xs text-slate-400"></p>
+    </section>
+
+    <section id="deniedCard" class="hidden glass-card max-w-lg mx-auto mt-14 rounded-3xl p-8 text-center space-y-4">
+      <h2 class="text-xl font-black text-rose-400">此帳號沒有管理權限</h2><p id="deniedMessage" class="text-sm text-slate-400"></p><button id="switchAccountBtn" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-sm">切換帳號</button>
+    </section>
+
+    <div id="adminApp" class="hidden space-y-6">
+      <nav class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <button class="admin-tab bg-emerald-500 text-slate-950 font-black rounded-xl p-3 text-xs" data-admin-tab="orders"><i class="fa-solid fa-file-invoice mr-1"></i>線上訂單</button>
+        <button class="admin-tab bg-slate-900 border border-slate-800 text-slate-300 font-bold rounded-xl p-3 text-xs" data-admin-tab="products"><i class="fa-solid fa-images mr-1"></i>商品與圖片</button>
+        <a href="orders.html" class="bg-slate-900 border border-slate-800 text-slate-300 font-bold rounded-xl p-3 text-xs text-center"><i class="fa-solid fa-chart-line mr-1"></i>完整訂單／淨利</a>
+        <a href="draw.html" class="bg-slate-900 border border-slate-800 text-amber-400 font-bold rounded-xl p-3 text-xs text-center"><i class="fa-solid fa-gift mr-1"></i>抽獎管理</a>
+      </nav>
+
+      <section id="admin-section-orders" class="space-y-4">
+        <div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-xs text-emerald-400 font-bold">ORDERS</p><h2 class="text-xl font-black">即時線上訂單</h2></div><div class="flex gap-2"><input id="orderSearch" placeholder="搜尋姓名、電話、車款" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs" /><button id="refreshOrdersBtn" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">重新整理</button></div></div>
+        <div class="glass-card rounded-2xl overflow-x-auto">
+          <table class="w-full text-left text-xs min-w-[920px]"><thead><tr class="border-b border-slate-800 text-slate-500"><th class="p-3">訂單編號</th><th class="p-3">客戶</th><th class="p-3">項目</th><th class="p-3">地址</th><th class="p-3">金額</th><th class="p-3">狀態</th><th class="p-3">建立時間</th></tr></thead><tbody id="adminOrderTableBody" class="divide-y divide-slate-800/80"></tbody></table>
+        </div>
+      </section>
+
+      <section id="admin-section-products" class="hidden space-y-4">
+        <div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-xs text-emerald-400 font-bold">PRODUCTS</p><h2 class="text-xl font-black">商品、售價與實車圖庫</h2></div><div class="flex gap-2"><button id="seedProductsBtn" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">建立／補齊 12 款預設商品</button><button id="refreshProductsBtn" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">重新整理</button></div></div>
+        <div class="glass-card rounded-2xl overflow-x-auto"><table class="w-full text-left text-xs min-w-[800px]"><thead><tr class="border-b border-slate-800 text-slate-500"><th class="p-3">圖庫</th><th class="p-3">車款</th><th class="p-3">款式</th><th class="p-3">鉛酸售價</th><th class="p-3">鋰鐵售價</th><th class="p-3">前台</th><th class="p-3 text-right">操作</th></tr></thead><tbody id="adminProductTableBody" class="divide-y divide-slate-800/80"></tbody></table></div>
+      </section>
+    </div>
+  </main>
+
+  <div id="editProductModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+    <div class="glass-card max-w-2xl w-full max-h-[92vh] overflow-y-auto rounded-3xl p-6 space-y-5 text-xs">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3"><h3 id="editModalProductTitle" class="text-lg font-bold">管理商品</h3><button id="closeProductModalBtn" class="text-slate-400 p-2"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+      <div class="grid sm:grid-cols-2 gap-3"><label><span class="font-bold block mb-1">車款名稱</span><input id="editNameInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">款式</span><input id="editStyleInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">標籤</span><input id="editTagInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">顏色（逗號分隔）</span><input id="editColorsInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">鉛酸版售價</span><input id="editPriceLeadInput" type="number" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">鋰鐵版售價</span><input id="editPriceLithiumInput" type="number" placeholder="不提供請留空" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label></div>
+      <label class="flex items-center gap-2"><input id="editVisibleInput" type="checkbox" class="accent-emerald-500" /><span class="font-bold">顯示於前台商城</span></label>
+      <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3"><div class="flex justify-between items-center"><label class="font-bold"><i class="fa-solid fa-cloud-arrow-up text-emerald-400 mr-2"></i>Firebase Storage 圖庫</label><span id="uploadProgressText" class="text-slate-400 text-[10px]"></span></div><input type="file" id="imageFileInput" multiple accept="image/*" class="hidden" /><button id="chooseImagesBtn" class="bg-slate-800 text-emerald-400 border border-emerald-500/30 font-bold px-4 py-2 rounded-xl"><i class="fa-solid fa-images mr-1"></i>選擇照片上傳</button><div id="productGalleryGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-2"></div></div>
+      <button id="saveProductBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl">儲存商品設定</button>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] bg-slate-100 text-slate-950 px-5 py-3 rounded-full shadow-2xl text-xs font-bold translate-y-20 opacity-0 transition-all"><span id="toastMsg"></span></div>
+  <script src="../config.js?v=12.2"></script>
+  <script src="../firebase-config.js?v=12.2"></script>
+  <script type="module" src="admin.js?v=12.2"></script>
+</body>
+</html>
