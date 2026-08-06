@@ -1,0 +1,17 @@
+V20 上傳方式
+
+這個 ZIP 打開後，index.html、products.html、admin、assets 等內容直接位於第一層。
+
+1. 在 iPhone「檔案」App 點 ZIP 解壓縮。
+2. 打開解壓後資料夾，選取裡面的全部內容。
+3. 上傳到 GitHub Repository 最外層，覆蓋所有同名檔案。
+4. Commit 到 main，等待 Vercel 顯示 Ready。
+5. 不要修改 Firebase、Firestore Rules 或活動 ID。
+
+部署後測試：
+前台：https://lucky-garage.vercel.app/index.html?v=20.0.0
+車款：https://lucky-garage.vercel.app/products.html?v=20.0.0
+抽獎：https://lucky-garage.vercel.app/garage.html?v=20.0.0
+後台：https://lucky-garage.vercel.app/admin/index.html?v=20.0.0
+
+注意：不要把 ZIP 本身上傳到 GitHub；GitHub 不會自動解壓縮。

@@ -3,7 +3,7 @@
 @media(max-width:900px){.hero{grid-template-columns:1fr}.hero-collage{min-height:320px}.cards,.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.modal-layout,.split{grid-template-columns:1fr}.header-row{align-items:flex-start;padding:10px 0;flex-direction:column}.public-nav{margin-left:0;width:100%}.site-header{position:relative}.status-strip{grid-template-columns:1fr 1fr}}
 @media(max-width:620px){.wrap{width:min(100% - 20px,1180px)}.hero{padding-top:32px}.hero-collage{min-height:260px}.cards,.product-grid{grid-template-columns:1fr}.product-photo{aspect-ratio:16/11}.form-grid{grid-template-columns:1fr}.modal-layout{padding:12px}.modal-card{border-radius:20px}.actions .btn{width:100%}.section-head{align-items:flex-start;flex-direction:column}.detail-list{grid-template-columns:1fr 1fr}}
 
-/* v19 手機固定快速選單：只有公開頁面使用，不包含任何後台入口。 */
+/* v20 手機固定快速選單：只有公開頁面使用，不包含任何後台入口。 */
 .mobile-dock{display:none}
 @media(max-width:760px){
   body{padding-bottom:76px}

@@ -2,13 +2,14 @@
 <html lang="zh-Hant" class="h-full bg-[#080a0f] text-slate-100">
 <head>
   <meta charset="utf-8" />
+  <meta name="build-version" content="20.0.0">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <title>小宇微電｜後台管理系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="stylesheet" href="admin-unified.css?v=19.0.0" />
+  <link rel="stylesheet" href="admin-unified.css?v=20.0.0" />
   <style>
     .glass-card{background:rgba(15,23,42,.88);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}
     .shell-view[hidden]{display:none!important}
@@ -36,7 +37,7 @@
       </a>
       <div id="headerActions" class="backend-user-actions hidden">
         <span id="adminIdentity" class="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 font-bold"></span>
-        <a class="header-front-link" href="../index.html?v=19.0.0">查看前台</a>
+        <a class="header-front-link" data-go-front href="/index.html?v=20.0.0">查看前台</a>
         <button id="logoutBtn" class="bg-slate-800 px-3 py-1 rounded-full border border-slate-700" type="button">登出</button>
       </div>
       <nav class="backend-nav" aria-label="後台固定選單">
@@ -44,7 +45,7 @@
         <button type="button" data-shell-view="orders-full">訂單・收據・保固</button>
         <button type="button" data-shell-view="products">商品與圖片</button>
         <button type="button" data-shell-view="draw">抽獎管理</button>
-        <a class="front-link" href="../index.html?v=19.0.0">離開後台・查看前台 →</a>
+        <a class="front-link" data-go-front href="/index.html?v=20.0.0">離開後台・查看前台 →</a>
       </nav>
     </div>
   </header>
@@ -91,12 +92,12 @@
 
       <section id="shell-orders-full" class="shell-view" data-shell-panel="orders-full" hidden>
         <div class="module-head"><div><h2>訂單・收據・保固管理</h2><p>新增、批量匯入、淨利統計、訂金收據、保固卡與全部訂單都集中在這個後台。</p></div></div>
-        <iframe id="ordersFrame" class="admin-frame" title="訂單收據保固管理" loading="lazy" data-src="./orders.html?embed=1&v=19.0.0"></iframe>
+        <iframe id="ordersFrame" class="admin-frame" title="訂單收據保固管理" loading="lazy" data-src="./orders.html?embed=1&v=20.0.0"></iframe>
       </section>
 
       <section id="shell-draw" class="shell-view" data-shell-panel="draw" hidden>
-        <div class="module-head"><div><h2>抽獎管理</h2><p>建立活動、產生一次性抽獎碼、查詢已使用結果，全部集中在這個後台。</p></div><a href="../garage.html?v=19.0.0" target="_blank" rel="noopener" class="bg-amber-500 text-slate-950 px-3 py-2 rounded-xl text-xs font-black">開啟客人抽獎頁</a></div>
-        <iframe id="drawFrame" class="admin-frame" title="抽獎管理" loading="lazy" data-src="./draw.html?embed=1&v=19.0.0"></iframe>
+        <div class="module-head"><div><h2>抽獎管理</h2><p>建立活動、產生一次性抽獎碼、查詢已使用結果，全部集中在這個後台。</p></div><a href="/garage.html?v=20.0.0" target="_blank" rel="noopener" class="bg-amber-500 text-slate-950 px-3 py-2 rounded-xl text-xs font-black">開啟客人抽獎頁</a></div>
+        <iframe id="drawFrame" class="admin-frame" title="抽獎管理" loading="lazy" data-src="./draw.html?embed=1&v=20.0.0"></iframe>
       </section>
     </div>
   </main>
@@ -112,10 +113,10 @@
   </div>
 
   <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] bg-slate-100 text-slate-950 px-5 py-3 rounded-full shadow-2xl text-xs font-bold translate-y-20 opacity-0 transition-all"><span id="toastMsg"></span></div>
-  <script src="../config.js?v=19.0.0"></script>
-  <script src="../firebase-config.js?v=19.0.0"></script>
-  <script src="../catalog.js?v=19.0.0"></script>
-  <script type="module" src="admin.js?v=19.0.0"></script>
-  <script src="admin-shell.js?v=19.0.0"></script>
+  <script src="../config.js?v=20.0.0"></script>
+  <script src="../firebase-config.js?v=20.0.0"></script>
+  <script src="../catalog.js?v=20.0.0"></script>
+  <script type="module" src="admin.js?v=20.0.0"></script>
+  <script src="admin-shell.js?v=20.0.0"></script>
 </body>
 </html>

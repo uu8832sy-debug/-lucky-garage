@@ -1,165 +1,21 @@
 {
+  "cleanUrls": false,
+  "trailingSlash": false,
   "headers": [
-    {
-      "source": "/",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/index.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/products.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/plate.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/garage.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/warranty.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/admin/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        }
-      ]
-    },
-    {
-      "source": "/admin.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        }
-      ]
-    },
-    {
-      "source": "/business.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        }
-      ]
-    },
-    {
-      "source": "/garage-admin.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        }
-      ]
-    },
-    {
-      "source": "/owner.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, max-age=0"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        }
-      ]
-    }
+    {"source":"/(.*)","headers":[{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"}]},
+    {"source":"/index.html","headers":[{"key":"Cache-Control","value":"no-store, max-age=0"}]},
+    {"source":"/products.html","headers":[{"key":"Cache-Control","value":"no-store, max-age=0"}]},
+    {"source":"/garage.html","headers":[{"key":"Cache-Control","value":"no-store, max-age=0"}]},
+    {"source":"/admin/(.*)","headers":[{"key":"Cache-Control","value":"no-store, max-age=0"},{"key":"X-Robots-Tag","value":"noindex, nofollow, noarchive"}]}
   ],
   "redirects": [
-    {
-      "source": "/admin",
-      "destination": "/admin/index.html",
-      "permanent": false
-    },
-    {
-      "source": "/admin/",
-      "destination": "/admin/index.html",
-      "permanent": false
-    },
-    {
-      "source": "/admin.html",
-      "destination": "/admin/index.html",
-      "permanent": false
-    },
-    {
-      "source": "/business.html",
-      "destination": "/admin/index.html?view=orders-full",
-      "permanent": false
-    },
-    {
-      "source": "/owner.html",
-      "destination": "/admin/index.html?view=orders-full",
-      "permanent": false
-    },
-    {
-      "source": "/garage-admin.html",
-      "destination": "/admin/index.html?view=draw",
-      "permanent": false
-    },
-    {
-      "source": "/raffle-now.html",
-      "destination": "/admin/index.html?view=draw",
-      "permanent": false
-    },
-    {
-      "source": "/raffle-now-v2.html",
-      "destination": "/admin/index.html?view=draw",
-      "permanent": false
-    }
+    {"source":"/admin","destination":"/admin/index.html","permanent":false},
+    {"source":"/admin/","destination":"/admin/index.html","permanent":false},
+    {"source":"/admin.html","destination":"/admin/index.html","permanent":false},
+    {"source":"/business.html","destination":"/admin/index.html?view=orders-full","permanent":false},
+    {"source":"/owner.html","destination":"/admin/index.html?view=orders-full","permanent":false},
+    {"source":"/garage-admin.html","destination":"/admin/index.html?view=draw","permanent":false},
+    {"source":"/raffle-now.html","destination":"/admin/index.html?view=draw","permanent":false},
+    {"source":"/raffle-now-v2.html","destination":"/admin/index.html?view=draw","permanent":false}
   ]
 }
