@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
 
-const payload = "site_payload_v26.zip";
+const payload = "site_payload_v30_2.zip";
 const input = fs.readFileSync(payload);
 const outDir = path.resolve("public");
 fs.rmSync(outDir,{recursive:true,force:true});
