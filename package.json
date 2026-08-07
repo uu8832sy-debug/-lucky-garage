@@ -1,7 +1,7 @@
 {
-  "name": "lucky-garage-v24-deploy",
+  "name": "lucky-garage-v25-deploy",
   "private": true,
-  "version": "24.0.0",
+  "version": "25.0.0",
   "scripts": {
     "build": "node build.mjs"
   }
