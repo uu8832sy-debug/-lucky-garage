@@ -106,5 +106,7 @@
       "destination": "/admin/index.html?view=draw",
       "permanent": false
     }
-  ]
+  ],
+  "outputDirectory": "public",
+  "buildCommand": "npm run build"
 }
