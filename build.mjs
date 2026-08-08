@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
 
-const payload = "site_payload_v30_2.zip";
+const payload = "site_payload_v31.zip";
 const input = fs.readFileSync(payload);
 const outDir = path.resolve("public");
 fs.rmSync(outDir,{recursive:true,force:true});
@@ -32,6 +32,6 @@ while(offset+4<=input.length){
   }
   offset=dataStart+compressedSize;
 }
-const required=["index.html","products.html","plate.html","garage.html","warranty.html","admin/index.html","assets/brand/logo-round.webp"];
+const required=["index.html","products.html","plate.html","warranty.html","admin/index.html","assets/brand/logo-round.webp"];
 for(const file of required){ if(!fs.existsSync(path.join(outDir,file))) throw new Error(`Deployment payload missing: ${file}`); }
 console.log(`Extracted ${count} runtime files to ${outDir}`);
