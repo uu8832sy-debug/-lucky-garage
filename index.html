@@ -1,105 +1,140 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" class="h-full bg-[#080a0f] text-slate-100">
 <head>
-  <meta charset="utf-8">
-  <script data-public-entry-v24>if(window.top!==window.self){window.top.location.replace(window.location.href);}</script>
-  <meta name="build-version" content="32.0.0"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#070a0f"><meta name="description" content="小宇微電官方網站｜微型電動二輪車、紀念展示牌、線上訂購與保固服務。">
-  <title>小宇微電｜官方前台</title>
-  <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta charset="utf-8" />
+  <meta name="build-version" content="32.0.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
+  <title>小宇微電｜V32 後台管理系統</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
-  <link rel="stylesheet" href="public.css?v=32.0.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="admin-unified.css?v=32.0.0" />
+  <style>
+    .glass-card{background:rgba(15,23,42,.88);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.08)}
+    .shell-view[hidden]{display:none!important}.admin-frame{display:block;width:100%;height:calc(100vh - 238px);min-height:680px;border:0;border-radius:20px;background:#080a0f}
+    .module-head{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}.module-head h2{font-size:1.15rem;font-weight:900}.module-head p{font-size:.78rem;color:#94a3b8;margin-top:3px}
+    [data-shell-view]{cursor:pointer}[data-shell-view].is-shell-active{background:#10b981!important;color:#03110d!important;border-color:#10b981!important}
+  </style>
 </head>
-<body>
-<div id="announcementBar" class="site-announcement" hidden></div>
-<header class="site-header"><div class="wrap header-row">
-  <a class="brand" href="/?v=32.0.0" aria-label="小宇微電官方首頁"><img class="brand-logo-img" src="/assets/brand/logo-round.webp" alt="小宇微電 Logo"><span><small>YU ELECTRIC</small><strong>小宇微電官方網站</strong></span></a>
-  <nav class="public-nav" aria-label="前台選單">
-    <a href="/?v=32.0.0" aria-current="page">首頁</a><a href="/products.html">車款商品</a><a href="/plate.html">展示牌訂製</a><a href="/warranty.html">保固查詢</a><a class="line" href="https://line.me/R/ti/p/@762eqvlg" target="_blank" rel="noopener">官方 LINE</a>
-  </nav>
-</div></header>
-<main>
-  <section class="wrap hero">
-    <div><img class="hero-brand-logo" src="/assets/brand/logo-round.webp" alt="小宇微電正式 Logo"><p id="heroEyebrow" class="eyebrow">工廠直營・全台到府交車</p><h1><span id="heroTitle">找小宇買微電，</span><br><span id="heroAccent">不走彎路</span></h1><p id="heroDescription">全台到府交車、線上看車、展示牌訂製與保固查詢，一站完成。</p>
-      <div class="actions"><a class="btn btn-primary" href="/products.html">立即查看車款</a><a class="btn btn-amber" href="/plate.html">訂製展示牌</a><a class="btn btn-secondary" href="/warranty.html">查詢保固卡</a></div>
+<body class="min-h-full flex flex-col antialiased">
+  <header class="backend-header">
+    <div class="backend-wrap">
+      <a class="backend-brand" href="./index.html" aria-label="後台首頁"><img class="backend-logo-img" src="../assets/brand/logo-round.webp" alt="小宇微電 Logo"><span><small>V32 ADMINISTRATION</small><strong>小宇微電後台管理系統</strong></span></a>
+      <div id="headerActions" class="backend-user-actions hidden"><span id="adminIdentity" class="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full border border-emerald-500/20 font-bold"></span><a class="header-front-link" href="https://lucky-garage.vercel.app/?v=32.0.0" target="_blank" rel="noopener">查看前台</a><button id="logoutBtn" class="bg-slate-800 px-3 py-1 rounded-full border border-slate-700" type="button">登出</button></div>
+      <nav class="backend-nav" aria-label="後台固定選單">
+        <button type="button" data-shell-view="dashboard" class="active is-shell-active">微電線上訂單</button>
+        <button type="button" data-shell-view="plate-orders">車牌線上訂單</button>
+        <button type="button" data-shell-view="products">商品</button>
+        <button type="button" data-shell-view="customers">客戶</button>
+        <button type="button" data-shell-view="content">首頁內容</button>
+        <button type="button" data-shell-view="delivery">交車案例</button>
+        <button type="button" data-shell-view="orders-full">完整訂單</button>
+        <a class="front-link" href="https://lucky-garage.vercel.app/?v=32.0.0" target="_blank" rel="noopener">前台 →</a>
+      </nav>
     </div>
-    <div class="hero-collage" aria-label="熱門車款照片"><img class="hero-main" src="assets/products/z3/01.webp" alt="Z3 微型電動車"><img src="assets/products/latte/01.webp" alt="小可愛拿鐵"><img src="assets/products/davespa/01.webp" alt="大偉士"></div>
-  </section>
-  <section class="wrap section"><div class="cards">
-    <article class="feature-card"><span class="feature-icon">🛵</span><b>完整車款公開售價</b><p>車款依供應提供鉛酸、三元鋰 30Ah、鋰鐵 30Ah 售價；車價不含領牌與保險代辦費。</p></article>
-    <article class="feature-card"><span class="feature-icon">🪪</span><b>1:1 紀念展示鐵牌</b><p>汽車、機車、重機展示牌皆可線上送出訂製需求；完成後由客服確認付款與製作細節。</p></article>
-    <article class="feature-card"><span class="feature-icon">📄</span><b>領牌方式自由選</b><p>可自行至監理站辦理；若由小宇代辦領牌與保險，車價另加 NT$3,000 代辦費。</p></article>
-  </section>
-  <section class="wrap section"><div class="section-head"><div><p class="eyebrow">POPULAR MODELS</p><h2>熱門車款</h2><p>照片已直接放入網站，不依賴 Firebase Storage 才能顯示。</p></div><a class="btn btn-secondary" href="/products.html">查看全部 12 款</a></div><div id="featuredProducts" class="product-grid">
-<article class="product-card" id="scooter-1">
-      <a class="product-photo" href="/products.html#scooter-1" aria-label="查看 大偉士"><img src="/assets/products/davespa/01.webp" alt="大偉士 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></a>
-      <div class="product-body"><div><span class="product-style">頂規改裝版</span><h3>大偉士</h3></div>
-      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 60–65 公里｜三元鋰 約 40–60 公里｜鋰鐵 約 70–80 公里</span></div>
-      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$35,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$52,000</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$58,800</strong></div></div>
-      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
-      <div class="price-row"><a class="btn btn-primary full-width" href="/products.html#scooter-1">看詳情</a></div></div>
-    </article>
-<article class="product-card" id="scooter-2">
-      <a class="product-photo" href="/products.html#scooter-2" aria-label="查看 小偉士"><img src="/assets/products/svespa/01.webp" alt="小偉士 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></a>
-      <div class="product-body"><div><span class="product-style">經典款</span><h3>小偉士</h3></div>
-      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 50–55 公里｜三元鋰 約 35–50 公里｜鋰鐵 約 60–70 公里</span></div>
-      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$28,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$41,800</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$45,600</strong></div></div>
-      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
-      <div class="price-row"><a class="btn btn-primary full-width" href="/products.html#scooter-2">看詳情</a></div></div>
-    </article>
-<article class="product-card" id="scooter-3">
-      <a class="product-photo" href="/products.html#scooter-3" aria-label="查看 神盾"><img src="/assets/products/shield/01.webp" alt="神盾 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></a>
-      <div class="product-body"><div><span class="product-style">鋼鐵戰艦版</span><h3>神盾</h3></div>
-      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 50–55 公里｜三元鋰 約 35–50 公里｜鋰鐵 約 60–70 公里</span></div>
-      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$29,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$42,800</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$48,000</strong></div></div>
-      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
-      <div class="price-row"><a class="btn btn-primary full-width" href="/products.html#scooter-3">看詳情</a></div></div>
-    </article>
-<article class="product-card" id="scooter-4">
-      <a class="product-photo" href="/products.html#scooter-4" aria-label="查看 天鵝座 Z3"><img src="/assets/products/z3/01.webp" alt="天鵝座 Z3 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></a>
-      <div class="product-body"><div><span class="product-style">普通版</span><h3>天鵝座 Z3</h3></div>
-      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 60–65 公里｜三元鋰 約 40–60 公里｜鋰鐵 約 70–80 公里</span></div>
-      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$35,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$52,000</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$58,800</strong></div></div>
-      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
-      <div class="price-row"><a class="btn btn-primary full-width" href="/products.html#scooter-4">看詳情</a></div></div>
-    </article>
-<article class="product-card" id="scooter-5">
-      <a class="product-photo" href="/products.html#scooter-5" aria-label="查看 天鵝座 Z3"><img src="/assets/products/z3/02.webp" alt="天鵝座 Z3 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></a>
-      <div class="product-body"><div><span class="product-style">暗魂版</span><h3>天鵝座 Z3</h3></div>
-      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 60–65 公里｜三元鋰 約 40–60 公里｜鋰鐵 約 70–80 公里</span></div>
-      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$38,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$55,000</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$62,000</strong></div></div>
-      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
-      <div class="price-row"><a class="btn btn-primary full-width" href="/products.html#scooter-5">看詳情</a></div></div>
-    </article>
-<article class="product-card" id="scooter-6">
-      <a class="product-photo" href="/products.html#scooter-6" aria-label="查看 正9號"><img src="/assets/products/nine/01.webp" alt="正9號 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></a>
-      <div class="product-body"><div><span class="product-style">曠達版</span><h3>正9號</h3></div>
-      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 60–65 公里｜三元鋰 約 40–60 公里｜鋰鐵 約 70–80 公里</span></div>
-      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$35,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$52,000</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$58,800</strong></div></div>
-      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
-      <div class="price-row"><a class="btn btn-primary full-width" href="/products.html#scooter-6">看詳情</a></div></div>
-    </article>
-</div></section>
+  </header>
 
-  <section id="promoSection" class="wrap section" hidden><div class="promo-banner"><div><p class="eyebrow">CURRENT CAMPAIGN</p><h2 id="promoTitle"></h2><p id="promoText"></p></div><a id="promoButton" class="btn btn-primary" href="/products.html">立即了解</a></div></section>
-  <section id="deliverySection" class="wrap section" hidden><div class="section-head"><div><p class="eyebrow">REAL DELIVERY</p><h2>最新交車紀錄</h2><p>真實交車案例持續更新。</p></div></div><div id="deliveryCasesGrid" class="delivery-case-grid"></div></section>
-  <section class="wrap section"><div class="panel"><div class="section-head"><div><p class="eyebrow">SERVICE</p><h2>購車流程</h2></div></div><div class="status-strip"><div><small>① 選擇車款</small><strong>查看照片與版本</strong></div><div><small>② 送出需求</small><strong>留下聯絡資料</strong></div><div><small>③ 確認訂金</small><strong>保留車輛排程</strong></div><div><small>④ 安排交車</small><strong>尾款依約支付</strong></div></div></div></section>
-</main>
-<footer class="footer"><div class="wrap footer-row"><span>© 2026 小宇微電｜找小宇買微電，不走彎路</span><span>官方 LINE：@762eqvlg</span></div></footer>
-<script src="config.js?v=32.0.0"></script><script src="firebase-config.js?v=32.0.0"></script><script src="catalog.js?v=32.0.0"></script><script src="home.js?v=32.0.0"></script>
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+    <section id="loginCard" class="glass-card max-w-lg mx-auto mt-14 rounded-3xl p-8 text-center space-y-4">
+      <img class="admin-login-logo" src="../assets/brand/logo-round.webp" alt="小宇微電 Logo"><span class="admin-login-lock"><i class="fa-solid fa-lock"></i></span>
+      <div><h2 class="text-xl font-black">管理員登入</h2><p class="text-slate-400 text-sm mt-2">登入一次即可管理微電線上訂單、車牌線上訂單、商品、客戶、首頁內容與交車案例。</p></div>
+      <button id="loginBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl" type="button"><i class="fa-brands fa-google mr-2"></i>使用 Google 登入</button><p id="loginMessage" class="text-xs text-slate-400"></p>
+    </section>
+    <section id="deniedCard" class="hidden glass-card max-w-lg mx-auto mt-14 rounded-3xl p-8 text-center space-y-4"><h2 class="text-xl font-black text-rose-400">此帳號沒有管理權限</h2><p id="deniedMessage" class="text-sm text-slate-400"></p><button id="switchAccountBtn" class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-xl text-sm" type="button">切換帳號</button></section>
 
+    <div id="adminApp" class="hidden space-y-6">
+      <section class="system-health glass-card rounded-2xl p-4">
+        <div class="system-health-head"><div><small>V32 SYSTEM</small><h2>系統連線狀態</h2></div><span>正式營運檢查</span></div>
+        <div class="system-status-grid">
+          <div class="system-status" data-system-status="auth"><span>管理員登入</span><b>檢查中</b><small>等待登入</small></div>
+          <div class="system-status" data-system-status="orders"><span>官網訂單</span><b>檢查中</b><small>等待同步</small></div>
+          <div class="system-status" data-system-status="products"><span>商品讀取</span><b>檢查中</b><small>等待同步</small></div>
+          <div class="system-status" data-system-status="productWrite"><span>商品寫入</span><b>待測試</b><small>第一次儲存商品時自動驗證</small></div>
+          <div class="system-status" data-system-status="content"><span>首頁內容</span><b>檢查中</b><small>等待同步</small></div>
+          <div class="system-status" data-system-status="delivery"><span>交車案例</span><b>檢查中</b><small>等待同步</small></div>
+        </div>
+      </section>
 
-<div class="floating-sales-cta" aria-label="快速諮詢與訂購">
-  <a class="floating-line" href="https://line.me/R/ti/p/%40762eqvlg" target="_blank" rel="noopener"><span>LINE</span><strong>免費諮詢</strong></a>
-  <a class="floating-order" href="/products.html"><span>🛵</span><strong>線上立即訂購</strong></a>
-</div>
+      <nav class="admin-shortcuts" aria-label="後台功能捷徑">
+        <button data-shell-view="dashboard" class="is-shell-active"><i class="fa-solid fa-motorcycle"></i><span>微電線上訂單</span></button>
+        <button data-shell-view="plate-orders"><i class="fa-solid fa-id-card"></i><span>車牌線上訂單</span></button>
+        <button data-shell-view="products"><i class="fa-solid fa-motorcycle"></i><span>商品管理</span></button>
+        <button data-shell-view="customers"><i class="fa-solid fa-users"></i><span>客戶管理</span></button>
+        <button data-shell-view="content"><i class="fa-solid fa-pen-ruler"></i><span>首頁內容</span></button>
+        <button data-shell-view="delivery"><i class="fa-solid fa-truck"></i><span>交車案例</span></button>
+        <button data-shell-view="orders-full"><i class="fa-solid fa-chart-line"></i><span>完整訂單</span></button>
+      </nav>
 
-<nav class="mobile-dock" aria-label="手機快速選單">
-  <a href="/?v=32.0.0"><span>⌂</span><small>首頁</small></a>
-  <a href="/products.html"><span>🛵</span><small>車款</small></a>
-  <a href="/plate.html"><span>🪪</span><small>車牌</small></a>
-  <a href="/warranty.html"><span>🛡</span><small>保固</small></a>
-  <a href="https://line.me/R/ti/p/@762eqvlg"><span>LINE</span><small>聯絡</small></a>
-</nav>
-</body></html>
+      <section id="shell-dashboard" class="shell-view space-y-4" data-shell-panel="dashboard">
+        <div class="dashboard-stats"><article><small>待審核總數</small><strong data-stat="total">0</strong></article><article><small>微電待審</small><strong data-stat="open">0</strong></article><article><small>車牌待審</small><strong data-stat="month">0</strong></article><article><small>今日新增</small><strong data-stat="today">0</strong></article><article><small>待審訂單總額</small><strong data-stat="revenue">NT$0</strong></article></div>
+        <div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-xs text-emerald-400 font-bold">EV ONLINE ORDERS</p><h2 class="text-xl font-black">微電線上訂單</h2><p class="text-xs text-slate-500 mt-1">這裡只顯示微型電動二輪前台訂單。車牌訂製已移到獨立的「車牌線上訂單」。</p></div><div class="admin-filter-row"><input id="orderSearch" placeholder="搜尋姓名、電話、車款"><button id="refreshOrdersBtn" type="button">重新整理</button></div></div>
+        <div class="glass-card rounded-2xl overflow-x-auto"><table class="admin-table"><thead><tr><th>訂單編號</th><th>客戶</th><th>車款</th><th>地址</th><th>金額</th><th>審核</th><th>建立時間</th><th>操作</th></tr></thead><tbody id="adminOrderTableBody"></tbody></table></div>
+      </section>
+
+      <section id="shell-plate-orders" class="shell-view space-y-4" data-shell-panel="plate-orders" hidden>
+        <div class="dashboard-stats plate-order-stats"><article><small>車牌待審</small><strong data-plate-stat="total">0</strong></article><article><small>今日新增</small><strong data-plate-stat="today">0</strong></article><article><small>待審總額</small><strong data-plate-stat="revenue">NT$0</strong></article></div>
+        <div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-xs text-emerald-400 font-bold">PLATE ONLINE ORDERS</p><h2 class="text-xl font-black">車牌訂製｜線上訂單</h2><p class="text-xs text-slate-500 mt-1">客人從展示牌訂製頁送出的需求會獨立顯示在這裡，不再和微電訂單混在一起。</p></div><div class="admin-filter-row"><input id="plateOrderSearch" placeholder="搜尋姓名、電話、車牌號碼"><button id="refreshPlateOrdersBtn" type="button">重新整理</button></div></div>
+        <div class="glass-card rounded-2xl overflow-x-auto"><table class="admin-table"><thead><tr><th>訂單編號</th><th>客戶</th><th>訂製內容</th><th>收件資料</th><th>金額</th><th>建立時間</th><th>操作</th></tr></thead><tbody id="plateOrderTableBody"></tbody></table></div>
+      </section>
+
+      <section id="shell-products" class="shell-view space-y-4" data-shell-panel="products" hidden>
+        <div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-xs text-emerald-400 font-bold">PRODUCT CMS</p><h2 class="text-xl font-black">商品管理</h2><p class="text-xs text-slate-500 mt-1">修改後儲存即可同步前台。支援新增、編輯、複製、上下架、排序、售價、規格、圖片。</p></div><div class="admin-filter-row"><input id="productSearch" placeholder="搜尋車款"><button id="addProductBtn" class="primary" type="button">＋ 新增商品</button><button id="seedProductsBtn" type="button">同步預設商品</button><button id="refreshProductsBtn" type="button">重新整理</button></div></div>
+        <div class="product-help"><b>商品編輯沒反應時：</b>看上方「商品寫入」狀態；若顯示 Firebase 權限拒絕，就代表網站程式正常、請確認 Firebase Rules 已正確發布。</div>
+        <div class="glass-card rounded-2xl overflow-x-auto"><table class="admin-table min-products"><thead><tr><th>排序</th><th>主圖</th><th>車款</th><th>款式</th><th>鉛酸售價</th><th>三元鋰售價</th><th>鋰鐵售價</th><th>前台</th><th>顏色</th><th>操作</th></tr></thead><tbody id="adminProductTableBody"></tbody></table></div>
+      </section>
+
+      <section id="shell-customers" class="shell-view space-y-4" data-shell-panel="customers" hidden>
+        <div class="module-head"><div><p class="text-xs text-emerald-400 font-bold">CUSTOMERS</p><h2>客戶管理</h2><p>從所有歷史訂單自動整理同一電話的客戶，不需另外重複建檔。</p></div><div class="admin-filter-row"><span id="customerCount" class="count-pill">0 位</span><input id="customerSearch" placeholder="搜尋姓名、電話、地址"></div></div>
+        <div class="glass-card rounded-2xl overflow-x-auto"><table class="admin-table"><thead><tr><th>姓名</th><th>電話</th><th>最近地址</th><th>訂單數</th><th>累計金額</th><th>最近車款</th><th>最後交易</th></tr></thead><tbody id="customerTableBody"></tbody></table></div>
+      </section>
+
+      <section id="shell-content" class="shell-view space-y-4" data-shell-panel="content" hidden>
+        <div class="module-head"><div><p class="text-xs text-emerald-400 font-bold">SITE CONTENT</p><h2>首頁內容／活動 Banner</h2><p>不用改程式，直接在這裡改首頁標題、公告與活動區塊。</p></div><button id="saveSiteSettingsBtn" class="admin-save-btn" type="button">儲存首頁內容</button></div>
+        <div class="content-grid">
+          <article class="glass-card content-card"><h3>頂部公告</h3><label class="check-row"><input id="siteAnnouncementEnabled" type="checkbox"><span>顯示公告列</span></label><label>公告文字<textarea id="siteAnnouncementText" rows="3" placeholder="例如：本週台北／新北皆可安排到府交車"></textarea></label></article>
+          <article class="glass-card content-card"><h3>首頁主視覺</h3><label>上方小標<input id="siteHeroEyebrow"></label><label>主標題<input id="siteHeroTitle"></label><label>綠色重點字<input id="siteHeroAccent"></label><label>說明<textarea id="siteHeroDescription" rows="3"></textarea></label></article>
+          <article class="glass-card content-card"><h3>活動 Banner</h3><label class="check-row"><input id="sitePromoEnabled" type="checkbox"><span>顯示活動 Banner</span></label><label>活動標題<input id="sitePromoTitle"></label><label>活動說明<textarea id="sitePromoText" rows="3"></textarea></label><label>按鈕文字<input id="sitePromoButtonText"></label><label>按鈕連結<input id="sitePromoButtonUrl" placeholder="/products.html 或 LINE 連結"></label></article>
+        </div>
+      </section>
+
+      <section id="shell-delivery" class="shell-view space-y-4" data-shell-panel="delivery" hidden>
+        <div class="module-head"><div><p class="text-xs text-emerald-400 font-bold">DELIVERY CASES</p><h2>交車案例</h2><p>建立真實交車紀錄，發布後會自動顯示在首頁。</p></div><div class="admin-filter-row"><button id="addDeliveryBtn" class="primary" type="button">＋ 新增交車案例</button><button id="refreshDeliveryBtn" type="button">重新整理</button></div></div>
+        <div id="deliveryCaseList" class="delivery-admin-list"></div>
+      </section>
+
+      <section id="shell-orders-full" class="shell-view" data-shell-panel="orders-full" hidden><div class="module-head"><div><h2>訂單・收據・保固管理</h2><p>歷史訂單、新增訂單、批量匯入、淨利、收據與保固卡集中管理。</p></div></div><iframe id="ordersFrame" class="admin-frame" title="訂單收據保固管理" loading="lazy" data-src="./orders.html?embed=1&v=32.0.0"></iframe></section>
+    </div>
+  </main>
+
+  <div id="editProductModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="glass-card max-w-2xl w-full max-h-[92vh] overflow-y-auto rounded-3xl p-6 space-y-5 text-xs product-modal-card">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3"><h3 id="editModalProductTitle" class="text-lg font-bold">管理商品</h3><button id="closeProductModalBtn" class="modal-close" type="button"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="grid sm:grid-cols-2 gap-3 product-form-grid">
+        <label><span>商品 ID</span><input id="editProductIdInput" readonly></label><label><span>排序</span><input id="editOrderInput" type="number" min="1"></label>
+        <label><span>車款名稱</span><input id="editNameInput"></label><label><span>款式</span><input id="editStyleInput"></label>
+        <label><span>顏色（逗號分隔）</span><input id="editColorsInput"></label><label><span>鉛酸版售價</span><input id="editPriceLeadInput" type="number" min="0"></label>
+        <label><span>三元鋰 30Ah 售價</span><input id="editPriceTernaryInput" type="number" min="0" placeholder="沒有請留空"></label><label><span>鋰鐵 30Ah 售價</span><input id="editPriceLithiumInput" type="number" min="0" placeholder="沒有請留空"></label>
+        <label><span>鉛酸參考續航</span><input id="editRangeLeadInput"></label><label><span>三元鋰參考續航</span><input id="editRangeTernaryInput"></label>
+        <label><span>鋰鐵參考續航</span><input id="editRangeLithiumInput"></label><label><span>鉛酸參考壽命</span><input id="editLifeLeadInput"></label>
+        <label><span>三元鋰參考壽命</span><input id="editLifeTernaryInput"></label><label><span>鋰鐵參考壽命</span><input id="editLifeLithiumInput"></label>
+      </div>
+      <label class="form-block"><span>商品介紹</span><textarea id="editDescriptionInput" rows="3"></textarea></label><label class="form-block"><span>商品特色（每行一項）</span><textarea id="editFeaturesInput" rows="4"></textarea></label><label class="form-block"><span>注意事項</span><textarea id="editNoteInput" rows="3"></textarea></label>
+      <label class="check-row"><input id="editVisibleInput" type="checkbox"><span>顯示於前台商城</span></label>
+      <div class="gallery-manager"><div class="gallery-head"><b>商品圖庫</b><span id="uploadProgressText"></span></div><input type="file" id="imageFileInput" multiple accept="image/*" hidden><button id="chooseImagesBtn" type="button">選擇照片上傳</button><small>新上傳的第一張照片會自動設為前台主圖。優先存 Firebase Storage；若 Storage 尚未開通，會自動壓縮後存入商品資料。</small><div id="productGalleryGrid"></div></div>
+      <div class="modal-actions"><button id="saveProductBtn" class="primary" type="button">儲存商品設定</button><button id="deleteProductBtn" class="danger" type="button">重設／刪除</button></div>
+    </div>
+  </div>
+
+  <div id="deliveryModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="glass-card max-w-lg w-full max-h-[92vh] overflow-y-auto rounded-3xl p-6 space-y-4 product-modal-card"><div class="flex justify-between items-center border-b border-slate-800 pb-3"><h3 id="deliveryModalTitle" class="text-lg font-bold">交車案例</h3><button id="closeDeliveryModalBtn" class="modal-close" type="button"><i class="fa-solid fa-xmark"></i></button></div><div class="grid sm:grid-cols-2 gap-3 product-form-grid"><label><span>排序</span><input id="deliveryOrder" type="number" min="1"></label><label><span>標題</span><input id="deliveryTitle"></label><label><span>車款</span><input id="deliveryModel"></label><label><span>交車地區</span><input id="deliveryLocation"></label></div><label class="form-block"><span>簡短說明</span><textarea id="deliveryNote" rows="3"></textarea></label><label class="check-row"><input id="deliveryPublished" type="checkbox"><span>發布到首頁</span></label><div class="gallery-manager"><b>交車照片</b><input id="deliveryImageInput" type="file" accept="image/*"><div id="deliveryImagePreview" class="delivery-preview"></div></div><button id="saveDeliveryBtn" class="admin-save-btn w-full" type="button">儲存交車案例</button></div>
+  </div>
+
+  <div id="orderDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4"><div class="glass-card max-w-lg w-full rounded-3xl p-6 space-y-4 product-modal-card"><div class="flex justify-between items-center"><h3 class="text-lg font-bold">訂單明細</h3><button id="closeOrderDetailBtn" class="modal-close" type="button"><i class="fa-solid fa-xmark"></i></button></div><div id="orderDetailContent"></div></div></div>
+
+  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-full shadow-2xl text-xs font-bold translate-y-20 opacity-0 transition-all"><span id="toastMsg"></span></div>
+  <script src="../config.js?v=32.0.0"></script><script src="../firebase-config.js?v=32.0.0"></script><script src="../catalog.js?v=32.0.0"></script><script type="module" src="admin.js?v=32.0.0"></script><script src="admin-shell.js?v=32.0.0"></script>
+</body>
+</html>

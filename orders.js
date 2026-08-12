@@ -65,39 +65,49 @@ const selectedOrderIds = new Set();
 const VEHICLE_COSTS = {
   "大偉士改裝版": [
     { label: "鉛酸版", battery: "鉛酸", cost: 29000 },
+    { label: "三元鋰30Ah", battery: "三元鋰30Ah", cost: 42000 },
     { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 49000 }
   ],
   "大偉士": [
     { label: "鉛酸版", battery: "鉛酸", cost: 29000 },
+    { label: "三元鋰30Ah", battery: "三元鋰30Ah", cost: 42000 },
     { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 49000 }
   ],
   "小偉士": [
     { label: "鉛酸版", battery: "鉛酸", cost: 23000 },
+    { label: "三元鋰30Ah", battery: "三元鋰30Ah", cost: 31600 },
     { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 38000 }
   ],
   "神盾": [
     { label: "鉛酸版", battery: "鉛酸", cost: 24000 },
+    { label: "三元鋰30Ah", battery: "三元鋰30Ah", cost: 32600 },
     { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 40000 }
   ],
   "輕風": [
     { label: "鉛酸版", battery: "鉛酸", cost: 24000 },
+    { label: "三元鋰30Ah", battery: "三元鋰30Ah", cost: 32600 },
     { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 40000 }
   ],
   "Z3": [
     { label: "普通版（鉛酸）", battery: "鉛酸", cost: 30000 },
     { label: "暗魂版（鉛酸）", battery: "鉛酸", cost: 32000 },
+    { label: "三元鋰30Ah", battery: "三元鋰30Ah", cost: 42000 },
+    { label: "暗魂三元鋰30Ah", battery: "三元鋰30Ah", cost: 45000 },
     { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 49000 },
     { label: "暗魂鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 51000 }
   ],
   "正9號": [
     { label: "鉛酸版", battery: "鉛酸", cost: 29000 },
+    { label: "三元鋰30Ah", battery: "三元鋰30Ah", cost: 43000 },
     { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 49000 }
   ],
   "小可愛（拿鐵）": [
-    { label: "鉛酸版（無鋰電版）", battery: "鉛酸", cost: 25000 }
+    { label: "鉛酸版", battery: "鉛酸", cost: 25000 },
+    { label: "三元鋰30Ah", battery: "三元鋰30Ah", cost: 33600 }
   ],
   "QC": [
     { label: "鉛酸版", battery: "鉛酸", cost: 27000 },
+    { label: "三元鋰30Ah", battery: "三元鋰30Ah", cost: 39000 },
     { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 47000 }
   ],
   "小酷龍": [
@@ -108,6 +118,7 @@ const VEHICLE_COSTS = {
   ],
   "Dio": [
     { label: "鉛酸版", battery: "鉛酸", cost: 25000 },
+    { label: "三元鋰30Ah", battery: "三元鋰30Ah", cost: 33600 },
     { label: "鋰鐵30Ah", battery: "鋰鐵30Ah", cost: 40000 }
   ],
   "其他": [
@@ -144,6 +155,15 @@ function cleanPhone(value) {
 }
 function customerKey(name, phone) {
   return `${normalizedNameKey(name)}|${cleanPhone(phone)}`;
+}
+function isWebsiteCheckoutRecord(order) {
+  return String(order?.source || "").startsWith("official-store") && String(order?.createdBy || "") === "public-store";
+}
+function isAcceptedWebsiteRecord(order) {
+  return String(order?.reviewStatus || "") === "accepted" || !!order?.acceptedAt || order?.migratedFromOnlineOrder === true;
+}
+function isVisibleHistoricalOrder(order) {
+  return !isWebsiteCheckoutRecord(order) || isAcceptedWebsiteRecord(order);
 }
 function findDuplicateOrder(name, phone, excludeId = "") {
   const key = customerKey(name, phone);
@@ -216,9 +236,11 @@ function selectedVariantInfo() {
 function inferVariant(order) {
   const variants = variantOptionsFor(order.model);
   const text = `${order.vehicleVariant || ""} ${order.battery || ""}`;
-  if (order.model === "Z3" && text.includes("暗魂") && text.includes("鋰")) return "暗魂鋰鐵30Ah";
+  if (order.model === "Z3" && text.includes("暗魂") && text.includes("三元")) return "暗魂三元鋰30Ah";
+  if (order.model === "Z3" && text.includes("暗魂") && (text.includes("鋰鐵") || (text.includes("鋰") && !text.includes("三元")))) return "暗魂鋰鐵30Ah";
   if (order.model === "Z3" && text.includes("暗魂")) return "暗魂版（鉛酸）";
-  if (text.includes("鋰")) return variants.find((item) => item.label.includes("鋰鐵"))?.label || variants[0].label;
+  if (text.includes("三元")) return variants.find((item) => item.label.includes("三元"))?.label || variants[0].label;
+  if (text.includes("鋰鐵") || text.includes("鋰")) return variants.find((item) => item.label.includes("鋰鐵"))?.label || variants[0].label;
   return variants[0].label;
 }
 function normalizedOrderModel(order) {
@@ -460,9 +482,11 @@ function interpretVehicleText(rawText) {
   const model = found?.[1] || raw || "其他";
   const variants = variantOptionsFor(model);
   let variant = variants[0].label;
-  if (model === "Z3" && raw.includes("暗魂") && raw.includes("鋰")) variant = "暗魂鋰鐵30Ah";
+  if (model === "Z3" && raw.includes("暗魂") && raw.includes("三元")) variant = "暗魂三元鋰30Ah";
+  else if (model === "Z3" && raw.includes("暗魂") && (raw.includes("鋰鐵") || (raw.includes("鋰") && !raw.includes("三元")))) variant = "暗魂鋰鐵30Ah";
   else if (model === "Z3" && raw.includes("暗魂")) variant = "暗魂版（鉛酸）";
-  else if (raw.includes("鋰")) variant = variants.find((item) => item.label.includes("鋰鐵"))?.label || variant;
+  else if (raw.includes("三元")) variant = variants.find((item) => item.label.includes("三元"))?.label || variant;
+  else if (raw.includes("鋰鐵") || raw.includes("鋰")) variant = variants.find((item) => item.label.includes("鋰鐵"))?.label || variant;
   const info = variants.find((item) => item.label === variant) || variants[0];
   const colors = ["消光黑", "鐵灰色", "鐵灰", "深灰", "淺灰", "紫色", "紫", "黑色", "黑", "白色", "白", "綠色", "綠", "紅色", "紅", "藍色", "藍", "灰色", "灰", "銀色", "銀", "粉色", "粉"];
   const color = colors.find((item) => raw.includes(item)) || "待確認";
@@ -597,7 +621,9 @@ async function loadOrders() {
   elements.orderList.innerHTML = '<p class="empty">讀取中…</p>';
   try {
     const snapshot = await getDocs(collection(db, "orders"));
-    currentOrders = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+    currentOrders = snapshot.docs
+      .map((item) => ({ id: item.id, ...item.data() }))
+      .filter(isVisibleHistoricalOrder);
     const statusRank = { "待訂金": 1, "已付訂金": 2, "備車中": 3, "待交車": 4, "已交車": 5, "取消": 6 };
     currentOrders.sort((a, b) => {
       const statusDiff = (statusRank[a.status] || 99) - (statusRank[b.status] || 99);
