@@ -211,6 +211,46 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+
+    // V32.7 無卡分期試算潛在客戶：前台只能新增紀錄，只有管理員能讀取與管理。
+    match /installmentLeads/{leadId} {
+      allow create: if request.resource.data.keys().hasAll([
+          'eventType','sessionId','phone','modelId','modelName','style',
+          'batteryKey','batteryLabel','price','term','monthly','total',
+          'eligibilityChecked','source','page','userAgent','createdAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'eventType','sessionId','phone','modelId','modelName','style',
+          'batteryKey','batteryLabel','price','term','monthly','total',
+          'eligibilityChecked','source','page','userAgent','createdAt'
+        ])
+        && request.resource.data.eventType in ['trial','line_intent']
+        && request.resource.data.sessionId is string
+        && request.resource.data.sessionId.size() >= 8
+        && request.resource.data.sessionId.size() <= 80
+        && request.resource.data.phone is string
+        && request.resource.data.phone.size() == 10
+        && request.resource.data.modelId is string
+        && request.resource.data.modelName is string
+        && request.resource.data.style is string
+        && request.resource.data.batteryKey in ['lead','ternary','lifepo4']
+        && request.resource.data.batteryLabel is string
+        && request.resource.data.price is int
+        && request.resource.data.price >= 0
+        && request.resource.data.price <= 300000
+        && request.resource.data.term in [6,12,18,24,30]
+        && request.resource.data.monthly is int
+        && request.resource.data.monthly >= 0
+        && request.resource.data.total is int
+        && request.resource.data.total >= 0
+        && request.resource.data.eligibilityChecked is bool
+        && request.resource.data.source == 'website-installment-free-v327'
+        && request.resource.data.page is string
+        && request.resource.data.userAgent is string
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

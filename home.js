@@ -4,6 +4,7 @@
   const $ = (s) => document.querySelector(s);
   const money = (value) => `NT$${Math.max(0, Number(value) || 0).toLocaleString('zh-TW')}`;
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  let installmentLeadWriter = null;
   const imageUrls = (p) => {
     const arr = Array.isArray(p?.images) ? p.images.slice() : [];
     arr.sort((a,b) => Number(!!(typeof b==='object'&&b?.isPrimary)) - Number(!!(typeof a==='object'&&a?.isPrimary)));
@@ -58,11 +59,23 @@
   function initInstallmentCalculator(){
     const modelEl=$('#installmentModel'),batteryEl=$('#installmentBattery'),termEl=$('#installmentTerm');
     const phoneEl=$('#installmentPhone'),priceEl=$('#installmentPrice'),monthlyEl=$('#installmentMonthly'),totalEl=$('#installmentTotal');
-    const rateLabelEl=$('#installmentRateLabel'),pillsEl=$('#installmentTermPills'),submitEl=$('#installmentSubmit'),checkEl=$('#installmentEligibilityCheck'),toastEl=$('#installmentToast');
+    const rateLabelEl=$('#installmentRateLabel'),pillsEl=$('#installmentTermPills'),submitEl=$('#installmentSubmit'),checkEl=$('#installmentEligibilityCheck'),toastEl=$('#installmentToast'),phoneHintEl=$('#installmentPhoneHint');
     if(!modelEl||!batteryEl||!termEl||!priceEl||!monthlyEl||!totalEl)return;
     const products=normalize(defaults).filter((p)=>Number(p.priceLead||0)>0);
     const fees={6:0.025,12:0.05,18:0.075,24:0.10,30:0.125};
     const feeLabels={6:'公開費率 2.5%',12:'公開費率 5%',18:'公開費率 7.5%',24:'公開費率 10%',30:'暫估費率 12.5%'};
+    const sessionId=(()=>{
+      const fallback=()=>`S-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      try {
+        const k='YU_INSTALLMENT_SESSION_V327';
+        let v=sessionStorage.getItem(k);
+        if(!v){v=(typeof crypto!=='undefined'&&typeof crypto.randomUUID==='function')?crypto.randomUUID():fallback();sessionStorage.setItem(k,v);}
+        return v;
+      } catch (error) {
+        return fallback();
+      }
+    })();
+    let trialSaved=false,saveTimer=null;
     const batteryOptions=(p)=>{
       const items=[{key:'lead',label:'鉛酸版',price:Number(p.priceLead||0)}];
       if(Number(p.priceTernary||0)>0)items.push({key:'ternary',label:'三元鋰 30Ah（可抽取）',price:Number(p.priceTernary)});
@@ -76,22 +89,14 @@
       if(products[0])modelEl.value=products[0].id;
     }
     function populateBatteries(){
-      const p=selectedProduct();
-      const options=batteryOptions(p);
+      const p=selectedProduct();const options=batteryOptions(p);
       batteryEl.innerHTML=options.map((b)=>`<option value="${b.key}">${escapeHtml(b.label)}</option>`).join('');
       if(options[0])batteryEl.value=options[0].key;
     }
     function calc(){
-      const battery=selectedBattery();
-      const term=Number(termEl.value||12);
-      const fee=fees[term]??0;
-      const price=Number(battery?.price||0);
-      const total=Math.round(price*(1+fee));
-      const monthly=Math.ceil(total/term);
-      priceEl.textContent=money(price);
-      totalEl.textContent=money(total);
-      monthlyEl.textContent=money(monthly);
-      rateLabelEl.textContent=`${term} 期｜${feeLabels[term]||'試算'}`;
+      const battery=selectedBattery();const term=Number(termEl.value||12);const fee=fees[term]??0;const price=Number(battery?.price||0);
+      const total=Math.round(price*(1+fee));const monthly=Math.ceil(total/term);
+      priceEl.textContent=money(price);totalEl.textContent=money(total);monthlyEl.textContent=money(monthly);rateLabelEl.textContent=`${term} 期｜${feeLabels[term]||'試算'}`;
       [...(pillsEl?.querySelectorAll('button')||[])].forEach((btn)=>btn.classList.toggle('active',Number(btn.dataset.term)===term));
       return {price,total,monthly,term,battery,product:selectedProduct()};
     }
@@ -99,18 +104,28 @@
     function cleanPhone(v){let d=String(v||'').replace(/\D/g,'');if(d.startsWith('886'))d='0'+d.slice(3);return d.slice(0,10);}
     function linePrefill(message){return `https://line.me/R/oaMessage/%40762eqvlg/?${encodeURIComponent(message)}`;}
     async function copyText(text){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true;}}catch{}try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return !!ok;}catch{return false;}}
+    function makeLead(eventType){const r=calc();const phone=cleanPhone(phoneEl?.value||'');return {eventType,sessionId,phone,modelId:r.product?.id||'',modelName:r.product?.name||'',style:r.product?.style||'',batteryKey:r.battery?.key||'',batteryLabel:r.battery?.label||'',price:r.price,term:r.term,monthly:r.monthly,total:r.total,eligibilityChecked:!!checkEl?.checked,source:'website-installment-free-v327',page:location.pathname||'/',userAgent:String(navigator.userAgent||'').slice(0,220)};}
+    async function saveLead(eventType='trial'){
+      const phone=cleanPhone(phoneEl?.value||'');if(!/^09\d{8}$/.test(phone)||typeof installmentLeadWriter!=='function')return false;
+      try{const ok=await installmentLeadWriter(makeLead(eventType));if(ok&&eventType==='trial'){trialSaved=true;if(phoneHintEl){phoneHintEl.textContent='✓ 本次試算已保留，方便後續分期聯絡。';phoneHintEl.classList.add('saved');}}return !!ok;}catch(error){console.warn('installment lead save',error);return false;}
+    }
+    function scheduleTrialSave(){
+      if(trialSaved)return;clearTimeout(saveTimer);const phone=cleanPhone(phoneEl?.value||'');
+      if(!/^09\d{8}$/.test(phone)){if(phoneHintEl){phoneHintEl.textContent='輸入完整手機後，系統會保留本次試算紀錄。';phoneHintEl.classList.remove('saved');}return;}
+      saveTimer=setTimeout(()=>saveLead('trial'),2200);
+    }
     populateModels();populateBatteries();
-    if(pillsEl){pillsEl.innerHTML=[6,12,18,24,30].map((n)=>`<button type="button" data-term="${n}">${n}期</button>`).join('');pillsEl.addEventListener('click',(e)=>{const btn=e.target.closest('button[data-term]');if(!btn)return;termEl.value=btn.dataset.term;calc();});}
-    modelEl.addEventListener('change',()=>{populateBatteries();calc();});batteryEl.addEventListener('change',calc);termEl.addEventListener('change',calc);
-    if(phoneEl)phoneEl.addEventListener('input',()=>{phoneEl.value=cleanPhone(phoneEl.value);});
+    if(pillsEl){pillsEl.innerHTML=[6,12,18,24,30].map((n)=>`<button type="button" data-term="${n}">${n}期</button>`).join('');pillsEl.addEventListener('click',(e)=>{const btn=e.target.closest('button[data-term]');if(!btn)return;termEl.value=btn.dataset.term;calc();scheduleTrialSave();});}
+    modelEl.addEventListener('change',()=>{populateBatteries();calc();scheduleTrialSave();});batteryEl.addEventListener('change',()=>{calc();scheduleTrialSave();});termEl.addEventListener('change',()=>{calc();scheduleTrialSave();});
+    if(phoneEl)phoneEl.addEventListener('input',()=>{phoneEl.value=cleanPhone(phoneEl.value);scheduleTrialSave();});
+    if(checkEl)checkEl.addEventListener('change',scheduleTrialSave);
     if(submitEl)submitEl.addEventListener('click',async()=>{
       const result=calc();const phone=cleanPhone(phoneEl?.value||'');
       if(!/^09\d{8}$/.test(phone)){showToast('請先輸入正確的 10 碼手機號碼。');phoneEl?.focus();return;}
-      if(!checkEl?.checked){showToast('請先勾選確認無卡分期基本條件。');checkEl?.focus();return;}
+      if(!checkEl?.checked){showToast('請先勾選確認無卡分期基本條件與資料使用說明。');checkEl?.focus();return;}
+      await saveLead('line_intent');
       const message=`您好小宇，我要申請無卡分期：\n手機號碼：${phone}\n車款：${result.product.name}${result.product.style?`｜${result.product.style}`:''}\n電池規格：${result.battery.label}\n車價：${money(result.price)}\n分期期數：${result.term}期\n網站預估月繳：${money(result.monthly)}\n請協助寄送銀角零卡分期申請簡訊，謝謝。`;
-      await copyText(message);
-      showToast('申請內容已複製，正在開啟官方 LINE。');
-      setTimeout(()=>{window.location.href=linePrefill(message);},250);
+      await copyText(message);showToast('申請內容已保留並複製，正在開啟官方 LINE。');setTimeout(()=>{window.location.href=linePrefill(message);},250);
     });
     calc();
   }
@@ -119,5 +134,5 @@
   initHeroSlider();
   initInstallmentCalculator();
   const config=window.LUCKY_GARAGE_FIREBASE_CONFIG||{};if(!config.apiKey||!config.projectId)return;
-  Promise.all([import('https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js')]).then(([appM,fs])=>{const app=appM.initializeApp(config,'home-v32-5');const db=fs.getFirestore(app);fs.onSnapshot(fs.collection(db,'products'),(snap)=>renderProducts(mergeRemote(snap.docs.map((d)=>({id:d.id,...d.data()})))),(e)=>console.warn('products sync',e));fs.onSnapshot(fs.doc(db,'siteSettings','main'),(snap)=>applySettings(snap.exists()?snap.data():{}),(e)=>console.warn('site settings sync',e));fs.onSnapshot(fs.collection(db,'deliveryCases'),(snap)=>renderDelivery(snap.docs.map((d)=>({id:d.id,...d.data()}))),(e)=>console.warn('delivery sync',e));}).catch((e)=>console.warn('Firebase home enhancement unavailable',e));
+  Promise.all([import('https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js')]).then(([appM,fs])=>{const app=appM.initializeApp(config,'home-v32-7');const db=fs.getFirestore(app);installmentLeadWriter=async(payload)=>{await fs.addDoc(fs.collection(db,'installmentLeads'),{...payload,createdAt:fs.serverTimestamp()});return true;};fs.onSnapshot(fs.collection(db,'products'),(snap)=>renderProducts(mergeRemote(snap.docs.map((d)=>({id:d.id,...d.data()})))),(e)=>console.warn('products sync',e));fs.onSnapshot(fs.doc(db,'siteSettings','main'),(snap)=>applySettings(snap.exists()?snap.data():{}),(e)=>console.warn('site settings sync',e));fs.onSnapshot(fs.collection(db,'deliveryCases'),(snap)=>renderDelivery(snap.docs.map((d)=>({id:d.id,...d.data()}))),(e)=>console.warn('delivery sync',e));}).catch((e)=>console.warn('Firebase home enhancement unavailable',e));
 })();
