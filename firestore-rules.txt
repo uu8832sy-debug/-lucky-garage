@@ -2,13 +2,13 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function signedIn() {
       return request.auth != null;
     }
 
     function isOwnerEmail() {
       return signedIn()
-        && request.auth.token.email_verified == true
         && request.auth.token.email == 'uu8832sr@gmail.com';
     }
 
@@ -25,220 +25,46 @@ service cloud.firestore {
       );
     }
 
-    function validPublicOrder() {
-      return request.resource.data.keys().hasAll([
-          'orderNo', 'orderId', 'source',
-          'customerName', 'custName', 'phone', 'custPhone',
-          'address', 'custAddress', 'model', 'itemName', 'color',
-          'vehicleVariant', 'battery', 'price', 'totalAmount',
-          'cost', 'netProfit', 'deposit', 'balancePaid',
-          'licenseMode', 'deliveryMode', 'paymentMethod', 'paymentTerms',
-          'status', 'deliveredAt', 'notes',
-          'createdAt', 'updatedAt', 'timestamp', 'createdBy', 'updatedBy'
-        ])
-        && request.resource.data.keys().hasOnly([
-          'orderNo', 'orderId', 'source',
-          'customerName', 'custName', 'phone', 'custPhone',
-          'address', 'custAddress', 'model', 'itemName', 'color',
-          'vehicleVariant', 'battery', 'price', 'totalAmount',
-          'cost', 'netProfit', 'deposit', 'balancePaid',
-          'licenseMode', 'deliveryMode', 'paymentMethod', 'paymentTerms',
-          'status', 'deliveredAt', 'notes',
-          'createdAt', 'updatedAt', 'timestamp', 'createdBy', 'updatedBy'
-        ])
+    function validPublicOrder(orderId) {
+      return request.resource.data.orderId == orderId
         && request.resource.data.orderNo == orderId
-        && request.resource.data.orderId == orderId
-        && request.resource.data.orderNo is string
-        && request.resource.data.orderNo.size() >= 8
-        && request.resource.data.orderNo.size() <= 40
+        && request.resource.data.source is string
+        && (request.resource.data.source == 'official-store' || request.resource.data.source == 'official-store-plate')
         && request.resource.data.customerName is string
         && request.resource.data.customerName.size() >= 1
         && request.resource.data.customerName.size() <= 40
-        && request.resource.data.custName == request.resource.data.customerName
         && request.resource.data.phone is string
         && request.resource.data.phone.size() >= 9
         && request.resource.data.phone.size() <= 20
-        && request.resource.data.custPhone == request.resource.data.phone
         && request.resource.data.address is string
         && request.resource.data.address.size() >= 3
         && request.resource.data.address.size() <= 180
-        && request.resource.data.custAddress == request.resource.data.address
         && request.resource.data.model is string
-        && request.resource.data.model.size() >= 1
-        && request.resource.data.model.size() <= 80
-        && request.resource.data.itemName is string
-        && request.resource.data.itemName.size() >= 1
-        && request.resource.data.itemName.size() <= 120
-        && request.resource.data.color is string
-        && request.resource.data.vehicleVariant is string
-        && request.resource.data.battery is string
-        && request.resource.data.source in ['official-store', 'official-store-plate']
-        && request.resource.data.status == '待訂金'
         && request.resource.data.price is int
         && request.resource.data.price >= 0
         && request.resource.data.price <= 300000
-        && request.resource.data.totalAmount is string
-        && request.resource.data.cost == 0
-        && request.resource.data.netProfit == request.resource.data.price
-        && request.resource.data.deposit == 0
-        && request.resource.data.balancePaid == 0
-        && request.resource.data.deliveredAt == ''
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.updatedAt == request.time
-        && request.resource.data.timestamp == request.time
-        && request.resource.data.createdBy == 'public-store'
-        && request.resource.data.updatedBy == 'public-store'
-        && (
-          (
-            request.resource.data.source == 'official-store'
-            && request.resource.data.model != '紀念展示車牌'
-          )
-          || (
-            request.resource.data.source == 'official-store-plate'
-            && request.resource.data.model == '紀念展示車牌'
-            && request.resource.data.price == 9500
-            && request.resource.data.paymentTerms == '訂金 NT$5,500／尾款 NT$4,000（貨到付款）'
-            && request.resource.data.licenseMode == '自行辦理'
-            && request.resource.data.deliveryMode == '物流寄送'
-          )
-        );
+        && request.resource.data.createdAt == request.time;
     }
 
-    match /admins/{uid} {
-      allow get: if signedIn() && request.auth.uid == uid;
-      allow list, create, update, delete: if false;
-    }
-
-    // 官方商城商品：前台可讀，只有管理員可變更。
-    match /products/{productId} {
-      allow read: if true;
-      allow create, update, delete: if isAdmin();
-    }
-
-    // 幸運車庫活動。活動建立後不可修改，避免機率被事後改動。
-    match /campaigns/{campaignId} {
-      allow get: if signedIn();
-      allow list: if isAdmin();
-      allow create: if isAdmin()
-        && request.resource.data.createdBy == request.auth.uid
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.active is bool
-        && request.resource.data.algorithm == 'sha256-v1'
-        && request.resource.data.seed is string
-        && request.resource.data.name is string
-        && request.resource.data.prizes is list
-        && request.resource.data.prizes.size() == 4
-        && request.resource.data.prizes[0].id == 'discount-500'
-        && request.resource.data.prizes[0].title == '現折 NT$500'
-        && request.resource.data.prizes[0].weight == 80
-        && request.resource.data.prizes[1].id == 'discount-1000'
-        && request.resource.data.prizes[1].title == '現折 NT$1,000'
-        && request.resource.data.prizes[1].weight == 16
-        && request.resource.data.prizes[2].id == 'discount-2000'
-        && request.resource.data.prizes[2].title == '現折 NT$2,000'
-        && request.resource.data.prizes[2].weight == 3
-        && request.resource.data.prizes[3].id == 'discount-3000'
-        && request.resource.data.prizes[3].title == '現折 NT$3,000'
-        && request.resource.data.prizes[3].weight == 1;
-      allow update, delete: if false;
-    }
-
-    match /drawCodes/{codeHash} {
-      allow get: if signedIn() && (
-        resource.data.used == false
-        || resource.data.usedBy == request.auth.uid
-        || isAdmin()
-      );
-      allow list: if isAdmin();
-      allow create: if isAdmin()
-        && request.resource.data.keys().hasAll([
-          'code', 'campaignId', 'active', 'used', 'usedBy', 'usedAt',
-          'selectedGarage', 'createdAt', 'createdBy'
-        ])
-        && request.resource.data.keys().hasOnly([
-          'code', 'campaignId', 'active', 'used', 'usedBy', 'usedAt',
-          'selectedGarage', 'createdAt', 'createdBy'
-        ])
-        && request.resource.data.code is string
-        && request.resource.data.campaignId is string
-        && request.resource.data.active == true
-        && request.resource.data.used == false
-        && request.resource.data.usedBy == null
-        && request.resource.data.usedAt == null
-        && request.resource.data.selectedGarage == null
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.createdBy == request.auth.uid
-        && exists(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId));
-      allow update: if (
-        isAdmin()
-        && resource.data.used == false
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active'])
-        && request.resource.data.active is bool
-      ) || (
-        signedIn()
-        && resource.data.active == true
-        && resource.data.used == false
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'used', 'usedBy', 'usedAt', 'selectedGarage'
-        ])
-        && request.resource.data.used == true
-        && request.resource.data.usedBy == request.auth.uid
-        && request.resource.data.usedAt == request.time
-        && request.resource.data.selectedGarage is int
-        && request.resource.data.selectedGarage >= 1
-        && request.resource.data.selectedGarage <= 9
-      );
-      allow delete: if false;
-    }
-
-    // 原有訂單資料全部保留。前台只能新增，管理員可完整管理。
-    match /orders/{orderId} {
-      allow read, update, delete: if isAdmin();
-      allow create: if isAdmin() || validPublicOrder();
-    }
-
-    match /sales/{saleId} {
-      allow read, create, update, delete: if isAdmin();
-    }
-
-    match /receipts/{receiptId} {
-      allow read, create, update, delete: if isAdmin();
-    }
-
-    match /warranties/{warrantyId} {
-      allow get: if isAdmin() || resource.data.published == true;
-      allow list: if isAdmin();
-      allow create, update, delete: if isAdmin();
-    }
-
-
-    // V32.7 無卡分期試算潛在客戶：前台只能新增紀錄，只有管理員能讀取與管理。
-    match /installmentLeads/{leadId} {
-      allow create: if request.resource.data.keys().hasAll([
-          'eventType','sessionId','phone','modelId','modelName','style',
-          'batteryKey','batteryLabel','price','term','monthly','total',
-          'eligibilityChecked','source','page','userAgent','createdAt'
-        ])
-        && request.resource.data.keys().hasOnly([
-          'eventType','sessionId','phone','modelId','modelName','style',
-          'batteryKey','batteryLabel','price','term','monthly','total',
-          'eligibilityChecked','source','page','userAgent','createdAt'
-        ])
-        && request.resource.data.eventType in ['trial','line_intent']
+    function validInstallmentLead() {
+      return request.resource.data.eventType is string
+        && (request.resource.data.eventType == 'trial' || request.resource.data.eventType == 'line_intent')
         && request.resource.data.sessionId is string
         && request.resource.data.sessionId.size() >= 8
         && request.resource.data.sessionId.size() <= 80
         && request.resource.data.phone is string
-        && request.resource.data.phone.size() == 10
+        && request.resource.data.phone.matches('^09[0-9]{8}$')
         && request.resource.data.modelId is string
         && request.resource.data.modelName is string
         && request.resource.data.style is string
-        && request.resource.data.batteryKey in ['lead','ternary','lifepo4']
+        && request.resource.data.batteryKey is string
+        && (request.resource.data.batteryKey == 'lead' || request.resource.data.batteryKey == 'ternary' || request.resource.data.batteryKey == 'lifepo4')
         && request.resource.data.batteryLabel is string
         && request.resource.data.price is int
         && request.resource.data.price >= 0
         && request.resource.data.price <= 300000
-        && request.resource.data.term in [6,12,18,24,30]
+        && request.resource.data.term is int
+        && (request.resource.data.term == 3 || request.resource.data.term == 6 || request.resource.data.term == 9 || request.resource.data.term == 12 || request.resource.data.term == 18 || request.resource.data.term == 24 || request.resource.data.term == 30 || request.resource.data.term == 36)
         && request.resource.data.monthly is int
         && request.resource.data.monthly >= 0
         && request.resource.data.total is int
@@ -248,7 +74,63 @@ service cloud.firestore {
         && request.resource.data.page is string
         && request.resource.data.userAgent is string
         && request.resource.data.createdAt == request.time;
+    }
+
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /siteSettings/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /deliveryCases/{caseId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
       allow read, update, delete: if isAdmin();
+      allow create: if isAdmin() || validPublicOrder(orderId);
+    }
+
+    match /onlineOrders/{orderId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if isAdmin() || validPublicOrder(orderId);
+    }
+
+    match /installmentLeads/{leadId} {
+      allow create: if validInstallmentLead();
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /warranties/{warrantyId} {
+      allow get: if isAdmin() || resource.data.published == true;
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /receipts/{receiptId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    match /sales/{saleId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    match /campaigns/{campaignId} {
+      allow read, create, update, delete: if isAdmin();
+    }
+
+    match /drawCodes/{codeId} {
+      allow read, create, update, delete: if isAdmin();
     }
 
     match /{document=**} {
