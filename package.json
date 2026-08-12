@@ -1,19 +1,8 @@
 {
-  "name": "yuwei-store-functions",
-  "version": "12.2.0",
+  "name": "xiaoyu-electric-v32-deploy",
   "private": true,
-  "main": "index.js",
-  "engines": {
-    "node": "20"
-  },
+  "version": "32.0.0",
   "scripts": {
-    "lint": "node --check index.js",
-    "deploy": "firebase deploy --only functions"
-  },
-  "dependencies": {
-    "axios": "^1.7.9",
-    "firebase-admin": "^12.7.0",
-    "firebase-functions": "^5.1.1",
-    "nodemailer": "^6.9.16"
+    "build": "node build.mjs"
   }
 }

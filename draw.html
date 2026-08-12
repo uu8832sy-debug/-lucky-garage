@@ -5,21 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="robots" content="noindex,nofollow,noarchive" />
   <meta name="theme-color" content="#090b10" />
+  <script>
+    (() => {
+      const embed = new URLSearchParams(location.search).get("embed") === "1";
+      if (!embed) {
+        location.replace("./index.html?view=draw");
+        return;
+      }
+      document.documentElement.classList.add("embed-mode");
+    })();
+  </script>
   <title>小宇微電｜幸運車庫管理</title>
   <link rel="manifest" href="../manifest.webmanifest" />
   <link rel="apple-touch-icon" href="../icon-192.png" />
-  <link rel="stylesheet" href="draw.css?v=14.0.0" />
+  <link rel="stylesheet" href="draw.css?v=20.0.0" />
+  <link rel="stylesheet" href="admin-unified.css?v=20.0.0" />
 </head>
 <body>
-  <main class="admin-shell">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">小宇微電</p>
-        <h1>幸運車庫管理</h1>
-      </div>
-      <nav class="topnav"><a href="index.html">後台首頁</a><a href="orders.html">訂單系統</a></nav>
-    </header>
+<header class="backend-header"><div class="backend-wrap"><a class="backend-brand" href="/admin/index.html"><span class="backend-mark">YU</span><span><small>ADMINISTRATION</small><strong>小宇微電後台管理系統</strong></span></a><nav class="backend-nav"><a href="/admin/index.html">後台首頁</a><a href="/admin/orders.html">訂單・收據・保固</a><a class="active" href="/admin/draw.html">抽獎管理</a><a class="front-link" href="/index.html?v=20.0.0">離開後台・查看前台 →</a></nav></div></header>
 
+  <main class="admin-shell">
     <section id="configWarning" class="card warning hidden">
       <h2>尚未連接 Firebase</h2>
       <p>請先完成 <code>firebase-config.js</code> 與 <code>firestore.rules</code> 設定。</p>
@@ -116,8 +121,8 @@
   </main>
 
   <div id="toast" class="toast"></div>
-  <script src="../config.js?v=14.0.0"></script>
-  <script src="../firebase-config.js?v=14.0.0"></script>
-  <script type="module" src="draw.js?v=14.0.0"></script>
+  <script src="../config.js?v=20.0.0"></script>
+  <script src="../firebase-config.js?v=20.0.0"></script>
+  <script type="module" src="draw.js?v=20.0.0"></script>
 </body>
 </html>
