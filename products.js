@@ -72,7 +72,7 @@
         visible: item.visible !== false,
         images: normalizeProductImages(item)
       }))
-      .filter((item) => item.visible !== false)
+      .filter((item) => item.visible !== false && String(item.name || "").trim() !== "重機車牌")
       .sort((a, b) => a.order - b.order);
   }
   function mergeRemoteProducts(remoteItems) {
@@ -297,7 +297,7 @@
   }
   function selectedBatteryName() {
     const kind = selectedVariantKind();
-    if (kind === "ternary") return "三元鋰30Ah";
+    if (kind === "ternary") return "三元鋰30Ah（可抽取）";
     if (kind === "lifepo4") return "鋰鐵30Ah（可抽取）";
     return "鉛酸";
   }
@@ -305,7 +305,7 @@
     if (!currentProduct) return;
     const kind = selectedVariantKind();
     if (kind === "ternary") {
-      $("#modalBattery").textContent = "三元鋰 30Ah";
+      $("#modalBattery").textContent = "三元鋰 30Ah（可抽取）";
       $("#modalRange").textContent = currentProduct.rangeTernary || "請洽客服確認";
       $("#modalLife").textContent = currentProduct.lifeTernary || "請洽客服確認";
     } else if (kind === "lifepo4") {
@@ -337,7 +337,7 @@
     $$(".thumb").forEach((button) => button.addEventListener("click", () => setMainPhoto(photos[Number(button.dataset.index)], Number(button.dataset.index))));
     setMainPhoto(photos[0] || "/icon-512.png");
     const variants = [{ label:"鉛酸版", kind:"lead", price:Number(currentProduct.priceLead || 0) }];
-    if (Number(currentProduct.priceTernary || 0) > 0) variants.push({ label:"三元鋰 30Ah", kind:"ternary", price:Number(currentProduct.priceTernary) });
+    if (Number(currentProduct.priceTernary || 0) > 0) variants.push({ label:"三元鋰 30Ah（可抽取）", kind:"ternary", price:Number(currentProduct.priceTernary) });
     if (Number(currentProduct.priceLithium || 0) > 0) variants.push({ label:"鋰鐵 30Ah（可抽取）", kind:"lifepo4", price:Number(currentProduct.priceLithium) });
     $("#variant").innerHTML = variants.map((variant) => `<option data-kind="${variant.kind}" data-price="${variant.price}">${escapeHtml(variant.label)}</option>`).join("");
     $("#color").innerHTML = (currentProduct.colors || ["顏色請洽客服"]).map((color) => `<option>${escapeHtml(color)}</option>`).join("");
