@@ -84,12 +84,12 @@
     },
     {
       "source": "/garage.html",
-      "destination": "/?v=32.2.1",
+      "destination": "/?v=32.5.0",
       "permanent": false
     },
     {
       "source": "/garage",
-      "destination": "/?v=32.2.1",
+      "destination": "/?v=32.5.0",
       "permanent": false
     },
     {
@@ -99,12 +99,12 @@
     },
     {
       "source": "/raffle-now.html",
-      "destination": "/?v=32.2.1",
+      "destination": "/?v=32.5.0",
       "permanent": false
     },
     {
       "source": "/raffle-now-v2.html",
-      "destination": "/?v=32.2.1",
+      "destination": "/?v=32.5.0",
       "permanent": false
     }
   ],
