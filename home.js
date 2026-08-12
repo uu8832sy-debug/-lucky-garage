@@ -57,10 +57,10 @@
   function renderDelivery(cases){const section=$('#deliverySection'),grid=$('#deliveryCasesGrid');if(!section||!grid)return;const list=(cases||[]).filter((c)=>c.published!==false).sort((a,b)=>Number(a.order||999)-Number(b.order||999)).slice(0,6);section.hidden=!list.length;grid.innerHTML=list.map((c)=>`<article class="delivery-case-card">${c.imageUrl?`<img src="${escapeHtml(c.imageUrl)}" alt="${escapeHtml(c.title||'交車紀錄')}" loading="lazy">`:`<div class="delivery-case-placeholder">🚚</div>`}<div><small>${escapeHtml(c.location||'全台到府交車')}</small><h3>${escapeHtml(c.title||'交車完成')}</h3><b>${escapeHtml(c.model||'')}</b><p>${escapeHtml(c.note||'感謝客人的信任。')}</p></div></article>`).join('');}
 
   function initInstallmentCalculator(){
-    const modelEl=$('#installmentModel'),batteryEl=$('#installmentBattery'),termEl=$('#installmentTerm');
-    const phoneEl=$('#installmentPhone'),priceEl=$('#installmentPrice'),monthlyEl=$('#installmentMonthly'),totalEl=$('#installmentTotal');
-    const rateLabelEl=$('#installmentRateLabel'),pillsEl=$('#installmentTermPills'),submitEl=$('#installmentSubmit'),checkEl=$('#installmentEligibilityCheck'),toastEl=$('#installmentToast'),phoneHintEl=$('#installmentPhoneHint');
-    if(!modelEl||!batteryEl||!termEl||!priceEl||!monthlyEl||!totalEl)return;
+    const modelEl=$('#installmentModel'),batteryEl=$('#installmentBattery'),licenseEl=$('#installmentLicense'),termEl=$('#installmentTerm');
+    const phoneEl=$('#installmentPhone'),vehiclePriceEl=$('#installmentVehiclePrice'),licenseFeeEl=$('#installmentLicenseFee'),priceEl=$('#installmentPrice'),monthlyEl=$('#installmentMonthly'),totalEl=$('#installmentTotal');
+    const rateLabelEl=$('#installmentRateLabel'),pillsEl=$('#installmentTermPills'),submitEl=$('#installmentSubmit'),checkEl=$('#installmentEligibilityCheck'),toastEl=$('#installmentToast'),phoneHintEl=$('#installmentPhoneHint'),licenseHintEl=$('#installmentLicenseHint');
+    if(!modelEl||!batteryEl||!licenseEl||!termEl||!priceEl||!monthlyEl||!totalEl)return;
     const products=normalize(defaults).filter((p)=>Number(p.priceLead||0)>0);
     const fees={3:0.026,6:0.045,9:0.055,12:0.075,18:0.105,24:0.125,30:0.16,36:0.20};
     const feeLabels={3:'試算費率 2.6%',6:'試算費率 4.5%',9:'試算費率 5.5%',12:'試算費率 7.5%',18:'試算費率 10.5%',24:'試算費率 12.5%',30:'試算費率 16.0%',36:'試算費率 20.0%'};
@@ -93,18 +93,30 @@
       batteryEl.innerHTML=options.map((b)=>`<option value="${b.key}">${escapeHtml(b.label)}</option>`).join('');
       if(options[0])batteryEl.value=options[0].key;
     }
+    function productCanLicense(p){return p?.id!=="scooter-12"&&!/無法領牌|不可領牌/.test(String(p?.note||''));}
+    function syncLicenseOptions(){
+      const p=selectedProduct();const canLicense=productCanLicense(p);
+      if(!canLicense){licenseEl.innerHTML='<option value="none" data-fee="0">不適用（此車款不可領牌）</option>';licenseEl.disabled=true;if(licenseHintEl)licenseHintEl.textContent='此車款不適用領牌服務。';return;}
+      licenseEl.disabled=false;
+      const previous=licenseEl.value;
+      licenseEl.innerHTML='<option value="self" data-fee="0">自行領牌（我方提供領牌文件）</option><option value="assist" data-fee="3000">代辦領牌（+ NT$3,000，併入分期）</option>';
+      licenseEl.value=(previous==='assist'||previous==='self')?previous:'self';
+      syncLicenseHint();
+    }
+    function selectedLicense(){const option=licenseEl.options[licenseEl.selectedIndex];return {key:licenseEl.value||'self',label:option?.textContent||'自行領牌（我方提供領牌文件）',fee:Number(option?.dataset?.fee||0)};}
+    function syncLicenseHint(){if(!licenseHintEl)return;const x=selectedLicense();licenseHintEl.textContent=x.key==='assist'?'代辦領牌費 NT$3,000 會直接加進分期本金一起計算月繳。':x.key==='none'?'此車款不適用領牌服務。':'自行領牌不加代辦費，我方提供領牌所需文件。';}
     function calc(){
-      const battery=selectedBattery();const term=Number(termEl.value||12);const fee=fees[term]??0;const price=Number(battery?.price||0);
-      const total=Math.round(price*(1+fee));const monthly=Math.ceil(total/term);
-      priceEl.textContent=money(price);totalEl.textContent=money(total);monthlyEl.textContent=money(monthly);rateLabelEl.textContent=`${term} 期｜${feeLabels[term]||'試算'}`;
+      const battery=selectedBattery();const license=selectedLicense();const term=Number(termEl.value||12);const fee=fees[term]??0;const vehiclePrice=Number(battery?.price||0);
+      const financePrincipal=vehiclePrice+Number(license.fee||0);const total=Math.round(financePrincipal*(1+fee));const monthly=Math.ceil(total/term);
+      if(vehiclePriceEl)vehiclePriceEl.textContent=money(vehiclePrice);if(licenseFeeEl)licenseFeeEl.textContent=license.fee?`+ ${money(license.fee)}`:money(0);priceEl.textContent=money(financePrincipal);totalEl.textContent=money(total);monthlyEl.textContent=money(monthly);rateLabelEl.textContent=`${term} 期｜${feeLabels[term]||'試算'}`;
       [...(pillsEl?.querySelectorAll('button')||[])].forEach((btn)=>btn.classList.toggle('active',Number(btn.dataset.term)===term));
-      return {price,total,monthly,term,battery,product:selectedProduct()};
+      return {price:vehiclePrice,financePrincipal,license,total,monthly,term,battery,product:selectedProduct()};
     }
     function showToast(message){if(!toastEl)return;toastEl.textContent=message;clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>{toastEl.textContent='';},3600);}
     function cleanPhone(v){let d=String(v||'').replace(/\D/g,'');if(d.startsWith('886'))d='0'+d.slice(3);return d.slice(0,10);}
     function linePrefill(message){return `https://line.me/R/oaMessage/%40762eqvlg/?${encodeURIComponent(message)}`;}
     async function copyText(text){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return true;}}catch{}try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return !!ok;}catch{return false;}}
-    function makeLead(eventType){const r=calc();const phone=cleanPhone(phoneEl?.value||'');return {eventType,sessionId,phone,modelId:r.product?.id||'',modelName:r.product?.name||'',style:r.product?.style||'',batteryKey:r.battery?.key||'',batteryLabel:r.battery?.label||'',price:r.price,term:r.term,monthly:r.monthly,total:r.total,eligibilityChecked:!!checkEl?.checked,source:'website-installment-free-v327',page:location.pathname||'/',userAgent:String(navigator.userAgent||'').slice(0,220)};}
+    function makeLead(eventType){const r=calc();const phone=cleanPhone(phoneEl?.value||'');return {eventType,sessionId,phone,modelId:r.product?.id||'',modelName:r.product?.name||'',style:r.product?.style||'',batteryKey:r.battery?.key||'',batteryLabel:r.battery?.label||'',price:r.price,vehiclePrice:r.price,licenseMode:r.license?.label||'',licenseKey:r.license?.key||'',licenseFee:Number(r.license?.fee||0),financePrincipal:r.financePrincipal,term:r.term,monthly:r.monthly,total:r.total,eligibilityChecked:!!checkEl?.checked,source:'website-installment-free-v327',page:location.pathname||'/',userAgent:String(navigator.userAgent||'').slice(0,220)};}
     async function saveLead(eventType='trial'){
       const phone=cleanPhone(phoneEl?.value||'');if(!/^09\d{8}$/.test(phone)||typeof installmentLeadWriter!=='function')return false;
       try{const ok=await installmentLeadWriter(makeLead(eventType));if(ok&&eventType==='trial'){trialSaved=true;if(phoneHintEl){phoneHintEl.textContent='✓ 本次試算已保留，方便後續分期聯絡。';phoneHintEl.classList.add('saved');}}return !!ok;}catch(error){console.warn('installment lead save',error);return false;}
@@ -114,9 +126,9 @@
       if(!/^09\d{8}$/.test(phone)){if(phoneHintEl){phoneHintEl.textContent='輸入完整手機後，系統會保留本次試算紀錄。';phoneHintEl.classList.remove('saved');}return;}
       saveTimer=setTimeout(()=>saveLead('trial'),2200);
     }
-    populateModels();populateBatteries();
+    populateModels();populateBatteries();syncLicenseOptions();
     if(pillsEl){pillsEl.innerHTML=[3,6,9,12,18,24,30,36].map((n)=>`<button type="button" data-term="${n}">${n}期</button>`).join('');pillsEl.addEventListener('click',(e)=>{const btn=e.target.closest('button[data-term]');if(!btn)return;termEl.value=btn.dataset.term;calc();scheduleTrialSave();});}
-    modelEl.addEventListener('change',()=>{populateBatteries();calc();scheduleTrialSave();});batteryEl.addEventListener('change',()=>{calc();scheduleTrialSave();});termEl.addEventListener('change',()=>{calc();scheduleTrialSave();});
+    modelEl.addEventListener('change',()=>{populateBatteries();syncLicenseOptions();calc();scheduleTrialSave();});batteryEl.addEventListener('change',()=>{calc();scheduleTrialSave();});licenseEl.addEventListener('change',()=>{syncLicenseHint();calc();scheduleTrialSave();});termEl.addEventListener('change',()=>{calc();scheduleTrialSave();});
     if(phoneEl)phoneEl.addEventListener('input',()=>{phoneEl.value=cleanPhone(phoneEl.value);scheduleTrialSave();});
     if(checkEl)checkEl.addEventListener('change',scheduleTrialSave);
     if(submitEl)submitEl.addEventListener('click',async()=>{
@@ -124,7 +136,7 @@
       if(!/^09\d{8}$/.test(phone)){showToast('請先輸入正確的 10 碼手機號碼。');phoneEl?.focus();return;}
       if(!checkEl?.checked){showToast('請先勾選確認無卡分期基本條件與資料使用說明。');checkEl?.focus();return;}
       await saveLead('line_intent');
-      const message=`您好小宇，我要申請無卡分期：\n手機號碼：${phone}\n車款：${result.product.name}${result.product.style?`｜${result.product.style}`:''}\n電池規格：${result.battery.label}\n車價：${money(result.price)}\n分期期數：${result.term}期\n網站預估月繳：${money(result.monthly)}\n請協助寄送銀角零卡分期申請簡訊，謝謝。`;
+      const message=`您好小宇，我要申請無卡分期：\n手機號碼：${phone}\n車款：${result.product.name}${result.product.style?`｜${result.product.style}`:''}\n電池規格：${result.battery.label}\n車價：${money(result.price)}\n領牌方式：${result.license.label}${result.license.fee?`（${money(result.license.fee)} 已併入分期）`:''}\n分期本金：${money(result.financePrincipal)}\n分期期數：${result.term}期\n網站預估月繳：${money(result.monthly)}\n請協助寄送銀角零卡分期申請簡訊，謝謝。`;
       await copyText(message);showToast('申請內容已保留並複製，正在開啟官方 LINE。');setTimeout(()=>{window.location.href=linePrefill(message);},250);
     });
     calc();
@@ -134,5 +146,5 @@
   initHeroSlider();
   initInstallmentCalculator();
   const config=window.LUCKY_GARAGE_FIREBASE_CONFIG||{};if(!config.apiKey||!config.projectId)return;
-  Promise.all([import('https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js')]).then(([appM,fs])=>{const app=appM.initializeApp(config,'home-v32-7-2');const db=fs.getFirestore(app);installmentLeadWriter=async(payload)=>{await fs.addDoc(fs.collection(db,'installmentLeads'),{...payload,createdAt:fs.serverTimestamp()});return true;};fs.onSnapshot(fs.collection(db,'products'),(snap)=>renderProducts(mergeRemote(snap.docs.map((d)=>({id:d.id,...d.data()})))),(e)=>console.warn('products sync',e));fs.onSnapshot(fs.doc(db,'siteSettings','main'),(snap)=>applySettings(snap.exists()?snap.data():{}),(e)=>console.warn('site settings sync',e));fs.onSnapshot(fs.collection(db,'deliveryCases'),(snap)=>renderDelivery(snap.docs.map((d)=>({id:d.id,...d.data()}))),(e)=>console.warn('delivery sync',e));}).catch((e)=>console.warn('Firebase home enhancement unavailable',e));
+  Promise.all([import('https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js')]).then(([appM,fs])=>{const app=appM.initializeApp(config,'home-v32-7-3');const db=fs.getFirestore(app);installmentLeadWriter=async(payload)=>{await fs.addDoc(fs.collection(db,'installmentLeads'),{...payload,createdAt:fs.serverTimestamp()});return true;};fs.onSnapshot(fs.collection(db,'products'),(snap)=>renderProducts(mergeRemote(snap.docs.map((d)=>({id:d.id,...d.data()})))),(e)=>console.warn('products sync',e));fs.onSnapshot(fs.doc(db,'siteSettings','main'),(snap)=>applySettings(snap.exists()?snap.data():{}),(e)=>console.warn('site settings sync',e));fs.onSnapshot(fs.collection(db,'deliveryCases'),(snap)=>renderDelivery(snap.docs.map((d)=>({id:d.id,...d.data()}))),(e)=>console.warn('delivery sync',e));}).catch((e)=>console.warn('Firebase home enhancement unavailable',e));
 })();
