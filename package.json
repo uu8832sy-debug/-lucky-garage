@@ -1,7 +1,7 @@
 {
   "name": "xiaoyu-electric-v32-deploy",
   "private": true,
-  "version": "32.7.0",
+  "version": "32.7.2",
   "scripts": {
     "build": "node build.mjs"
   }

@@ -62,8 +62,8 @@
     const rateLabelEl=$('#installmentRateLabel'),pillsEl=$('#installmentTermPills'),submitEl=$('#installmentSubmit'),checkEl=$('#installmentEligibilityCheck'),toastEl=$('#installmentToast'),phoneHintEl=$('#installmentPhoneHint');
     if(!modelEl||!batteryEl||!termEl||!priceEl||!monthlyEl||!totalEl)return;
     const products=normalize(defaults).filter((p)=>Number(p.priceLead||0)>0);
-    const fees={6:0.025,12:0.05,18:0.075,24:0.10,30:0.125};
-    const feeLabels={6:'公開費率 2.5%',12:'公開費率 5%',18:'公開費率 7.5%',24:'公開費率 10%',30:'暫估費率 12.5%'};
+    const fees={3:0.026,6:0.045,9:0.055,12:0.075,18:0.105,24:0.125,30:0.16,36:0.20};
+    const feeLabels={3:'試算費率 2.6%',6:'試算費率 4.5%',9:'試算費率 5.5%',12:'試算費率 7.5%',18:'試算費率 10.5%',24:'試算費率 12.5%',30:'試算費率 16.0%',36:'試算費率 20.0%'};
     const sessionId=(()=>{
       const fallback=()=>`S-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       try {
@@ -115,7 +115,7 @@
       saveTimer=setTimeout(()=>saveLead('trial'),2200);
     }
     populateModels();populateBatteries();
-    if(pillsEl){pillsEl.innerHTML=[6,12,18,24,30].map((n)=>`<button type="button" data-term="${n}">${n}期</button>`).join('');pillsEl.addEventListener('click',(e)=>{const btn=e.target.closest('button[data-term]');if(!btn)return;termEl.value=btn.dataset.term;calc();scheduleTrialSave();});}
+    if(pillsEl){pillsEl.innerHTML=[3,6,9,12,18,24,30,36].map((n)=>`<button type="button" data-term="${n}">${n}期</button>`).join('');pillsEl.addEventListener('click',(e)=>{const btn=e.target.closest('button[data-term]');if(!btn)return;termEl.value=btn.dataset.term;calc();scheduleTrialSave();});}
     modelEl.addEventListener('change',()=>{populateBatteries();calc();scheduleTrialSave();});batteryEl.addEventListener('change',()=>{calc();scheduleTrialSave();});termEl.addEventListener('change',()=>{calc();scheduleTrialSave();});
     if(phoneEl)phoneEl.addEventListener('input',()=>{phoneEl.value=cleanPhone(phoneEl.value);scheduleTrialSave();});
     if(checkEl)checkEl.addEventListener('change',scheduleTrialSave);
@@ -134,5 +134,5 @@
   initHeroSlider();
   initInstallmentCalculator();
   const config=window.LUCKY_GARAGE_FIREBASE_CONFIG||{};if(!config.apiKey||!config.projectId)return;
-  Promise.all([import('https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js')]).then(([appM,fs])=>{const app=appM.initializeApp(config,'home-v32-7');const db=fs.getFirestore(app);installmentLeadWriter=async(payload)=>{await fs.addDoc(fs.collection(db,'installmentLeads'),{...payload,createdAt:fs.serverTimestamp()});return true;};fs.onSnapshot(fs.collection(db,'products'),(snap)=>renderProducts(mergeRemote(snap.docs.map((d)=>({id:d.id,...d.data()})))),(e)=>console.warn('products sync',e));fs.onSnapshot(fs.doc(db,'siteSettings','main'),(snap)=>applySettings(snap.exists()?snap.data():{}),(e)=>console.warn('site settings sync',e));fs.onSnapshot(fs.collection(db,'deliveryCases'),(snap)=>renderDelivery(snap.docs.map((d)=>({id:d.id,...d.data()}))),(e)=>console.warn('delivery sync',e));}).catch((e)=>console.warn('Firebase home enhancement unavailable',e));
+  Promise.all([import('https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js')]).then(([appM,fs])=>{const app=appM.initializeApp(config,'home-v32-7-2');const db=fs.getFirestore(app);installmentLeadWriter=async(payload)=>{await fs.addDoc(fs.collection(db,'installmentLeads'),{...payload,createdAt:fs.serverTimestamp()});return true;};fs.onSnapshot(fs.collection(db,'products'),(snap)=>renderProducts(mergeRemote(snap.docs.map((d)=>({id:d.id,...d.data()})))),(e)=>console.warn('products sync',e));fs.onSnapshot(fs.doc(db,'siteSettings','main'),(snap)=>applySettings(snap.exists()?snap.data():{}),(e)=>console.warn('site settings sync',e));fs.onSnapshot(fs.collection(db,'deliveryCases'),(snap)=>renderDelivery(snap.docs.map((d)=>({id:d.id,...d.data()}))),(e)=>console.warn('delivery sync',e));}).catch((e)=>console.warn('Firebase home enhancement unavailable',e));
 })();
