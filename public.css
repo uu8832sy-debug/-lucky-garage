@@ -12,3 +12,38 @@
   .mobile-dock a:active{background:#172131;color:var(--green)}
   .mobile-dock span{font-size:15px;line-height:1}.mobile-dock small{font-size:10px;white-space:nowrap}
 }
+
+.feature-chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 14px}.feature-chips span{font-size:11px;font-weight:800;color:#d1fae5;background:rgba(16,185,129,.09);border:1px solid rgba(52,211,153,.2);border-radius:999px;padding:7px 9px}.product-disclaimer{font-size:11px!important;color:#94a3b8!important;line-height:1.6;margin:10px 0 14px!important}.detail-list{grid-template-columns:repeat(3,1fr)}@media(max-width:620px){.detail-list{grid-template-columns:1fr 1fr}.detail-list div:last-child{grid-column:1/-1}}
+
+/* V23 price transparency + licensing */
+.model-prices{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px}.model-prices>div{background:#071018;border:1px solid #1f2937;border-radius:12px;padding:10px}.model-prices small{display:block;color:var(--muted);font-size:10px}.model-prices strong{font-size:18px;color:#f8fafc}.muted-price{color:#94a3b8!important;font-size:14px!important}.price-note{font-size:10.5px;color:#94a3b8;line-height:1.5}.full-width{width:100%}.price-table{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.price-list-card{background:linear-gradient(145deg,rgba(17,24,39,.92),rgba(9,14,22,.96));border:1px solid rgba(148,163,184,.14);border-radius:18px;padding:15px;display:grid;gap:12px}.price-list-card>div:first-child span{display:block;color:var(--muted);font-size:10px;font-weight:800}.price-list-card>div:first-child strong{font-size:19px}.price-list-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px}.price-list-values p{margin:0;background:#071018;border:1px solid #1f2937;border-radius:11px;padding:9px}.price-list-values small{display:block;color:var(--muted);font-size:10px}.price-list-values b{font-size:16px}.license-guide{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}.license-guide>div{background:rgba(16,185,129,.07);border:1px solid rgba(52,211,153,.2);border-radius:18px;padding:16px}.license-guide strong{display:block;font-size:16px;margin:4px 0}.license-guide p{margin:0;color:#cbd5e1;font-size:12px}.license-icon{font-size:23px}.license-inline{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.22);color:#fde68a;border-radius:12px;padding:10px 12px;font-size:11px;line-height:1.6}.total-box{min-height:63px}
+@media(max-width:900px){.price-table{grid-template-columns:repeat(2,minmax(0,1fr))}.license-guide{grid-template-columns:1fr}}
+@media(max-width:620px){.price-table{grid-template-columns:1fr}.price-list-card{grid-template-columns:1fr}.model-prices{grid-template-columns:repeat(auto-fit,minmax(105px,1fr))}.price-list-values b{font-size:15px}}
+
+
+/* V24 official brand identity */
+.brand-logo-img{width:46px;height:46px;flex:0 0 46px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px rgba(94,234,212,.34),0 8px 24px rgba(34,211,238,.16);background:#05090d}
+.hero-brand-logo{width:92px;height:92px;border-radius:50%;object-fit:cover;display:block;margin:0 0 18px;box-shadow:0 0 0 1px rgba(94,234,212,.34),0 18px 46px rgba(34,211,238,.18)}
+.order-success-screen{position:fixed;inset:0;z-index:220;display:grid;place-items:center;padding:20px;background:rgba(2,6,12,.92);backdrop-filter:blur(18px);opacity:0;visibility:hidden;transition:.22s ease}
+.order-success-screen.show{opacity:1;visibility:visible}
+.order-success-card{width:min(440px,100%);text-align:center;padding:28px 22px;border-radius:28px;background:linear-gradient(145deg,rgba(17,24,39,.98),rgba(7,13,20,.98));border:1px solid rgba(94,234,212,.24);box-shadow:0 30px 90px rgba(0,0,0,.55)}
+.order-success-logo{width:110px;height:110px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px rgba(94,234,212,.4),0 16px 42px rgba(34,211,238,.20)}
+.order-success-eyebrow{margin:16px 0 5px;color:var(--green);font-size:11px;font-weight:1000;letter-spacing:.14em}
+.order-success-card h2{font-size:30px;margin:0 0 8px}.order-success-card p:not(.order-success-eyebrow){color:#cbd5e1;margin:0 auto 15px;max-width:340px}.order-success-id{display:block;margin:0 0 18px;padding:10px 12px;border-radius:13px;background:#071810;color:#67e8f9;border:1px solid rgba(94,234,212,.18);font-size:14px;word-break:break-all}.order-success-card .btn{width:100%}
+@media(max-width:760px){.brand-logo-img{width:42px;height:42px;flex-basis:42px}.hero-brand-logo{width:76px;height:76px;margin-bottom:14px}.order-success-logo{width:94px;height:94px}.order-success-card{padding:24px 18px}.order-success-card h2{font-size:26px}}
+
+/* v25 conversion CTA */
+.floating-sales-cta{position:fixed;right:18px;bottom:20px;z-index:78;display:grid;gap:9px;width:190px}
+.floating-sales-cta a{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:16px;box-shadow:0 16px 38px rgba(0,0,0,.34);font-size:12px;font-weight:900;backdrop-filter:blur(16px)}
+.floating-sales-cta a span{display:grid;place-items:center;min-width:38px;height:38px;border-radius:12px;font-size:13px;font-weight:1000}
+.floating-sales-cta a strong{font-size:14px}
+.floating-line{background:rgba(9,24,19,.96);border:1px solid rgba(52,211,153,.34);color:#d1fae5}.floating-line span{background:#22c55e;color:#052e16}
+.floating-order{background:rgba(12,19,30,.96);border:1px solid rgba(94,234,212,.28);color:#ecfeff}.floating-order span{background:#12333a;color:#67e8f9}
+@media(max-width:760px){.floating-sales-cta{display:none}}
+
+/* v25.1 LINE handoff fallback */
+.order-success-message{margin:0 0 12px;padding:11px 12px;text-align:left;border-radius:13px;background:#060b12;border:1px solid rgba(94,234,212,.16)}
+.order-success-message small{display:block;margin-bottom:5px;color:#67e8f9;font-size:10px;font-weight:900}.order-success-message pre{margin:0;white-space:pre-wrap;word-break:break-word;color:#e2e8f0;font:700 12px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif}.order-success-card .btn+.btn{margin-top:9px}.order-success-hint{display:block;margin-top:10px;color:#94a3b8;font-size:10.5px;line-height:1.55}
+
+/* V30 dynamic homepage content */
+.site-announcement{position:relative;z-index:120;background:#10b981;color:#03110d;text-align:center;padding:9px 16px;font-size:.78rem;font-weight:900;letter-spacing:.02em}.promo-banner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:24px 26px;border:1px solid rgba(52,211,153,.25);background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(15,23,42,.94));border-radius:24px}.promo-banner h2{margin:3px 0 6px;font-size:clamp(1.35rem,3vw,2rem)}.promo-banner p:not(.eyebrow){color:#cbd5e1;margin:0}.delivery-case-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.delivery-case-card{overflow:hidden;background:#0f172a;border:1px solid rgba(148,163,184,.16);border-radius:20px}.delivery-case-card>img,.delivery-case-placeholder{display:block;width:100%;height:190px;object-fit:cover;background:#09101a}.delivery-case-placeholder{display:grid;place-items:center;font-size:3rem}.delivery-case-card>div:last-child{padding:15px}.delivery-case-card small{color:#34d399;font-weight:850}.delivery-case-card h3{font-size:1.05rem;margin:4px 0}.delivery-case-card b{display:block;color:#e2e8f0;font-size:.82rem}.delivery-case-card p{color:#94a3b8;font-size:.78rem;margin:7px 0 0}@media(max-width:800px){.promo-banner{align-items:flex-start;flex-direction:column}.delivery-case-grid{grid-template-columns:1fr 1fr}.delivery-case-card>img,.delivery-case-placeholder{height:150px}}@media(max-width:520px){.delivery-case-grid{grid-template-columns:1fr}.delivery-case-card>img,.delivery-case-placeholder{height:210px}}

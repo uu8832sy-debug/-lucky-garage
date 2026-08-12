@@ -1,5 +1,5 @@
 /*
-  小宇微電｜幸運車庫 Firebase Web 設定
+  小宇微電｜官方網站 Firebase Web 設定
 
   Firebase Web 設定用來識別專案，本身不是服務帳戶私鑰。
   實際資料權限由 Firebase Authentication 與 firestore.rules 控制。

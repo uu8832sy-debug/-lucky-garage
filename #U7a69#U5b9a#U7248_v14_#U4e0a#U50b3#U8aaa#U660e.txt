@@ -1,0 +1,17 @@
+小宇微電｜幸運車庫緊急穩定版 v14.0.0
+
+最快上線：只需要覆蓋 5 個檔案
+1. 專案最外層：config.js、garage.js、garage.html
+2. admin 資料夾：draw.js、draw.html
+3. Commit 到 main，等待 Vercel 顯示 Ready。
+4. 管理頁開啟：admin/draw.html?v=1400
+5. 客戶抽獎頁開啟：garage.html?v=1400
+
+本版固定機率：
+- 現折 500：80%
+- 現折 1000：16%
+- 現折 2000：3%
+- 現折 3000：1%
+
+本版不修改訂單、收據、商品、保固卡、Firebase 設定或 Firestore 規則。
+既有活動 main-2026-v12-final 即使 Firestore 內獎項文字、ID 或排序是手機手動建立的，也不再阻擋產碼或抽獎；正式開獎機率一律以 config.js 固定設定計算。

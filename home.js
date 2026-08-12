@@ -1,14 +1,26 @@
-const products = Array.isArray(window.YU_PRODUCT_CATALOG) ? window.YU_PRODUCT_CATALOG.filter((p) => p.visible !== false) : [];
-const grid = document.querySelector('#featuredProducts');
-const money = (value) => `NT$${Math.max(0, Number(value) || 0).toLocaleString('zh-TW')}`;
-const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-const card = (p) => `<article class="product-card">
-  <a class="product-photo" href="/products.html#${escapeHtml(p.id)}" aria-label="查看 ${escapeHtml(p.name)}">
-    <img src="${escapeHtml(p.images?.[0] || '')}" alt="${escapeHtml(p.name)} 實車照片" loading="lazy"><span class="tag">${escapeHtml(p.tag || '微型電動')}</span>
-  </a>
-  <div class="product-body"><div><span class="product-style">${escapeHtml(p.style || '')}</span><h3>${escapeHtml(p.name)}</h3></div>
-    <div class="spec-row"><span>🔋 ${escapeHtml(p.battery || '規格洽詢')}</span><span>⚡ ${escapeHtml(p.motor || '規格洽詢')}</span></div>
-    <div class="price-row"><div><small>售價起</small><strong class="price">${money(p.priceLead)}</strong></div><a class="btn btn-primary" href="/products.html#${escapeHtml(p.id)}">看詳情</a></div>
-  </div>
-</article>`;
-if (grid) grid.innerHTML = products.slice(0, 6).map(card).join('');
+(() => {
+  "use strict";
+  const defaults = Array.isArray(window.YU_PRODUCT_CATALOG) ? JSON.parse(JSON.stringify(window.YU_PRODUCT_CATALOG)) : [];
+  const $ = (s) => document.querySelector(s);
+  const money = (value) => `NT$${Math.max(0, Number(value) || 0).toLocaleString('zh-TW')}`;
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const imageUrls = (p) => {
+    const arr = Array.isArray(p?.images) ? p.images.slice() : [];
+    arr.sort((a,b) => Number(!!(typeof b==='object'&&b?.isPrimary)) - Number(!!(typeof a==='object'&&a?.isPrimary)));
+    return arr.map((x)=>typeof x==='string'?x:x?.url).filter(Boolean);
+  };
+  function normalize(items){return (Array.isArray(items)?items:[]).map((p,i)=>({...p,id:String(p.id||`p-${i}`),order:Number(p.order||i+1),visible:p.visible!==false,images:imageUrls(p)})).filter((p)=>p.visible!==false).sort((a,b)=>a.order-b.order);}
+  function mergeRemote(remote){const map=new Map(defaults.map((p)=>[p.id,{...p}]));for(const r of remote||[]){if(!r?.id||String(r.id).startsWith('__'))continue;const base=map.get(r.id);const imgs=imageUrls(r);if(base)map.set(r.id,{...base,...r,images:imgs.length?imgs:imageUrls(base)});else map.set(r.id,{...r,images:imgs});}return normalize([...map.values()]);}
+  function hasTernary(p){return Number(p.priceTernary||0)>0;}
+  function hasLiFePO4(p){return Number(p.priceLithium||0)>0;}
+  function batterySummary(p){const parts=['鉛酸'];if(hasTernary(p))parts.push('三元鋰 30Ah');if(hasLiFePO4(p))parts.push('鋰鐵 30Ah');return parts.length>1?parts.join('／'):'鉛酸版';}
+  function rangeSummary(p){const parts=[`鉛酸 ${p.rangeLead||'請洽客服確認'}`];if(hasTernary(p))parts.push(`三元鋰 ${p.rangeTernary||'請洽客服確認'}`);if(hasLiFePO4(p))parts.push(`鋰鐵 ${p.rangeLithium||'請洽客服確認'}`);return parts.join('｜');}
+  function badgeText(p){if(hasTernary(p)&&hasLiFePO4(p))return '三種電池可選';if(hasTernary(p))return '可選三元鋰 30Ah';if(hasLiFePO4(p))return '可選鋰鐵 30Ah';return '鉛酸版';}
+  function card(p){const img=imageUrls(p)[0]||'/icon-512.png';const priceBlocks=[`<div><small>鉛酸版</small><strong>${money(p.priceLead)}</strong></div>`];if(hasTernary(p))priceBlocks.push(`<div><small>三元鋰 30Ah</small><strong>${money(p.priceTernary)}</strong></div>`);if(hasLiFePO4(p))priceBlocks.push(`<div><small>鋰鐵 30Ah</small><strong>${money(p.priceLithium)}</strong></div>`);return `<article class="product-card"><a class="product-photo" href="/products.html#${escapeHtml(p.id)}"><img src="${escapeHtml(img)}" alt="${escapeHtml(p.name)} 實車照片" loading="lazy" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">${escapeHtml(badgeText(p))}</span></a><div class="product-body"><div><span class="product-style">${escapeHtml(p.style||'')}</span><h3>${escapeHtml(p.name)}</h3></div><div class="spec-row"><span>🔋 ${escapeHtml(batterySummary(p))}</span><span>🛣️ ${escapeHtml(rangeSummary(p))}</span></div><div class="model-prices">${priceBlocks.join('')}</div><div class="price-note">車價不含領牌保險代辦；代辦另加 NT$3,000。</div><div class="price-row"><a class="btn btn-primary full-width" href="/products.html#${escapeHtml(p.id)}">看詳情</a></div></div></article>`;}
+  function renderProducts(products){const grid=$('#featuredProducts');if(grid)grid.innerHTML=products.slice(0,6).map(card).join('');}
+  function applySettings(data={}){const s={announcementEnabled:false,announcementText:'',heroEyebrow:'工廠直營・全台到府交車',heroTitle:'找小宇買微電，',heroAccent:'不走彎路',heroDescription:'全台到府交車、線上看車、展示牌訂製與保固查詢，一站完成。',promoEnabled:false,promoTitle:'',promoText:'',promoButtonText:'立即了解',promoButtonUrl:'/products.html',...data};const retired=/幸運車庫|抽獎碼|抽獎活動|開庫/;if(retired.test(String(s.heroDescription||'')))s.heroDescription='全台到府交車、線上看車、展示牌訂製與保固查詢，一站完成。';if(retired.test([s.promoTitle,s.promoText,s.promoButtonUrl].join(' ')))s.promoEnabled=false;if(retired.test(String(s.announcementText||'')))s.announcementEnabled=false;const announcement=$('#announcementBar');if(announcement){announcement.hidden=!s.announcementEnabled||!s.announcementText;announcement.textContent=s.announcementText||'';}if($('#heroEyebrow'))$('#heroEyebrow').textContent=s.heroEyebrow||'';if($('#heroTitle'))$('#heroTitle').textContent=s.heroTitle||'';if($('#heroAccent'))$('#heroAccent').textContent=s.heroAccent||'';if($('#heroDescription'))$('#heroDescription').textContent=s.heroDescription||'';const promo=$('#promoSection');if(promo){promo.hidden=!s.promoEnabled;if($('#promoTitle'))$('#promoTitle').textContent=s.promoTitle||'';if($('#promoText'))$('#promoText').textContent=s.promoText||'';const btn=$('#promoButton');if(btn){btn.textContent=s.promoButtonText||'立即了解';btn.href=s.promoButtonUrl||'/products.html';}}}
+  function renderDelivery(cases){const section=$('#deliverySection'),grid=$('#deliveryCasesGrid');if(!section||!grid)return;const list=(cases||[]).filter((c)=>c.published!==false).sort((a,b)=>Number(a.order||999)-Number(b.order||999)).slice(0,6);section.hidden=!list.length;grid.innerHTML=list.map((c)=>`<article class="delivery-case-card">${c.imageUrl?`<img src="${escapeHtml(c.imageUrl)}" alt="${escapeHtml(c.title||'交車紀錄')}" loading="lazy">`:`<div class="delivery-case-placeholder">🚚</div>`}<div><small>${escapeHtml(c.location||'全台到府交車')}</small><h3>${escapeHtml(c.title||'交車完成')}</h3><b>${escapeHtml(c.model||'')}</b><p>${escapeHtml(c.note||'感謝客人的信任。')}</p></div></article>`).join('');}
+  renderProducts(normalize(defaults));
+  const config=window.LUCKY_GARAGE_FIREBASE_CONFIG||{};if(!config.apiKey||!config.projectId)return;
+  Promise.all([import('https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js'),import('https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js')]).then(([appM,fs])=>{const app=appM.initializeApp(config,'home-v32');const db=fs.getFirestore(app);fs.onSnapshot(fs.collection(db,'products'),(snap)=>renderProducts(mergeRemote(snap.docs.map((d)=>({id:d.id,...d.data()})))),(e)=>console.warn('products sync',e));fs.onSnapshot(fs.doc(db,'siteSettings','main'),(snap)=>applySettings(snap.exists()?snap.data():{}),(e)=>console.warn('site settings sync',e));fs.onSnapshot(fs.collection(db,'deliveryCases'),(snap)=>renderDelivery(snap.docs.map((d)=>({id:d.id,...d.data()}))),(e)=>console.warn('delivery sync',e));}).catch((e)=>console.warn('Firebase home enhancement unavailable',e));
+})();

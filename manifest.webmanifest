@@ -1,12 +1,25 @@
 {
-  "name": "小宇微電官方商城",
+  "name": "小宇微電｜微型二輪・車牌訂製",
   "short_name": "小宇微電",
-  "start_url": "./index.html",
+  "description": "小宇微電官方網站｜微型電動二輪、紀念展示車牌與售後保固。",
+  "start_url": "/?v=32.0.0",
   "display": "standalone",
-  "background_color": "#080a0f",
-  "theme_color": "#080a0f",
+  "background_color": "#05090d",
+  "theme_color": "#05090d",
   "icons": [
-    {"src":"icon-192.png","sizes":"192x192","type":"image/png"},
-    {"src":"icon-512.png","sizes":"512x512","type":"image/png"}
-  ]
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "/",
+  "scope": "/"
 }

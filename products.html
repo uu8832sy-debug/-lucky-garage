@@ -2,22 +2,133 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <meta name="build-version" content="20.0.0"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <script data-public-entry-v24>if(window.top!==window.self){window.top.location.replace(window.location.href);}</script>
+  <meta name="build-version" content="32.0.0"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#070a0f"><meta name="description" content="小宇微電車款商品頁｜實車照片、價格、規格與線上訂購需求。">
   <title>車款商品｜小宇微電</title>
-  <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-192.png"><link rel="stylesheet" href="public.css?v=20.0.0">
+  <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="stylesheet" href="public.css?v=32.0.0">
 </head>
 <body>
 <header class="site-header"><div class="wrap header-row">
-  <a class="brand" href="/index.html"><span class="brand-mark">YU</span><span><small>YU ELECTRIC</small><strong>小宇微電官方網站</strong></span></a>
-  <nav class="public-nav" aria-label="前台選單"><a href="/index.html">首頁</a><a href="/products.html" aria-current="page">車款商品</a><a href="/plate.html">展示牌訂製</a><a href="/garage.html">幸運車庫</a><a href="/warranty.html">保固查詢</a><a class="line" href="https://line.me/R/ti/p/@762eqvlg" target="_blank" rel="noopener">官方 LINE</a></nav>
+  <a class="brand" href="/?v=32.0.0"><img class="brand-logo-img" src="/assets/brand/logo-round.webp" alt="小宇微電 Logo"><span><small>YU ELECTRIC</small><strong>小宇微電官方網站</strong></span></a>
+  <nav class="public-nav" aria-label="前台選單"><a href="/?v=32.0.0">首頁</a><a href="/products.html" aria-current="page">車款商品</a><a href="/plate.html">展示牌訂製</a><a href="/warranty.html">保固查詢</a><a class="line" href="https://line.me/R/ti/p/@762eqvlg" target="_blank" rel="noopener">官方 LINE</a></nav>
 </div></header>
 <main>
-  <section class="wrap page-hero"><p class="eyebrow">SCOOTER CATALOG</p><h1>微型電動車商品頁</h1><p>實車照片、售價與主要規格集中展示；現車顏色、交期、領牌及分期結果以客服最終確認為準。</p></section>
+  <section class="wrap page-hero"><p class="eyebrow">SCOOTER CATALOG</p><h1>微型電動車商品頁</h1><p>實車照片、售價、電池版本與參考續航集中展示；現車顏色、交期、領牌及分期結果以客服最終確認為準。</p></section>
+  <section class="wrap section price-section" style="padding-top:12px">
+    <div class="section-head"><div><p class="eyebrow">PRICE LIST</p><h2>全車款公開售價</h2><p>以下為車輛本體售價。可領牌車款若選擇由小宇代辦領牌＋保險，另加 NT$3,000。</p></div></div>
+    <div id="priceTable" class="price-table" aria-label="全車款售價表"></div>
+    <div class="notice" style="margin-top:14px">電池方案分開計價：<b>三元鋰 30Ah</b>為新電池廠商方案；<b>鋰鐵 30Ah</b>保留原方案。實際可供電壓、庫存與交期以客服確認為準。</div>
+    <div class="license-guide">
+      <div><span class="license-icon">📄</span><strong>自行前往監理站領牌</strong><p>建議想節省代辦費的客人可自行辦理。保險＋領牌規費約 NT$1,800 多，實際金額依保險公司與監理站收費為準。</p></div>
+      <div><span class="license-icon">🛵</span><strong>車輛一般不必到監理站</strong><p>辦理時攜帶領牌所需文件即可；實際受理文件與現場要求仍以監理站規定為準。</p></div>
+      <div><span class="license-icon">✅</span><strong>小宇代辦：另加 NT$3,000</strong><p>不想自己跑流程，也可選擇由小宇協助辦理領牌與保險，費用於車價外另計。</p></div>
+    </div>
+  </section>
   <section class="wrap section" style="padding-top:12px">
-    <div class="filters" aria-label="商品篩選"><button class="filter-btn active" data-filter="all">全部車款</button><button class="filter-btn" data-filter="72V">72V</button><button class="filter-btn" data-filter="60V">60V</button><button class="filter-btn" data-filter="48V">48V</button><button class="filter-btn" data-filter="展示">三輪／場域用</button></div>
+    <div class="filters" aria-label="商品篩選"><button class="filter-btn active" data-filter="all">全部車款</button><button class="filter-btn" data-filter="lithium">可選鋰電（三元鋰／鋰鐵）</button><button class="filter-btn" data-filter="lead-only">僅鉛酸</button><button class="filter-btn" data-filter="展示">三輪／場域用</button></div>
     <div class="notice" style="margin:14px 0 20px">微型電動二輪車須依台灣現行規定領牌、投保並遵守道路使用規範；「微型三輪」頁面已特別標註無法領牌。</div>
-    <div id="productGrid" class="product-grid"><div class="loading-skeleton">商品與照片載入中…</div></div><noscript><div class="notice">請開啟 JavaScript 才能瀏覽車款；也可直接加入官方 LINE：@762eqvlg。</div></noscript>
+    <div id="productGrid" class="product-grid">
+<article class="product-card" id="scooter-1">
+      <button class="product-photo open-product" type="button" data-id="scooter-1" aria-label="查看 大偉士"><img src="/assets/products/davespa/01.webp" alt="大偉士 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></button>
+      <div class="product-body"><div><span class="product-style">頂規改裝版</span><h3>大偉士</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 60–65 公里｜三元鋰 約 40–60 公里｜鋰鐵 約 70–80 公里</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$35,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$52,000</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$58,800</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-1">看詳情／訂購</button></div></div>
+    </article>
+<article class="product-card" id="scooter-2">
+      <button class="product-photo open-product" type="button" data-id="scooter-2" aria-label="查看 小偉士"><img src="/assets/products/svespa/01.webp" alt="小偉士 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></button>
+      <div class="product-body"><div><span class="product-style">經典款</span><h3>小偉士</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 50–55 公里｜三元鋰 約 35–50 公里｜鋰鐵 約 60–70 公里</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$28,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$41,800</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$45,600</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-2">看詳情／訂購</button></div></div>
+    </article>
+<article class="product-card" id="scooter-3">
+      <button class="product-photo open-product" type="button" data-id="scooter-3" aria-label="查看 神盾"><img src="/assets/products/shield/01.webp" alt="神盾 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></button>
+      <div class="product-body"><div><span class="product-style">鋼鐵戰艦版</span><h3>神盾</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 50–55 公里｜三元鋰 約 35–50 公里｜鋰鐵 約 60–70 公里</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$29,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$42,800</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$48,000</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-3">看詳情／訂購</button></div></div>
+    </article>
+<article class="product-card" id="scooter-4">
+      <button class="product-photo open-product" type="button" data-id="scooter-4" aria-label="查看 天鵝座 Z3"><img src="/assets/products/z3/01.webp" alt="天鵝座 Z3 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></button>
+      <div class="product-body"><div><span class="product-style">普通版</span><h3>天鵝座 Z3</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 60–65 公里｜三元鋰 約 40–60 公里｜鋰鐵 約 70–80 公里</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$35,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$52,000</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$58,800</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-4">看詳情／訂購</button></div></div>
+    </article>
+<article class="product-card" id="scooter-5">
+      <button class="product-photo open-product" type="button" data-id="scooter-5" aria-label="查看 天鵝座 Z3"><img src="/assets/products/z3/02.webp" alt="天鵝座 Z3 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></button>
+      <div class="product-body"><div><span class="product-style">暗魂版</span><h3>天鵝座 Z3</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 60–65 公里｜三元鋰 約 40–60 公里｜鋰鐵 約 70–80 公里</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$38,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$55,000</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$62,000</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-5">看詳情／訂購</button></div></div>
+    </article>
+<article class="product-card" id="scooter-6">
+      <button class="product-photo open-product" type="button" data-id="scooter-6" aria-label="查看 正9號"><img src="/assets/products/nine/01.webp" alt="正9號 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></button>
+      <div class="product-body"><div><span class="product-style">曠達版</span><h3>正9號</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 60–65 公里｜三元鋰 約 40–60 公里｜鋰鐵 約 70–80 公里</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$35,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$52,000</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$58,800</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-6">看詳情／訂購</button></div></div>
+    </article>
+<article class="product-card" id="scooter-7">
+      <button class="product-photo open-product" type="button" data-id="scooter-7" aria-label="查看 正9號"><img src="/assets/products/nine/03.webp" alt="正9號 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></button>
+      <div class="product-body"><div><span class="product-style">金大力版</span><h3>正9號</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 60–65 公里｜三元鋰 約 40–60 公里｜鋰鐵 約 70–80 公里</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$35,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$52,000</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$58,800</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-7">看詳情／訂購</button></div></div>
+    </article>
+<article class="product-card" id="scooter-8">
+      <button class="product-photo open-product" type="button" data-id="scooter-8" aria-label="查看 小可愛（拿鐵）"><img src="/assets/products/latte/01.webp" alt="小可愛（拿鐵） 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">可選三元鋰 30Ah</span></button>
+      <div class="product-body"><div><span class="product-style">可愛馬卡龍版</span><h3>小可愛（拿鐵）</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah</span><span>🛣️ 鉛酸 約 50–55 公里｜三元鋰 約 35–50 公里</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$30,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$43,800</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-8">看詳情／訂購</button></div></div>
+    </article>
+<article class="product-card" id="scooter-9">
+      <button class="product-photo open-product" type="button" data-id="scooter-9" aria-label="查看 Dio"><img src="/assets/products/dio/01.webp" alt="Dio 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></button>
+      <div class="product-body"><div><span class="product-style">經典外型</span><h3>Dio</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 請洽客服確認｜三元鋰 約 35–50 公里｜鋰鐵 請洽客服確認</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$30,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$43,800</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$48,000</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-9">看詳情／訂購</button></div></div>
+    </article>
+<article class="product-card" id="scooter-10">
+      <button class="product-photo open-product" type="button" data-id="scooter-10" aria-label="查看 QC"><img src="/assets/products/qc/01.webp" alt="QC 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">三種電池可選</span></button>
+      <div class="product-body"><div><span class="product-style">時尚 QC 款</span><h3>QC</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸／三元鋰 30Ah／鋰鐵 30Ah</span><span>🛣️ 鉛酸 約 60–65 公里｜三元鋰 約 40–60 公里｜鋰鐵 約 70–80 公里</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$32,000</strong></div><div><small>三元鋰 30Ah</small><strong>NT$49,000</strong></div><div><small>鋰鐵 30Ah</small><strong>NT$56,400</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-10">看詳情／訂購</button></div></div>
+    </article>
+<article class="product-card" id="scooter-11">
+      <button class="product-photo open-product" type="button" data-id="scooter-11" aria-label="查看 小酷龍"><img src="/assets/products/dragon/01.webp" alt="小酷龍 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">鉛酸版</span></button>
+      <div class="product-body"><div><span class="product-style">檔車造型款</span><h3>小酷龍</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸版</span><span>🛣️ 鉛酸 請洽客服確認</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$21,000</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-11">看詳情／訂購</button></div></div>
+    </article>
+<article class="product-card" id="scooter-12">
+      <button class="product-photo open-product" type="button" data-id="scooter-12" aria-label="查看 微型三輪"><img src="/assets/products/trike/01.webp" alt="微型三輪 實車照片" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">鉛酸版</span></button>
+      <div class="product-body"><div><span class="product-style">載物長者三輪版</span><h3>微型三輪</h3></div>
+      <div class="spec-row"><span>🔋 鉛酸版</span><span>🛣️ 鉛酸 請洽客服確認</span></div>
+      <div class="model-prices"><div><small>鉛酸版</small><strong>NT$33,000</strong></div></div>
+      <div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>
+      <div class="price-row"><button class="btn btn-primary open-product full-width" type="button" data-id="scooter-12">看詳情／訂購</button></div></div>
+    </article>
+</div><noscript><div class="notice">請開啟 JavaScript 才能瀏覽車款；也可直接加入官方 LINE：@762eqvlg。</div></noscript>
   </section>
 </main>
 <footer class="footer"><div class="wrap footer-row"><span>© 2026 小宇微電</span><span>官方 LINE：@762eqvlg</span></div></footer>
@@ -27,26 +138,45 @@
   <div class="modal-layout">
     <div><div class="gallery-main"><img id="mainPhoto" src="" alt="車款照片"></div><div id="thumbs" class="thumbs"></div></div>
     <div class="details"><p id="modalStyle" class="eyebrow"></p><h3 id="modalName"></h3><p id="modalNote" class="note"></p>
-      <div class="detail-list"><div><small>電池</small><strong id="modalBattery">—</strong></div><div><small>馬達</small><strong id="modalMotor">—</strong></div><div><small>速度</small><strong id="modalSpeed">—</strong></div><div><small>續航</small><strong id="modalRange">—</strong></div></div>
+      <div class="detail-list"><div><small>電池版本</small><strong id="modalBattery">—</strong></div><div><small>參考續航</small><strong id="modalRange">—</strong></div><div><small>電池參考壽命</small><strong id="modalLife">—</strong></div></div><div id="modalFeatures" class="feature-chips" hidden></div><p class="product-disclaimer">續航里程與電池壽命為參考數值，實際情況會因載重、路況、環境溫度、充電習慣及使用方式而有所差異；電池參考壽命不等同保固期限。</p>
       <form id="orderForm" class="order-form">
         <div class="form-grid"><label class="field"><span>電池版本</span><select id="variant" required></select></label><label class="field"><span>顏色</span><select id="color" required></select></label></div>
+        <label class="field"><span>領牌方式</span><select id="licenseMode" required></select></label>
+        <div id="licenseHint" class="license-inline">自行領牌：保險＋領牌規費約 NT$1,800 多；車輛一般不必到監理站，攜帶領牌文件即可。實際依監理站規定為準。</div>
         <div class="form-grid"><label class="field"><span>姓名 *</span><input id="customerName" maxlength="40" autocomplete="name" required></label><label class="field"><span>手機 *</span><input id="phone" inputmode="tel" maxlength="20" autocomplete="tel" required></label></div>
         <label class="field"><span>送車地址 *</span><input id="address" maxlength="180" autocomplete="street-address" required></label>
         <label class="field"><span>備註</span><textarea id="customerNote" rows="2" maxlength="160" placeholder="例如：想了解無卡分期、指定顏色或交車時間"></textarea></label>
         <input id="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
-        <div class="form-grid"><label class="field"><span id="captchaQuestion">驗證</span><input id="captchaAnswer" inputmode="numeric" required></label><div class="total-box"><span>參考售價</span><strong id="total">NT$0</strong></div></div>
-        <button id="submitOrder" class="btn btn-primary" type="submit">送出訂單需求並開啟 LINE</button><small style="color:#94a3b8">送出後會建立「待訂金」訂單，實際訂金、交期及配備由客服再次確認。</small>
+        <div class="form-grid"><label class="field"><span id="captchaQuestion">驗證</span><input id="captchaAnswer" inputmode="numeric" required></label><div class="total-box"><span id="totalLabel">參考總額</span><strong id="total">NT$0</strong></div></div>
+        <button id="submitOrder" class="btn btn-primary" type="submit">送出訂單需求</button><small style="color:#94a3b8">送出後會建立「待訂金」訂單，實際訂金、交期及配備由客服再次確認。</small>
       </form>
     </div>
   </div>
 </section></div>
+
+<div id="orderSuccessScreen" class="order-success-screen" aria-hidden="true">
+  <section class="order-success-card" role="status" aria-live="polite">
+    <img class="order-success-logo" src="/assets/brand/logo-round.webp" alt="小宇微電 Logo">
+    <p class="order-success-eyebrow">小宇微電｜官方訂購</p>
+    <h2 id="orderSuccessTitle">訂單已建立</h2>
+    <p id="orderSuccessText">訂單已整理完成，請點下方按鈕開啟官方 LINE。</p>
+    <strong id="orderSuccessId" class="order-success-id"></strong>
+    <div class="order-success-message">
+      <small>完整訂單內容</small>
+      <pre id="orderSuccessPreview"></pre>
+    </div>
+    <a id="orderSuccessLine" class="btn btn-primary" href="https://line.me/R/ti/p/%40762eqvlg">複製訂單並開啟 LINE</a>
+    <button id="orderSuccessCopy" class="btn btn-secondary" type="button">複製完整訂單內容</button>
+    <small id="orderSuccessHint" class="order-success-hint">進入 LINE 後，長按輸入框 →「貼上」→ 傳送。這是目前 iPhone 上最穩定的免費方式。</small>
+  </section>
+</div>
 <div id="toast" class="toast" role="status"></div>
-<script src="config.js?v=20.0.0"></script><script src="firebase-config.js?v=20.0.0"></script><script src="catalog.js?v=20.0.0"></script><script src="products.js?v=20.0.0"></script>
+<script src="config.js?v=32.0.0"></script><script src="firebase-config.js?v=32.0.0"></script><script src="catalog.js?v=32.0.0"></script><script src="products.js?v=32.0.0"></script>
 
 <nav class="mobile-dock" aria-label="手機快速選單">
-  <a href="/index.html"><span>⌂</span><small>首頁</small></a>
+  <a href="/?v=32.0.0"><span>⌂</span><small>首頁</small></a>
   <a href="/products.html"><span>🛵</span><small>車款</small></a>
-  <a href="/garage.html"><span>🎁</span><small>抽獎</small></a>
+  <a href="/plate.html"><span>🪪</span><small>車牌</small></a>
   <a href="/warranty.html"><span>🛡</span><small>保固</small></a>
   <a href="https://line.me/R/ti/p/@762eqvlg"><span>LINE</span><small>聯絡</small></a>
 </nav>

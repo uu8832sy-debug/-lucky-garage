@@ -1,9 +1,2 @@
-只需覆蓋上傳 3 個檔案：
-1. business.html
-2. owner.html
-3. owner.js
-
-不要刪除或修改 business.js、business.css、admin.css、draw-core.js、Firestore 規則。
-上傳完成後等 1～3 分鐘，用 Safari 開啟：
-訂單管理：business.html?v=4
-抽獎管理：owner.html?v=7
+V22 手機部署：只要把 site_payload_v22.zip、build.mjs、package.json、vercel.json 四個檔案放到 GitHub 專案最外層並覆蓋。不要解壓 site_payload_v22.zip。
+本版修正正9號曠達版照片、商品公開資訊與後台商品內容管理。
