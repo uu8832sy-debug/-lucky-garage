@@ -34,4 +34,4 @@ while(offset+4<=input.length){
 }
 const required=["index.html","products.html","plate.html","warranty.html","admin/index.html","assets/brand/logo-round.webp"];
 for(const file of required){ if(!fs.existsSync(path.join(outDir,file))) throw new Error(`Deployment payload missing: ${file}`); }
-console.log(`Extracted ${count} runtime files from V33 payload to ${outDir}`);
+console.log(`Extracted ${count} runtime files from V33.3 payload to ${outDir}`);
