@@ -32,6 +32,35 @@ while(offset+4<=input.length){
   }
   offset=dataStart+compressedSize;
 }
+
+const patchText=(relative,transform)=>{
+  const file=path.join(outDir,relative);
+  if(!fs.existsSync(file))return;
+  fs.writeFileSync(file,transform(fs.readFileSync(file,"utf8")),"utf8");
+};
+const removeRetiredPublicUi=(html)=>html
+  .replace(/<a\b[^>]*href=["']\/garage(?:\.html)?[^"']*["'][^>]*>.*?<\/a>/g,"")
+  .replace(/<article class="feature-card"><span class="feature-icon">🎁<\/span><b>成交限定幸運車庫<\/b>.*?<\/article>/g,'<article class="feature-card"><span class="feature-icon">📱</span><b>線上看車與訂購</b><p>車款、電池、價格與交期集中展示，選好規格即可送出訂購需求並由客服確認。</p></article>')
+  .replaceAll("訂購需求、幸運抽獎與保固查詢","展示牌訂製與保固查詢")
+  .replaceAll("紀念展示牌、幸運車庫抽獎、訂單與保固服務","紀念展示牌、線上訂單與保固服務")
+  .replaceAll("32.1.1","32.1.2");
+for(const file of ["index.html","products.html","plate.html","warranty.html"]){patchText(file,removeRetiredPublicUi);}
+patchText("index.html",(html)=>html.replace('<a class="btn btn-amber" href="/garage.html">使用抽獎碼</a>',""));
+patchText("admin/index.html",(html)=>html
+  .replace(/<button[^>]*data-shell-view="draw"[^>]*>.*?<\/button>/g,"")
+  .replace(/<section id="shell-draw".*?<\/section>/g,"")
+  .replace("、交車案例與抽獎。","與交車案例。")
+  .replaceAll("32.1.1","32.1.2"));
+patchText("home.js",(js)=>js
+  .replace(".filter((p)=>p.visible!==false).sort", ".filter((p)=>p.visible!==false&&String(p.name||'').trim()!=='重機車牌').sort")
+  .replace("訂購需求、幸運抽獎與保固查詢","展示牌訂製與保固查詢")
+  .replace("...data};const announcement=", "...data};const retired=/幸運車庫|抽獎碼|抽獎活動|開庫/;if(retired.test(String(s.heroDescription||'')))s.heroDescription='全台到府交車、線上看車、展示牌訂製與保固查詢，一站完成。';if(retired.test([s.promoTitle,s.promoText,s.promoButtonUrl].join(' ')))s.promoEnabled=false;if(retired.test(String(s.announcementText||'')))s.announcementEnabled=false;const announcement="));
+patchText("products.js",(js)=>js.replace(".filter((item) => item.visible !== false)", ".filter((item) => item.visible !== false && String(item.name || \"\").trim() !== \"重機車牌\")"));
+patchText("public.css",(css)=>css.replaceAll("grid-template-columns:repeat(5,1fr)","grid-template-columns:repeat(4,1fr)"));
+patchText("warranty.css",(css)=>css.replaceAll("grid-template-columns:repeat(5,1fr)","grid-template-columns:repeat(4,1fr)"));
+patchText("manifest.webmanifest",(text)=>text.replace("紀念展示車牌、幸運車庫與售後保固","紀念展示牌、線上訂單與售後保固"));
+fs.writeFileSync(path.join(outDir,"BUILD_VERSION.txt"),"32.1.2\n","utf8");
 const required=["index.html","products.html","plate.html","garage.html","warranty.html","admin/index.html","assets/brand/logo-round.webp","public-theme-v32.css","admin/admin-theme-v32.css"];
 for(const file of required){ if(!fs.existsSync(path.join(outDir,file))) throw new Error(`Deployment payload missing: ${file}`); }
 console.log(`Extracted ${count} runtime files to ${outDir}`);
+
