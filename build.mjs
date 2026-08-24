@@ -38,28 +38,49 @@ const patchText=(relative,transform)=>{
   if(!fs.existsSync(file))return;
   fs.writeFileSync(file,transform(fs.readFileSync(file,"utf8")),"utf8");
 };
+const copyBrandAsset=(source,relative)=>{
+  const from=path.resolve(source),to=path.join(outDir,relative);
+  if(!fs.existsSync(from))throw new Error(`Brand asset missing: ${source}`);
+  fs.mkdirSync(path.dirname(to),{recursive:true});
+  fs.copyFileSync(from,to);
+};
+copyBrandAsset("brand-logo-round-v2.webp","assets/brand/logo-round.webp");
+copyBrandAsset("brand-logo-round-v2.webp","assets/brand/logo-round-v2.webp");
+copyBrandAsset("brand-logo-horizontal-v2.webp","assets/brand/logo-horizontal-v2.webp");
+for(const icon of ["apple-touch-icon.png","icon-192.png","icon-512.png","favicon-32.png"]){copyBrandAsset("brand-logo-round-v2.png",icon);}
+copyBrandAsset("brand-favicon-v2.ico","favicon.ico");
 const removeRetiredPublicUi=(html)=>html
   .replace(/<a\b[^>]*href=["']\/garage(?:\.html)?[^"']*["'][^>]*>.*?<\/a>/g,"")
   .replace(/<article class="feature-card"><span class="feature-icon">🎁<\/span><b>成交限定幸運車庫<\/b>.*?<\/article>/g,'<article class="feature-card"><span class="feature-icon">📱</span><b>線上看車與訂購</b><p>車款、電池、價格與交期集中展示，選好規格即可送出訂購需求並由客服確認。</p></article>')
   .replaceAll("訂購需求、幸運抽獎與保固查詢","展示牌訂製與保固查詢")
   .replaceAll("紀念展示牌、幸運車庫抽獎、訂單與保固服務","紀念展示牌、線上訂單與保固服務")
-  .replaceAll("32.1.1","32.1.2");
+  .replaceAll("32.1.0","32.1.3")
+  .replaceAll("32.1.1","32.1.3")
+  .replaceAll("32.1.2","32.1.3")
+  .replace(/<img class="brand-logo-img" src="\/assets\/brand\/logo-round\.webp" alt="([^"]+)">/g,'<picture class="brand-logo-lockup"><source media="(max-width:760px)" srcset="/assets/brand/logo-round-v2.webp"><img class="brand-logo-img brand-logo-img--horizontal" src="/assets/brand/logo-horizontal-v2.webp" alt="$1"></picture>');
 for(const file of ["index.html","products.html","plate.html","warranty.html"]){patchText(file,removeRetiredPublicUi);}
-patchText("index.html",(html)=>html.replace('<a class="btn btn-amber" href="/garage.html">使用抽獎碼</a>',""));
+patchText("index.html",(html)=>html
+  .replace('<a class="btn btn-amber" href="/garage.html">使用抽獎碼</a>',"")
+  .replace(/<img class="hero-brand-logo" src="\/assets\/brand\/logo-round\.webp" alt="([^"]+)">/,'<img class="hero-brand-logo hero-brand-logo--horizontal" src="/assets/brand/logo-horizontal-v2.webp" alt="$1">'));
 patchText("admin/index.html",(html)=>html
   .replace(/<button[^>]*data-shell-view="draw"[^>]*>.*?<\/button>/g,"")
   .replace(/<section id="shell-draw".*?<\/section>/g,"")
   .replace("、交車案例與抽獎。","與交車案例。")
-  .replaceAll("32.1.1","32.1.2"));
+  .replaceAll("32.1.0","32.1.3")
+  .replaceAll("32.1.1","32.1.3")
+  .replaceAll("32.1.2","32.1.3"));
 patchText("home.js",(js)=>js
   .replace(".filter((p)=>p.visible!==false).sort", ".filter((p)=>p.visible!==false&&String(p.name||'').trim()!=='重機車牌').sort")
   .replace("訂購需求、幸運抽獎與保固查詢","展示牌訂製與保固查詢")
-  .replace("...data};const announcement=", "...data};const retired=/幸運車庫|抽獎碼|抽獎活動|開庫/;if(retired.test(String(s.heroDescription||'')))s.heroDescription='全台到府交車、線上看車、展示牌訂製與保固查詢，一站完成。';if(retired.test([s.promoTitle,s.promoText,s.promoButtonUrl].join(' ')))s.promoEnabled=false;if(retired.test(String(s.announcementText||'')))s.announcementEnabled=false;const announcement="));
+  .replace("const retired=/幸運車庫|抽獎碼|抽獎活動|開庫/;","const retired=/幸運車庫|抽獎|開庫/;")
+  .replace("...data};const announcement=", "...data};const retired=/幸運車庫|抽獎|開庫/;if(retired.test(String(s.heroDescription||'')))s.heroDescription='全台到府交車、線上看車、展示牌訂製與保固查詢，一站完成。';if(retired.test([s.promoTitle,s.promoText,s.promoButtonUrl].join(' ')))s.promoEnabled=false;if(retired.test(String(s.announcementText||'')))s.announcementEnabled=false;const announcement="));
 patchText("products.js",(js)=>js.replace(".filter((item) => item.visible !== false)", ".filter((item) => item.visible !== false && String(item.name || \"\").trim() !== \"重機車牌\")"));
 patchText("public.css",(css)=>css.replaceAll("grid-template-columns:repeat(5,1fr)","grid-template-columns:repeat(4,1fr)"));
 patchText("warranty.css",(css)=>css.replaceAll("grid-template-columns:repeat(5,1fr)","grid-template-columns:repeat(4,1fr)"));
 patchText("manifest.webmanifest",(text)=>text.replace("紀念展示車牌、幸運車庫與售後保固","紀念展示牌、線上訂單與售後保固"));
-fs.writeFileSync(path.join(outDir,"BUILD_VERSION.txt"),"32.1.2\n","utf8");
+patchText("public.css",(css)=>css.includes("V32.1.3 horizontal brand")?css:css+`\n/* V32.1.3 horizontal brand */\n.brand-logo-lockup{display:block;line-height:0}body .brand-logo-img--horizontal{width:220px;height:58px;max-width:36vw;object-fit:contain;object-position:left center;border:0;border-radius:0;box-shadow:none;background:transparent}body .hero-brand-logo--horizontal{width:min(520px,100%);height:auto;max-height:180px;object-fit:contain;object-position:left center;border:0;border-radius:0;box-shadow:none;background:transparent;margin:0 0 20px}.footer-brand-logo{width:190px;height:auto;object-fit:contain;border:0}.footer-row{align-items:center}@media(min-width:761px){.brand>.brand-logo-lockup+span{display:none}}@media(max-width:760px){body .brand-logo-img--horizontal{width:48px;height:48px;max-width:none;border-radius:50%}body .hero-brand-logo--horizontal{width:min(360px,100%);margin-bottom:16px}.footer-brand-logo{width:150px}}\n`);
+for(const file of ["index.html","products.html","plate.html","warranty.html"]){patchText(file,(html)=>html.replace('<footer class="footer"><div class="wrap footer-row">','<footer class="footer"><div class="wrap footer-row"><img class="footer-brand-logo" src="/assets/brand/logo-horizontal-v2.webp" alt="小宇微電E-BIKE">'));}
+fs.writeFileSync(path.join(outDir,"BUILD_VERSION.txt"),"32.1.3\n","utf8");
 const required=["index.html","products.html","plate.html","garage.html","warranty.html","admin/index.html","assets/brand/logo-round.webp","public-theme-v32.css","admin/admin-theme-v32.css"];
 for(const file of required){ if(!fs.existsSync(path.join(outDir,file))) throw new Error(`Deployment payload missing: ${file}`); }
 console.log(`Extracted ${count} runtime files to ${outDir}`);
