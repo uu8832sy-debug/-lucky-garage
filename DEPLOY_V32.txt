@@ -1,0 +1,24 @@
+小宇微電E-BIKE V32 UI／UX 全面升級版
+=====================================
+
+部署方式
+1. 將此壓縮檔完整上傳到「原本的」GitHub repository，或匯入原本的 Vercel project。
+2. Vercel Build Command 維持：npm run build
+3. Vercel Output Directory 維持：public
+4. 請勿建立新的 Firebase project；沿用原本的 Firebase 設定與資料。
+
+本次變更範圍
+- 前台改為淺色、可愛、溫暖的 E-BIKE 品牌視覺。
+- 後台同步改為淺色管理介面。
+- 網站名稱統一為「小宇微電E-BIKE」。
+- 保留所有既有頁面、路由、表單欄位、JavaScript、Firebase 設定與前後台功能。
+
+主要入口
+- 前台：/
+- 車款商品：/products.html
+- 展示牌訂製：/plate.html
+- 幸運車庫：/garage.html
+- 保固查詢：/warranty.html
+- 後台：/admin 或 /admin/index.html
+
+版本：32.1.0

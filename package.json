@@ -1,7 +1,7 @@
 {
-  "name": "xiaoyu-electric-v32-deploy",
+  "name": "xiaoyu-ebike-v32-deploy",
   "private": true,
-  "version": "32.7.2",
+  "version": "32.1.0",
   "scripts": {
     "build": "node build.mjs"
   }

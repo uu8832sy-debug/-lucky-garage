@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
 
-const payload = "site_payload_v33.zip";
+const payload = "site_payload_v32_1.zip";
 const input = fs.readFileSync(payload);
 const outDir = path.resolve("public");
 fs.rmSync(outDir,{recursive:true,force:true});
@@ -32,40 +32,6 @@ while(offset+4<=input.length){
   }
   offset=dataStart+compressedSize;
 }
-// Google Ads tag
-const googleAdsTag = `
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18403644831"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'AW-18403644831');
-</script>
-`;
-
-const googleTagPages = [
-  "index.html",
-  "products.html",
-  "plate.html",
-  "warranty.html"
-];
-
-for (const page of googleTagPages) {
-  const filePath = path.join(outDir, page);
-  if (!fs.existsSync(filePath)) continue;
-
-  let html = fs.readFileSync(filePath, "utf8");
-
-  if (!html.includes("AW-18403644831")) {
-    html = html.replace(
-      /<head([^>]*)>/i,
-      `<head$1>\n${googleAdsTag}`
-    );
-    fs.writeFileSync(filePath, html);
-  }
-}
-
-const required=["index.html","products.html","plate.html","warranty.html","admin/index.html","assets/brand/logo-round.webp"];
+const required=["index.html","products.html","plate.html","garage.html","warranty.html","admin/index.html","assets/brand/logo-round.webp","public-theme-v32.css","admin/admin-theme-v32.css"];
 for(const file of required){ if(!fs.existsSync(path.join(outDir,file))) throw new Error(`Deployment payload missing: ${file}`); }
-console.log(`Extracted ${count} runtime files from V33.3 payload to ${outDir}`);
+console.log(`Extracted ${count} runtime files to ${outDir}`);

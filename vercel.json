@@ -43,6 +43,15 @@
       ]
     },
     {
+      "source": "/garage.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
+    },
+    {
       "source": "/admin/(.*)",
       "headers": [
         {
@@ -83,28 +92,18 @@
       "permanent": false
     },
     {
-      "source": "/garage.html",
-      "destination": "/?v=32.7.0",
-      "permanent": false
-    },
-    {
-      "source": "/garage",
-      "destination": "/?v=32.7.0",
-      "permanent": false
-    },
-    {
       "source": "/garage-admin.html",
-      "destination": "/admin/index.html",
+      "destination": "/admin/index.html?view=draw",
       "permanent": false
     },
     {
       "source": "/raffle-now.html",
-      "destination": "/?v=32.7.0",
+      "destination": "/admin/index.html?view=draw",
       "permanent": false
     },
     {
       "source": "/raffle-now-v2.html",
-      "destination": "/?v=32.7.0",
+      "destination": "/admin/index.html?view=draw",
       "permanent": false
     }
   ],
