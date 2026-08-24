@@ -92,21 +92,32 @@
       "permanent": false
     },
     {
+      "source": "/garage.html",
+      "destination": "/?v=32.1.2",
+      "permanent": false
+    },
+    {
+      "source": "/garage",
+      "destination": "/?v=32.1.2",
+      "permanent": false
+    },
+    {
       "source": "/garage-admin.html",
-      "destination": "/admin/index.html?view=draw",
+      "destination": "/admin/index.html",
       "permanent": false
     },
     {
       "source": "/raffle-now.html",
-      "destination": "/admin/index.html?view=draw",
+      "destination": "/?v=32.1.2",
       "permanent": false
     },
     {
       "source": "/raffle-now-v2.html",
-      "destination": "/admin/index.html?view=draw",
+      "destination": "/?v=32.1.2",
       "permanent": false
     }
   ],
   "outputDirectory": "public",
   "buildCommand": "npm run build"
 }
+
