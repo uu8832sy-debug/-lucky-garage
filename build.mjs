@@ -121,6 +121,7 @@ fs.writeFileSync(path.join(outDir,"installment.html"),`<!doctype html>\n<html la
 // Overlay multi-shop runtime files that are intentionally maintained outside the legacy ZIP payload.
 copyRuntimeFile("multi-shop-core.js");
 copyRuntimeFile("admin/admin.js");
+copyRuntimeFile("admin/shop-branding.js");
 for(const file of [
   "platform.html","platform.js",
   "site-settings.html","site-settings.js",
@@ -137,11 +138,12 @@ patchText("admin/index.html",(html)=>{
     '<a href="site-settings.html" class="bg-slate-900 border border-slate-800 text-emerald-400 font-bold rounded-xl p-3 text-xs text-center">網站設定</a><a href="cases.html" class="bg-slate-900 border border-slate-800 text-amber-400 font-bold rounded-xl p-3 text-xs text-center">案例管理</a><a href="platform.html" class="bg-slate-900 border border-slate-800 text-sky-400 font-bold rounded-xl p-3 text-xs text-center">代理店管理</a><a href="orders.html"'
   );
 });
+patchText("admin/index.html",(html)=>html.includes("shop-branding.js")?html:html.replace('</body>','<script src="shop-branding.js?v=1"></script></body>'));
 
 fs.writeFileSync(path.join(outDir,"BUILD_VERSION.txt"),"32.1.4-multishop\n","utf8");
 const required=[
   "index.html","products.html","plate.html","installment.html","garage.html","warranty.html",
-  "admin/index.html","admin/admin.js","admin/platform.html","admin/site-settings.html","admin/cases.html","admin/payment-settings.html","admin/payment-settings.js",
+  "admin/index.html","admin/admin.js","admin/shop-branding.js","admin/platform.html","admin/site-settings.html","admin/cases.html","admin/payment-settings.html","admin/payment-settings.js",
   "multi-shop-core.js","jerry/index.html","jerry/app.js","jerry/style.css","jerry/finance.css","jerry/hero.css",
   "assets/brand/logo-round.webp","public-theme-v32.css","admin/admin-theme-v32.css"
 ];
