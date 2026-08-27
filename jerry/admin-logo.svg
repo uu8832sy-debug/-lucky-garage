@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="傑瑞電動車">
+  <rect width="160" height="160" rx="38" fill="#11231c"/>
+  <circle cx="80" cy="80" r="61" fill="none" stroke="#21c77a" stroke-width="5"/>
+  <path d="M96 39v57c0 23-13 35-34 35-14 0-25-6-32-17l18-13c4 6 8 9 14 9 7 0 11-5 11-15V39z" fill="#fff"/>
+  <path d="M102 103h31l-7 10h-31z" fill="#21c77a"/>
+  <text x="80" y="148" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" fill="#9ee8c2">JERRY E-BIKE</text>
+</svg>
