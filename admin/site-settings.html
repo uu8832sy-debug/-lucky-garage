@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-Hant" class="h-full bg-[#080a0f] text-slate-100">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>網站內容設定｜管理後台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-full bg-slate-950 text-slate-100">
+  <main class="max-w-3xl mx-auto p-4 sm:p-7 space-y-5">
+    <div class="flex items-center justify-between gap-4"><div><p class="text-xs text-emerald-400 font-black">SITE SETTINGS</p><h1 class="text-2xl font-black">網站內容設定</h1></div><a href="index.html" class="bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-sm">← 回後台</a></div>
+    <section id="gate" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-slate-400">正在確認管理員權限…</section>
+    <section id="editor" class="hidden bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-7 space-y-5">
+      <div class="text-xs text-slate-400">目前店家：<b id="shopName" class="text-emerald-400"></b></div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <label class="sm:col-span-2"><span class="block text-xs font-bold mb-1">品牌名稱</span><input id="brandName" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+        <label class="sm:col-span-2"><span class="block text-xs font-bold mb-1">首頁大標題</span><textarea id="heroTitle" rows="2" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3"></textarea></label>
+        <label class="sm:col-span-2"><span class="block text-xs font-bold mb-1">首頁說明</span><textarea id="heroSubtitle" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3"></textarea></label>
+        <label class="sm:col-span-2"><span class="block text-xs font-bold mb-1">網站公告列</span><input id="announcement" placeholder="不需要可留空" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+        <label><span class="block text-xs font-bold mb-1">電話</span><input id="phone" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+        <label><span class="block text-xs font-bold mb-1">營業時間</span><input id="hours" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+        <label class="sm:col-span-2"><span class="block text-xs font-bold mb-1">地址</span><input id="address" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+        <label class="sm:col-span-2"><span class="block text-xs font-bold mb-1">LINE 網址</span><input id="lineUrl" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+        <label class="sm:col-span-2"><span class="block text-xs font-bold mb-1">導航網址</span><input id="mapUrl" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+        <label><span class="block text-xs font-bold mb-1">主色</span><input id="primaryColor" type="color" class="w-full h-12 bg-slate-950 border border-slate-700 rounded-xl p-1" /></label>
+      </div>
+      <button id="saveBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl">儲存網站設定</button>
+      <div id="status" class="hidden rounded-xl p-4 text-sm bg-slate-950 border border-slate-800"></div>
+    </section>
+  </main>
+  <script src="../firebase-config.js"></script>
+  <script type="module" src="site-settings.js"></script>
+</body>
+</html>
