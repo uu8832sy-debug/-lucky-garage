@@ -9,9 +9,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/jerry/styles.css?v=3" />
-  <link rel="stylesheet" href="/jerry/finance.css?v=1" />
-  <link rel="stylesheet" href="/jerry/hero.css?v=1" />
+  <link rel="stylesheet" href="/jerry/styles.css?v=5" />
+  <link rel="stylesheet" href="/jerry/finance.css?v=2" />
+  <link rel="stylesheet" href="/jerry/hero.css?v=3" />
 </head>
 <body>
   <div id="announcement" class="announcement" hidden></div>
@@ -19,63 +19,84 @@
   <header class="site-header">
     <div class="wrap nav-row">
       <a class="brand" href="/jerry/" aria-label="傑瑞電動自行車首頁">
-        <span class="brand-mark">J</span>
+        <img class="brand-logo" src="/jerry/admin-logo.png" alt="Jerry E-Bike Logo" />
         <span><small>JERRY E-BIKE</small><strong id="brandName">傑瑞電動自行車</strong></span>
       </a>
       <nav class="nav-links">
-        <a href="#services">服務項目</a>
-        <a href="#prices">新車價目</a>
-        <a href="#products">現有車款</a>
+        <a href="#products">車款</a>
+        <a href="#services">服務</a>
+        <a href="#prices">價目</a>
         <a href="#cases">案例</a>
-        <a href="#contact">店家資訊</a>
+        <a href="#contact">門市</a>
       </nav>
-      <a id="headerCta" class="btn btn-primary" href="#contact">LINE 詢問</a>
+      <a id="headerCta" class="btn btn-primary" href="#contact">立即詢問</a>
     </div>
   </header>
 
   <main>
     <section class="hero">
-      <div class="hero-grid wrap">
-        <div class="hero-copy">
-          <p class="eyebrow">SHULIN ・ JERRY E-BIKE</p>
-          <h1 id="heroTitle">銷售、維修、保養、改裝<br>一間店處理好</h1>
-          <p id="heroSubtitle">樹林實體門市，Gogoro 維修保養、電動車銷售與客製改裝，都可以直接到店詢問。</p>
-          <div class="hero-actions">
-            <a id="heroPrimary" class="btn btn-primary btn-lg" href="#contact">LINE 詢問</a>
-            <a class="btn btn-ghost btn-lg" href="#prices">看新車價目</a>
+      <div class="wrap hero-wrap">
+        <div id="heroVisual" class="hero-visual">
+          <div class="hero-overlay"></div>
+          <div class="hero-content">
+            <p class="eyebrow hero-eyebrow">SHULIN ・ JERRY E-BIKE</p>
+            <h1 id="heroTitle">銷售、維修、保養、改裝<br>一間店處理好</h1>
+            <p id="heroSubtitle">樹林實體門市，Gogoro 維修保養、電動車銷售與客製改裝，都可以直接到店詢問。</p>
+            <div class="hero-actions">
+              <a id="heroPrimary" class="btn btn-primary btn-lg" href="#contact">LINE 詢問</a>
+              <a class="btn btn-light btn-lg" href="#products">探索車款</a>
+            </div>
           </div>
-          <div class="trust-row">
-            <span>✓ 原廠品質</span><span>✓ 專業服務</span><span>✓ 電池保固</span><span>✓ 售後維修</span>
+          <div class="hero-signature">
+            <span>實體門市</span>
+            <strong>樹林・保安街</strong>
           </div>
         </div>
-        <div class="hero-panel">
-          <div id="heroVisual" class="hero-card hero-card-main">
-            <span class="hero-kicker">JERRY E-BIKE</span>
-            <strong>把車顧好<br>比把話說漂亮重要</strong>
-            <p>到店檢查、報價確認、施工處理，流程清楚。</p>
-          </div>
-          <div class="hero-card hero-card-mini"><span>門市服務</span><b>銷售・維修・保養・改裝</b></div>
+
+        <div class="hero-quickbar">
+          <a href="#products"><small>01</small><span>探索車款</span><b>→</b></a>
+          <a href="#services"><small>02</small><span>維修保養</span><b>→</b></a>
+          <a href="#prices"><small>03</small><span>新車價目</span><b>→</b></a>
+          <a href="#reservation"><small>04</small><span>預約服務</span><b>→</b></a>
         </div>
+      </div>
+    </section>
+
+    <section class="brand-intro">
+      <div class="wrap brand-intro-grid">
+        <p class="eyebrow">JERRY SERVICE</p>
+        <h2>不是只把車修好。<br>是把每一次用車顧好。</h2>
+        <p>從日常保養、故障檢修，到選車、升級與客製改裝，直接到店，把問題一次講清楚、一次處理。</p>
       </div>
     </section>
 
     <section id="services" class="section wrap">
-      <div class="section-head">
-        <div><p class="eyebrow">SERVICES</p><h2>買車、修車、保養、改裝都有人處理</h2></div>
-        <p>現場依車況與工位安排，維修與保養基本上不用預約，有工位即可處理。</p>
+      <div class="section-head premium-head">
+        <div><p class="eyebrow">SERVICES</p><h2>你需要的，都在這間店。</h2></div>
+        <p>銷售、維修、保養、改裝，以實際車況與使用需求為主，不硬推不需要的項目。</p>
       </div>
       <div class="service-grid">
-        <article class="service-card"><span>01</span><h3>車輛銷售</h3><p>新車、代步車與不同電池方案，依預算與使用需求挑選。</p></article>
-        <article class="service-card"><span>02</span><h3>維修檢查</h3><p>異音、故障、騎乘異常、電系問題，到店檢查後確認處理方式。</p></article>
-        <article class="service-card"><span>03</span><h3>定期保養</h3><p>耗材、煞車、輪胎、傳動與日常車況檢查，維持騎乘狀態。</p></article>
-        <article class="service-card"><span>04</span><h3>客製改裝</h3><p>依用途與需求規劃外觀及車輛改裝，施工前先確認內容與費用。</p></article>
+        <article class="service-card"><span>01</span><div><h3>車輛銷售</h3><p>新車、代步車與不同電池方案，依預算與使用需求挑選。</p></div></article>
+        <article class="service-card"><span>02</span><div><h3>維修檢查</h3><p>異音、故障、騎乘異常、電系問題，到店檢查後確認處理方式。</p></div></article>
+        <article class="service-card"><span>03</span><div><h3>定期保養</h3><p>耗材、煞車、輪胎、傳動與日常車況檢查，維持騎乘狀態。</p></div></article>
+        <article class="service-card"><span>04</span><div><h3>客製改裝</h3><p>依用途與需求規劃外觀及車輛改裝，施工前先確認內容與費用。</p></div></article>
       </div>
     </section>
 
-    <section id="prices" class="section section-dark">
+    <section id="products" class="section product-showcase">
       <div class="wrap">
-        <div class="section-head">
-          <div><p class="eyebrow">NEW BIKE PRICE</p><h2>新車價目表</h2></div>
+        <div class="section-head premium-head">
+          <div><p class="eyebrow">OUR RIDES</p><h2>找到適合你的那台車。</h2></div>
+          <p>現場車款與售價會由後台更新。點選車款可直接試算信用卡與分期月付。</p>
+        </div>
+        <div id="productGrid" class="product-grid"><div class="loading-card">正在讀取車款…</div></div>
+      </div>
+    </section>
+
+    <section id="prices" class="section price-section">
+      <div class="wrap">
+        <div class="section-head premium-head">
+          <div><p class="eyebrow">NEW BIKE PRICE</p><h2>價格，直接看清楚。</h2></div>
           <p>以下售價依店家目前提供資料整理，實際售價、規格與現場活動以門市最新報價為準。</p>
         </div>
         <div id="priceGrid" class="price-grid"></div>
@@ -83,57 +104,50 @@
     </section>
 
     <section class="section wrap assurance-section">
-      <div class="section-head">
-        <div><p class="eyebrow">WARRANTY & PAYMENT</p><h2>保固與付款方式</h2></div>
-        <p>購車後續維修、保養與電池問題都可直接回店詢問。</p>
+      <div class="section-head premium-head">
+        <div><p class="eyebrow">OWNERSHIP</p><h2>買完之後，才是服務開始。</h2></div>
+        <p>保固、付款、分期與後續維修都能直接回店處理。</p>
       </div>
       <div class="assurance-grid">
-        <article class="assurance-card"><span>電池保固</span><h3>鋰電池 1 年</h3><p>鉛酸電池 6 個月</p></article>
-        <article class="assurance-card"><span>車輛保固</span><h3>馬達 1 年</h3><p>控制器 1 年</p></article>
-        <article class="assurance-card"><span>付款方式</span><h3>現金・LINE Pay</h3><p>信用卡消費滿 NT$1,500 以上可使用</p></article>
-        <article class="assurance-card"><span>分期</span><h3>多家銀行配合</h3><p>實際方案與核准條件請洽門市</p></article>
+        <article class="assurance-card"><span>01</span><h3>鋰電池 1 年</h3><p>鉛酸電池 6 個月</p></article>
+        <article class="assurance-card"><span>02</span><h3>馬達・控制器 1 年</h3><p>依保固條件與實際檢測結果處理</p></article>
+        <article class="assurance-card"><span>03</span><h3>現金・LINE Pay・信用卡</h3><p>信用卡消費滿 NT$1,500 以上可使用</p></article>
+        <article class="assurance-card"><span>04</span><h3>多期分期方案</h3><p>前台可即時試算，實際核准條件以門市為準</p></article>
       </div>
     </section>
 
-    <section id="products" class="section section-dark">
+    <section id="cases" class="section case-showcase">
       <div class="wrap">
-        <div class="section-head">
-          <div><p class="eyebrow">AVAILABLE BIKES</p><h2>目前現有車款</h2></div>
-          <p>店家後台上架商品後，這裡會直接顯示最新照片、售價與車款資訊。</p>
+        <div class="section-head premium-head">
+          <div><p class="eyebrow">REAL WORKS</p><h2>實際做過的，比話術有用。</h2></div>
+          <p>維修、改裝與交車案例由店家後台持續更新。</p>
         </div>
-        <div id="productGrid" class="product-grid"><div class="loading-card">正在讀取車款…</div></div>
+        <div id="caseGrid" class="case-grid"><div class="loading-card">正在讀取案例…</div></div>
       </div>
     </section>
 
-    <section id="cases" class="section wrap">
-      <div class="section-head">
-        <div><p class="eyebrow">WORKS</p><h2>維修 / 改裝 / 交車案例</h2></div>
-        <p>後台新增案例後，網站會自動更新。</p>
-      </div>
-      <div id="caseGrid" class="case-grid"><div class="loading-card">正在讀取案例…</div></div>
-    </section>
-
-    <section id="reservation" class="section reservation-section">
+    <section id="reservation" class="reservation-section">
       <div class="wrap reservation-grid">
         <div>
-          <p class="eyebrow">RESERVATION</p>
-          <h2>基本上不用預約<br>有工位就直接處理</h2>
-          <p>維修、保養、改裝可安排時間 12:00–21:00。現場依狀況排隊，預約保養車輛會優先安排；工時較久的車輛會提前告知。</p>
+          <p class="eyebrow">SERVICE BOOKING</p>
+          <h2>臨時來可以。<br>先約，更方便。</h2>
+          <p>維修、保養、改裝可安排 12:00–21:00。現場依工位安排，預約保養車輛會優先；工時較久的項目會提前告知。</p>
         </div>
         <div class="reservation-card">
-          <h3>如果要先預約，請留下</h3>
+          <span class="reservation-number">01 — 04</span>
+          <h3>預約時留下這些就好</h3>
           <div class="reservation-fields"><span>預約日期／時段</span><span>貴姓</span><span>手機</span><span>車牌</span></div>
-          <p>留下以上資訊後，店家會再跟您確認並登記。</p>
+          <p>留下資訊後，店家會再跟您確認並登記。</p>
           <a id="reservationLineBtn" class="btn btn-primary full-btn" href="https://line.me/R/ti/p/@882npfrm" target="_blank" rel="noopener">LINE 預約／詢問</a>
         </div>
       </div>
     </section>
 
-    <section id="contact" class="section contact-section">
+    <section id="contact" class="contact-section">
       <div class="wrap contact-grid">
         <div>
-          <p class="eyebrow">CONTACT</p>
-          <h2 id="contactTitle">直接來店，或先 LINE 問</h2>
+          <p class="eyebrow">VISIT JERRY</p>
+          <h2 id="contactTitle">直接來店，或先 LINE 問。</h2>
           <p id="contactText">保安街郵局正對面。維修與保養基本上不用預約，依現場工位安排。</p>
         </div>
         <div class="contact-card">
@@ -147,7 +161,7 @@
           </dl>
           <div class="contact-actions">
             <a id="lineBtn" class="btn btn-primary" href="https://line.me/R/ti/p/@882npfrm" target="_blank" rel="noopener">LINE 詢問</a>
-            <a id="mapBtn" class="btn btn-ghost" href="#">開啟導航</a>
+            <a id="mapBtn" class="btn btn-dark" href="#">開啟導航</a>
           </div>
         </div>
       </div>
@@ -171,6 +185,6 @@
   </div>
 
   <script src="/firebase-config.js"></script>
-  <script type="module" src="/jerry/app.js?v=3"></script>
+  <script type="module" src="/jerry/app.js?v=4"></script>
 </body>
 </html>
