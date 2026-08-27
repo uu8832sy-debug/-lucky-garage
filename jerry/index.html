@@ -3,13 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#101419" />
+  <meta name="theme-color" content="#ffffff" />
   <meta name="description" content="傑瑞電動自行車｜樹林 Gogoro 維修、保養、改裝與電動車銷售。" />
   <title>傑瑞電動自行車｜銷售・維修・保養・改裝</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/jerry/styles.css?v=3" />
+  <link rel="stylesheet" href="/jerry/finance.css?v=1" />
+  <link rel="stylesheet" href="/jerry/hero.css?v=1" />
 </head>
 <body>
   <div id="announcement" class="announcement" hidden></div>
@@ -47,7 +49,7 @@
           </div>
         </div>
         <div class="hero-panel">
-          <div class="hero-card hero-card-main">
+          <div id="heroVisual" class="hero-card hero-card-main">
             <span class="hero-kicker">JERRY E-BIKE</span>
             <strong>把車顧好<br>比把話說漂亮重要</strong>
             <p>到店檢查、報價確認、施工處理，流程清楚。</p>
@@ -155,6 +157,18 @@
   <footer>
     <div class="wrap footer-row"><span>© <span id="year"></span> <b id="footerBrand">傑瑞電動自行車</b></span><a href="/admin/">管理員登入</a></div>
   </footer>
+
+  <div id="financeModal" class="finance-modal" hidden>
+    <div class="finance-backdrop" data-close-finance></div>
+    <section class="finance-dialog" role="dialog" aria-modal="true" aria-labelledby="financeTitle">
+      <button class="finance-close" type="button" data-close-finance aria-label="關閉">×</button>
+      <p class="eyebrow">PAYMENT CALCULATOR</p><h2 id="financeTitle">分期試算</h2><p id="financeProduct" class="finance-product"></p>
+      <div class="finance-inputs"><label>車價<input id="financePrice" type="number" min="0" step="1"></label><label>頭期款<input id="financeDownPayment" type="number" min="0" step="1"></label></div>
+      <div><span class="finance-label">選擇期數</span><div id="financeTerms" class="finance-terms"></div></div>
+      <div class="finance-results"><div><span>刷卡總額</span><b id="cardTotal">—</b></div><div><span>分期總額</span><b id="installmentTotal">—</b></div><div class="monthly"><span>每月月付</span><b id="monthlyPayment">—</b></div></div>
+      <p id="financeNote" class="finance-note"></p><a id="financeLine" class="btn btn-primary full-btn" href="https://line.me/R/ti/p/@882npfrm" target="_blank" rel="noopener">帶著試算結果 LINE 詢問</a>
+    </section>
+  </div>
 
   <script src="/firebase-config.js"></script>
   <script type="module" src="/jerry/app.js?v=3"></script>

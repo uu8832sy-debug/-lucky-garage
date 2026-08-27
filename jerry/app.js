@@ -5,6 +5,9 @@ const SHOP_ID = "jerry";
 const app = initializeApp(window.LUCKY_GARAGE_FIREBASE_CONFIG || {});
 const db = getFirestore(app);
 const $ = (selector) => document.querySelector(selector);
+const PAYMENT_DEFAULTS = { cardSurcharge:3, minimumCardAmount:1500, defaultDownPayment:0, roundAmounts:true, plans:{3:{enabled:true,feePercent:3},6:{enabled:true,feePercent:5},12:{enabled:true,feePercent:8},18:{enabled:false,feePercent:10},24:{enabled:true,feePercent:12},30:{enabled:false,feePercent:15},36:{enabled:false,feePercent:18}} };
+let paymentSettings = PAYMENT_DEFAULTS;
+let selectedTerm = 12;
 
 const DEFAULTS = {
   brandName: "傑瑞電動自行車",
@@ -83,6 +86,7 @@ function money(value) {
   const n = Number(value);
   return Number.isFinite(n) && n > 0 ? `NT$ ${Math.round(n).toLocaleString("zh-TW")}` : "請洽店家";
 }
+function plainMoney(value) { return `NT$ ${Number(value || 0).toLocaleString("zh-TW", {maximumFractionDigits:0})}`; }
 function safeUrl(value, fallback = "#") {
   const text = String(value || "").trim();
   if (!text) return fallback;
@@ -107,7 +111,7 @@ function renderPrices() {
       <div class="price-card-head"><div><span>JERRY E-BIKE</span><h3>${escapeHtml(group.name)}</h3></div><b>${escapeHtml(group.note)}</b></div>
       <div class="price-table-wrap"><table class="price-table">
         <thead><tr><th>電池規格</th>${dual ? "<th>一般版</th><th>特仕版</th>" : "<th>售價</th>"}</tr></thead>
-        <tbody>${group.rows.map((row) => `<tr><td><strong>${escapeHtml(row[0])}</strong><small>${escapeHtml(row[1])}</small></td>${dual ? `<td>${money(row[2])}</td><td>${money(row[3])}</td>` : `<td>${money(row[2])}</td>`}</tr>`).join("")}</tbody>
+        <tbody>${group.rows.map((row) => `<tr><td><strong>${escapeHtml(row[0])}</strong><small>${escapeHtml(row[1])}</small></td>${dual ? `<td><button class="price-calc" data-finance-price="${row[2]}" data-finance-name="${escapeHtml(group.name+' '+row[0]+' 一般版')}">${money(row[2])}<small>試算月付</small></button></td><td><button class="price-calc" data-finance-price="${row[3]}" data-finance-name="${escapeHtml(group.name+' '+row[0]+' 特仕版')}">${money(row[3])}<small>試算月付</small></button></td>` : `<td><button class="price-calc" data-finance-price="${row[2]}" data-finance-name="${escapeHtml(group.name+' '+row[0])}">${money(row[2])}<small>試算月付</small></button></td>`}</tr>`).join("")}</tbody>
       </table></div>
     </article>`;
   }).join("");
@@ -159,6 +163,22 @@ async function loadSettings() {
   }
 }
 
+async function loadPaymentSettings() {
+  try { const snap = await getDoc(doc(db,"shops",SHOP_ID,"siteSettings","payment")); const data=snap.exists()?snap.data():{}; paymentSettings={...PAYMENT_DEFAULTS,...data,plans:{...PAYMENT_DEFAULTS.plans,...(data.plans||{})}}; }
+  catch(error) { console.warn("Using default payment settings.",error); }
+  const enabled = Object.entries(paymentSettings.plans).filter(([,p])=>p?.enabled).map(([t])=>Number(t)).sort((a,b)=>a-b);
+  if (enabled.length && !enabled.includes(selectedTerm)) selectedTerm=enabled[0];
+}
+
+function rounded(value){ return paymentSettings.roundAmounts===false ? Math.round(value*100)/100 : Math.round(value); }
+function renderTerms(){ const enabled=Object.entries(paymentSettings.plans).filter(([,p])=>p?.enabled).sort((a,b)=>Number(a[0])-Number(b[0])); $("#financeTerms").innerHTML=enabled.map(([term,p])=>`<button type="button" class="${Number(term)===selectedTerm?'active':''}" data-finance-term="${term}">${term} 期<small>總費率 ${Number(p.feePercent)||0}%</small></button>`).join("") || '<span class="finance-note">目前未開放分期方案</span>'; }
+function calculateFinance(){ const price=Math.max(0,Number($("#financePrice").value)||0), down=Math.min(price,Math.max(0,Number($("#financeDownPayment").value)||0)), surcharge=Number(paymentSettings.cardSurcharge)||0, cardTotal=rounded(price*(1+surcharge/100)), cardDown=price?rounded(down*(cardTotal/price)):0, principal=Math.max(0,cardTotal-cardDown), plan=paymentSettings.plans[selectedTerm], fee=Number(plan?.feePercent)||0, financed=rounded(principal*(1+fee/100)), grand=rounded(cardDown+financed), monthly=selectedTerm?rounded(financed/selectedTerm):0; $("#cardTotal").textContent=plainMoney(cardTotal);$("#installmentTotal").textContent=plan?.enabled?plainMoney(grand):"未開放";$("#monthlyPayment").textContent=plan?.enabled?plainMoney(monthly):"—";const minimum=Number(paymentSettings.minimumCardAmount)||0;$("#financeNote").textContent=price<minimum?`信用卡最低消費 ${plainMoney(minimum)}，此金額未達門檻。`:`刷卡加價 ${surcharge}%；頭期款 ${plainMoney(down)}。此為試算，實際金額與核准條件以門市為準。`;const name=$("#financeProduct").textContent;$("#financeLine").href=`${DEFAULTS.lineUrl}?text=${encodeURIComponent(`${name}｜車價 ${plainMoney(price)}｜${selectedTerm}期｜月付約 ${plainMoney(monthly)}`)}`; }
+function openFinance(price,name){$("#financeProduct").textContent=name||"車款試算";$("#financePrice").value=Number(price)||0;$("#financeDownPayment").value=Math.min(Number(price)||0,Number(paymentSettings.defaultDownPayment)||0);renderTerms();calculateFinance();$("#financeModal").hidden=false;document.body.classList.add("modal-open");}
+function closeFinance(){$("#financeModal").hidden=true;document.body.classList.remove("modal-open");}
+document.addEventListener("click",event=>{const trigger=event.target.closest("[data-finance-price]");if(trigger)openFinance(trigger.dataset.financePrice,trigger.dataset.financeName);const term=event.target.closest("[data-finance-term]");if(term){selectedTerm=Number(term.dataset.financeTerm);renderTerms();calculateFinance();}if(event.target.closest("[data-close-finance]"))closeFinance();});
+[$("#financePrice"),$("#financeDownPayment")].forEach(el=>el?.addEventListener("input",calculateFinance));
+document.addEventListener("keydown",event=>{if(event.key==="Escape"&&!$("#financeModal").hidden)closeFinance();});
+
 async function loadProducts() {
   const grid = $("#productGrid");
   try {
@@ -170,6 +190,8 @@ async function loadProducts() {
       grid.innerHTML = '<div class="empty-card">目前現車由店家整理中。新車公開價格可先看上方價目表，實際庫存請直接 LINE 詢問。</div>';
       return;
     }
+    const heroImage = firstImage(products[0]);
+    if (heroImage) { $("#heroVisual").style.backgroundImage = `linear-gradient(180deg,rgba(12,24,28,.04),rgba(12,24,28,.72)),url("${String(heroImage).replace(/["\\]/g,"\\$&")}")`; $("#heroVisual").classList.add("has-photo"); }
     grid.innerHTML = products.map((item) => {
       const image = firstImage(item);
       const price = item.priceLead || item.price || item.priceLithium;
@@ -181,6 +203,7 @@ async function loadProducts() {
           <div class="product-style">${escapeHtml(item.style || "")}</div>
           <div class="product-price">${money(price)}</div>
           <div class="product-meta">實際車況、規格與交車內容請以店內確認為準。</div>
+          ${Number(price)>0?`<button class="product-finance-btn" data-finance-price="${Number(price)}" data-finance-name="${escapeHtml(item.name||'車款')}">查看詳情與分期試算</button>`:""}
         </div>
       </article>`;
     }).join("");
@@ -216,4 +239,4 @@ async function loadCases() {
 
 $("#year").textContent = new Date().getFullYear();
 renderPrices();
-Promise.allSettled([loadSettings(), loadProducts(), loadCases()]);
+Promise.allSettled([loadSettings(), loadPaymentSettings(), loadProducts(), loadCases()]);
