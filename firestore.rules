@@ -12,7 +12,7 @@ service cloud.firestore {
         && request.auth.token.email == 'uu8832sr@gmail.com';
     }
 
-    function isAdmin() {
+    function legacyAdmin() {
       return signedIn() && (
         isOwnerEmail()
         || request.auth.uid == 'rN911472GUXjc1IYToSPhgf6zbs2'
@@ -22,6 +22,24 @@ service cloud.firestore {
           exists(/databases/$(database)/documents/admins/$(request.auth.uid))
           && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.enabled == true
         )
+      );
+    }
+
+    function hasTenantAccount() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/adminAccounts/$(request.auth.uid))
+        && get(/databases/$(database)/documents/adminAccounts/$(request.auth.uid)).data.enabled == true;
+    }
+
+    function belongsTo(shopId) {
+      return hasTenantAccount()
+        && get(/databases/$(database)/documents/adminAccounts/$(request.auth.uid)).data.shopId == shopId;
+    }
+
+    function isPlatformOwner() {
+      return isOwnerEmail() || (
+        hasTenantAccount()
+        && get(/databases/$(database)/documents/adminAccounts/$(request.auth.uid)).data.role == 'platformOwner'
       );
     }
 
@@ -44,6 +62,11 @@ service cloud.firestore {
         && request.resource.data.price >= 0
         && request.resource.data.price <= 300000
         && request.resource.data.createdAt == request.time;
+    }
+
+    function validShopPublicOrder(orderId, shopId) {
+      return validPublicOrder(orderId)
+        && request.resource.data.shopId == shopId;
     }
 
     function validInstallmentLead() {
@@ -76,6 +99,7 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
     }
 
+    // Existing 小宇微電 collections remain available during migration.
     match /admins/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list, create, update, delete: if false;
@@ -83,54 +107,117 @@ service cloud.firestore {
 
     match /products/{productId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if legacyAdmin();
     }
 
     match /siteSettings/{docId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if legacyAdmin();
     }
 
     match /deliveryCases/{caseId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if legacyAdmin();
     }
 
     match /orders/{orderId} {
-      allow read, update, delete: if isAdmin();
-      allow create: if isAdmin() || validPublicOrder(orderId);
+      allow read, update, delete: if legacyAdmin();
+      allow create: if legacyAdmin() || validPublicOrder(orderId);
     }
 
     match /onlineOrders/{orderId} {
-      allow read, update, delete: if isAdmin();
-      allow create: if isAdmin() || validPublicOrder(orderId);
+      allow read, update, delete: if legacyAdmin();
+      allow create: if legacyAdmin() || validPublicOrder(orderId);
     }
 
     match /installmentLeads/{leadId} {
       allow create: if validInstallmentLead();
-      allow read, update, delete: if isAdmin();
+      allow read, update, delete: if legacyAdmin();
     }
 
     match /warranties/{warrantyId} {
-      allow get: if isAdmin() || resource.data.published == true;
-      allow list: if isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow get: if legacyAdmin() || resource.data.published == true;
+      allow list: if legacyAdmin();
+      allow create, update, delete: if legacyAdmin();
     }
 
     match /receipts/{receiptId} {
-      allow read, create, update, delete: if isAdmin();
+      allow read, create, update, delete: if legacyAdmin();
     }
 
     match /sales/{saleId} {
-      allow read, create, update, delete: if isAdmin();
+      allow read, create, update, delete: if legacyAdmin();
     }
 
     match /campaigns/{campaignId} {
-      allow read, create, update, delete: if isAdmin();
+      allow read, create, update, delete: if legacyAdmin();
     }
 
     match /drawCodes/{codeId} {
-      allow read, create, update, delete: if isAdmin();
+      allow read, create, update, delete: if legacyAdmin();
+    }
+
+    // Shared login directory: one Firebase Auth project, different shopId per account.
+    match /adminAccounts/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if isPlatformOwner();
+    }
+
+    match /shops/{shopId} {
+      allow read: if resource.data.public == true || belongsTo(shopId) || isPlatformOwner();
+      allow create, update, delete: if isPlatformOwner();
+
+      match /products/{productId} {
+        allow read: if true;
+        allow create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /siteSettings/{docId} {
+        allow read: if true;
+        allow create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /deliveryCases/{caseId} {
+        allow read: if true;
+        allow create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /orders/{orderId} {
+        allow read, update, delete: if belongsTo(shopId) || isPlatformOwner();
+        allow create: if belongsTo(shopId) || isPlatformOwner() || validShopPublicOrder(orderId, shopId);
+      }
+
+      match /onlineOrders/{orderId} {
+        allow read, update, delete: if belongsTo(shopId) || isPlatformOwner();
+        allow create: if belongsTo(shopId) || isPlatformOwner() || validShopPublicOrder(orderId, shopId);
+      }
+
+      match /installmentLeads/{leadId} {
+        allow read, update, delete: if belongsTo(shopId) || isPlatformOwner();
+        allow create: if request.resource.data.shopId == shopId && validInstallmentLead();
+      }
+
+      match /warranties/{warrantyId} {
+        allow get: if belongsTo(shopId) || isPlatformOwner() || resource.data.published == true;
+        allow list: if belongsTo(shopId) || isPlatformOwner();
+        allow create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /receipts/{receiptId} {
+        allow read, create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /sales/{saleId} {
+        allow read, create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /campaigns/{campaignId} {
+        allow read, create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /drawCodes/{codeId} {
+        allow read, create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
     }
 
     match /{document=**} {
