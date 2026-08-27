@@ -37,6 +37,8 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
+const JERRY_PREVIEW_ADMIN = "https://lucky-garage-git-multi-shop-admin-uu8832sr-7011s-projects.vercel.app/admin/index.html?shop=jerry";
+const isJerryCustomDomain = /(^|\.)jerrye-bike\.com$/i.test(location.hostname);
 
 const DEFAULT_PRODUCTS = [
   { id:"scooter-1", order:1, name:"大偉士", style:"頂規改裝版", tag:"72V", visible:true, priceLead:35000, priceLithium:58800, colors:["黑色","白色","灰色"], images:[] },
@@ -92,7 +94,7 @@ function installPasswordLogin() {
     <input id="adminEmailInput" type="email" autocomplete="username" placeholder="管理員 Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm" />
     <input id="adminPasswordInput" type="password" autocomplete="current-password" placeholder="密碼" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm" />
     <button id="emailLoginBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl"><i class="fa-solid fa-right-to-bracket mr-2"></i>Email／密碼登入</button>
-    <div class="text-center text-[10px] text-slate-500">或使用原本的 Google 管理員登入</div>`;
+    <div class="text-center text-[10px] text-slate-500">店家 Email 帳號需先由平台管理員建立；或使用 Google 管理員登入</div>`;
   googleBtn.before(wrap);
   $("#emailLoginBtn").addEventListener("click", beginEmailLogin);
   $("#adminPasswordInput").addEventListener("keydown", (event) => { if (event.key === "Enter") beginEmailLogin(); });
@@ -108,12 +110,20 @@ async function beginEmailLogin() {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
     console.error(error);
-    $("#loginMessage").textContent = "登入失敗，請確認帳號密碼與 Firebase Email/Password 登入是否已啟用。";
+    const code = String(error?.code || "");
+    $("#loginMessage").textContent = code.includes("invalid-credential") || code.includes("user-not-found")
+      ? "這組店家帳號尚未建立，或密碼不正確。可先用 Google 管理員登入。"
+      : `登入失敗：${code || error?.message || "未知錯誤"}`;
   } finally {
     $("#emailLoginBtn").disabled = false;
   }
 }
 async function beginGoogleLogin() {
+  if (isJerryCustomDomain) {
+    $("#loginMessage").textContent = "正在前往管理登入頁…";
+    location.assign(JERRY_PREVIEW_ADMIN);
+    return;
+  }
   $("#loginMessage").textContent = "正在開啟 Google 登入…";
   $("#loginBtn").disabled = true;
   try {
@@ -128,7 +138,12 @@ async function beginGoogleLogin() {
       await signInWithRedirect(auth, provider);
       return;
     }
-    $("#loginMessage").textContent = error?.message || "登入失敗。";
+    if (code.includes("unauthorized-domain")) {
+      $("#loginMessage").textContent = "此網址尚未加入 Firebase 授權網域，正在改用可登入的管理網址…";
+      setTimeout(() => location.assign(JERRY_PREVIEW_ADMIN), 500);
+      return;
+    }
+    $("#loginMessage").textContent = `登入失敗：${code || error?.message || "未知錯誤"}`;
   } finally {
     $("#loginBtn").disabled = false;
   }
