@@ -138,7 +138,7 @@ patchText("admin/index.html",(html)=>{
     '<a href="site-settings.html" class="bg-slate-900 border border-slate-800 text-emerald-400 font-bold rounded-xl p-3 text-xs text-center">網站設定</a><a href="cases.html" class="bg-slate-900 border border-slate-800 text-amber-400 font-bold rounded-xl p-3 text-xs text-center">案例管理</a><a href="platform.html" class="bg-slate-900 border border-slate-800 text-sky-400 font-bold rounded-xl p-3 text-xs text-center">代理店管理</a><a href="orders.html"'
   );
 });
-patchText("admin/index.html",(html)=>html.includes("shop-branding.js")?html.replace(/shop-branding\.js\?v=\d+/,"shop-branding.js?v=2"):html.replace('</body>','<script src="shop-branding.js?v=2"></script></body>'));
+patchText("admin/index.html",(html)=>html.includes("shop-branding.js")?html.replace(/shop-branding\.js\?v=\d+/,"shop-branding.js?v=3"):html.replace('</body>','<script src="shop-branding.js?v=3"></script></body>'));
 
 fs.writeFileSync(path.join(outDir,"BUILD_VERSION.txt"),"32.1.4-multishop\n","utf8");
 const required=[
