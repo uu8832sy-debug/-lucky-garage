@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-Hant" class="h-full bg-[#080a0f] text-slate-100">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>新增代理店｜小宇微電管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-full antialiased">
+  <main class="max-w-xl mx-auto p-5 sm:p-8">
+    <div class="flex items-center justify-between mb-6">
+      <div><p class="text-xs text-emerald-400 font-bold">PLATFORM OWNER</p><h1 class="text-2xl font-black">新增代理店</h1></div>
+      <a href="index.html" class="text-sm text-slate-400 underline">回後台</a>
+    </div>
+
+    <section id="loginCard" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+      <h2 class="font-bold">先用小宇主帳號登入</h2>
+      <button id="loginBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl">Google 登入</button>
+      <p id="loginStatus" class="text-xs text-slate-400"></p>
+    </section>
+
+    <section id="formCard" class="hidden bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+      <div class="text-xs text-slate-400">目前登入：<span id="identity" class="text-emerald-400 font-bold"></span></div>
+      <label class="block"><span class="text-xs font-bold block mb-1">店家名稱</span><input id="shopName" value="傑瑞電動車" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+      <label class="block"><span class="text-xs font-bold block mb-1">shopId</span><input id="shopId" value="jerry" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+      <label class="block"><span class="text-xs font-bold block mb-1">管理員 Email</span><input id="adminEmail" type="email" placeholder="例如 jerry@example.com" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+      <label class="block"><span class="text-xs font-bold block mb-1">初始密碼</span><input id="adminPassword" type="password" minlength="8" placeholder="至少 8 碼" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+      <button id="createBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl">建立傑瑞代理店</button>
+      <div id="result" class="text-sm whitespace-pre-wrap rounded-xl bg-slate-950 border border-slate-800 p-4 hidden"></div>
+      <button id="logoutBtn" class="text-xs text-slate-500 underline">登出</button>
+    </section>
+  </main>
+
+  <script src="../firebase-config.js"></script>
+  <script type="module" src="create-shop.js"></script>
+</body>
+</html>
