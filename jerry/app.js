@@ -8,7 +8,7 @@ const $ = (selector) => document.querySelector(selector);
 
 const DEFAULTS = {
   brandName: "傑瑞電動車",
-  heroTitle: "Gogoro 維修、保養、改裝<br>一次處理好",
+  heroTitle: "Gogoro 維修、保養、改裝\n一次處理好",
   heroSubtitle: "從日常保養、故障檢修，到外觀與性能改裝，讓你不用到處找店家。",
   contactTitle: "要維修、保養、改裝，先直接問",
   contactText: "把車況、需求、預算先說清楚，到店會比較快。",
@@ -23,6 +23,7 @@ const DEFAULTS = {
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>'"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
 }
+function multilineHtml(value) { return escapeHtml(value).replace(/\n/g, "<br>"); }
 function money(value) {
   const n = Number(value);
   return Number.isFinite(n) && n > 0 ? `NT$${Math.round(n).toLocaleString("zh-TW")}` : "請洽店家";
@@ -49,7 +50,7 @@ function applySettings(settings) {
   $("#brandName").textContent = s.brandName;
   $("#footerBrand").textContent = s.brandName;
   $("#storeName").textContent = s.brandName;
-  $("#heroTitle").innerHTML = String(s.heroTitle || DEFAULTS.heroTitle);
+  $("#heroTitle").innerHTML = multilineHtml(s.heroTitle || DEFAULTS.heroTitle);
   $("#heroSubtitle").textContent = s.heroSubtitle || DEFAULTS.heroSubtitle;
   $("#contactTitle").textContent = s.contactTitle || DEFAULTS.contactTitle;
   $("#contactText").textContent = s.contactText || DEFAULTS.contactText;
