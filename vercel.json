@@ -65,6 +65,28 @@
       ]
     }
   ],
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "jerrye-bike.com"
+        }
+      ],
+      "destination": "/jerry/index.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.jerrye-bike.com"
+        }
+      ],
+      "destination": "/jerry/index.html"
+    }
+  ],
   "redirects": [
     {
       "source": "/admin",
@@ -120,4 +142,3 @@
   "outputDirectory": "public",
   "buildCommand": "npm run build"
 }
-
