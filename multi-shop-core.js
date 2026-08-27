@@ -1,30 +1,69 @@
 import { doc, getDoc, collection } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 const LEGACY_OWNER_EMAIL = "uu8832sr@gmail.com";
+const OWNER_SHOPS = {
+  xiaoyu:{ id:"xiaoyu", name:"小宇微電", enabled:true },
+  jerry:{ id:"jerry", name:"傑瑞電動車", enabled:true }
+};
+const OWNER_SHOP_KEY = "luckyGarageAdminShop";
+
+function requestedOwnerShop() {
+  try {
+    const queryShop = new URLSearchParams(globalThis.location?.search || "").get("shop");
+    if (queryShop && OWNER_SHOPS[queryShop]) {
+      globalThis.sessionStorage?.setItem(OWNER_SHOP_KEY, queryShop);
+      return queryShop;
+    }
+    const saved = globalThis.sessionStorage?.getItem(OWNER_SHOP_KEY);
+    if (saved && OWNER_SHOPS[saved]) return saved;
+  } catch {}
+  return "xiaoyu";
+}
+
+export function setOwnerShop(shopId) {
+  if (!OWNER_SHOPS[shopId]) throw new Error("不支援的店家");
+  try { globalThis.sessionStorage?.setItem(OWNER_SHOP_KEY, shopId); } catch {}
+}
 
 /**
  * Multi-shop tenant core.
  * Normal tenant: Firebase Auth user => /adminAccounts/{uid} => { enabled, shopId, role }.
  * Tenant data: /shops/{shopId}/...
- * During migration, the original owner can still use the legacy top-level collections.
+ * Platform owner can switch between the legacy Xiaoyu store and managed tenant stores.
  */
 export async function resolveShopContext(db, user) {
   if (!user || user.isAnonymous) throw new Error("尚未登入");
 
-  const accountSnap = await getDoc(doc(db, "adminAccounts", user.uid));
-  if (!accountSnap.exists()) {
-    if (user.emailVerified && String(user.email || "").toLowerCase() === LEGACY_OWNER_EMAIL) {
+  const email = String(user.email || "").toLowerCase();
+  const isPlatformOwner = user.emailVerified && email === LEGACY_OWNER_EMAIL;
+  if (isPlatformOwner) {
+    const shopId = requestedOwnerShop();
+    if (shopId === "xiaoyu") {
       return {
         uid:user.uid,
         email:user.email || "",
         shopId:"xiaoyu",
         role:"platformOwner",
         legacy:true,
-        shop:{ id:"xiaoyu", name:"小宇微電", enabled:true }
+        shop:OWNER_SHOPS.xiaoyu
       };
     }
-    throw new Error("此帳號尚未綁定車行");
+
+    const shopSnap = await getDoc(doc(db, "shops", shopId));
+    const shop = shopSnap.exists() ? shopSnap.data() || {} : OWNER_SHOPS[shopId];
+    if (shop.enabled === false) throw new Error("此車行目前已停用");
+    return {
+      uid:user.uid,
+      email:user.email || "",
+      shopId,
+      role:"platformOwner",
+      legacy:false,
+      shop:{ ...OWNER_SHOPS[shopId], ...shop, id:shopId }
+    };
   }
+
+  const accountSnap = await getDoc(doc(db, "adminAccounts", user.uid));
+  if (!accountSnap.exists()) throw new Error("此帳號尚未綁定車行");
 
   const account = accountSnap.data() || {};
   if (account.enabled !== true) throw new Error("此帳號已停用");
