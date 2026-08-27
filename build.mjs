@@ -124,7 +124,8 @@ copyRuntimeFile("admin/admin.js");
 for(const file of [
   "platform.html","platform.js",
   "site-settings.html","site-settings.js",
-  "cases.html","cases.js"
+  "cases.html","cases.js",
+  "payment-settings.html","payment-settings.js"
 ]) copyRuntimeFile(`admin/${file}`);
 copyRuntimeDir("jerry");
 
@@ -140,8 +141,8 @@ patchText("admin/index.html",(html)=>{
 fs.writeFileSync(path.join(outDir,"BUILD_VERSION.txt"),"32.1.4-multishop\n","utf8");
 const required=[
   "index.html","products.html","plate.html","installment.html","garage.html","warranty.html",
-  "admin/index.html","admin/admin.js","admin/platform.html","admin/site-settings.html","admin/cases.html",
-  "multi-shop-core.js","jerry/index.html","jerry/app.js","jerry/style.css",
+  "admin/index.html","admin/admin.js","admin/platform.html","admin/site-settings.html","admin/cases.html","admin/payment-settings.html","admin/payment-settings.js",
+  "multi-shop-core.js","jerry/index.html","jerry/app.js","jerry/style.css","jerry/finance.css","jerry/hero.css",
   "assets/brand/logo-round.webp","public-theme-v32.css","admin/admin-theme-v32.css"
 ];
 for(const file of required){ if(!fs.existsSync(path.join(outDir,file))) throw new Error(`Deployment payload missing: ${file}`); }
