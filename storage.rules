@@ -6,7 +6,7 @@ service firebase.storage {
       return request.auth != null;
     }
 
-    function isAdmin() {
+    function legacyAdmin() {
       return signedIn() && (
         (request.auth.token.email_verified == true && request.auth.token.email == 'uu8832sr@gmail.com')
         || request.auth.uid == 'rN911472GUXjc1IYToSPhgf6zbs2'
@@ -16,15 +16,40 @@ service firebase.storage {
       );
     }
 
+    function tenantAccount() {
+      return firestore.get(/databases/(default)/documents/adminAccounts/$(request.auth.uid));
+    }
+
+    function belongsTo(shopId) {
+      return signedIn()
+        && tenantAccount().data.enabled == true
+        && tenantAccount().data.shopId == shopId;
+    }
+
+    function isPlatformOwner() {
+      return signedIn() && (
+        request.auth.token.email == 'uu8832sr@gmail.com'
+        || (tenantAccount().data.enabled == true && tenantAccount().data.role == 'platformOwner')
+      );
+    }
+
+    function validImageWrite() {
+      return request.resource == null || (
+        request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*')
+      );
+    }
+
+    // Existing 小宇微電 image path remains compatible during migration.
     match /products/{productId}/{fileName} {
       allow read: if true;
-      allow write: if isAdmin() && (
-        request.resource == null
-        || (
-          request.resource.size < 10 * 1024 * 1024
-          && request.resource.contentType.matches('image/.*')
-        )
-      );
+      allow write: if legacyAdmin() && validImageWrite();
+    }
+
+    // New tenant-isolated image path.
+    match /shops/{shopId}/products/{productId}/{fileName} {
+      allow read: if true;
+      allow write: if (belongsTo(shopId) || isPlatformOwner()) && validImageWrite();
     }
 
     match /{allPaths=**} {
