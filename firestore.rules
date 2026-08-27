@@ -43,27 +43,6 @@ service cloud.firestore {
       );
     }
 
-    function verifiedInviteEmail() {
-      return signedIn()
-        && request.auth.token.email_verified == true
-        && request.auth.token.email is string;
-    }
-
-    function invitePath() {
-      return /databases/$(database)/documents/shopInvites/$(request.auth.token.email);
-    }
-
-    function validInviteClaim(uid) {
-      return verifiedInviteEmail()
-        && request.auth.uid == uid
-        && exists(invitePath())
-        && get(invitePath()).data.enabled == true
-        && request.resource.data.enabled == true
-        && request.resource.data.role == 'admin'
-        && request.resource.data.email == request.auth.token.email
-        && request.resource.data.shopId == get(invitePath()).data.shopId;
-    }
-
     function validPublicOrder(orderId) {
       return request.resource.data.orderId == orderId
         && request.resource.data.orderNo == orderId
@@ -120,6 +99,7 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
     }
 
+    // Existing 小宇微電 collections remain available during migration.
     match /admins/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list, create, update, delete: if false;
@@ -177,17 +157,10 @@ service cloud.firestore {
       allow read, create, update, delete: if legacyAdmin();
     }
 
-    match /shopInvites/{email} {
-      allow get: if isPlatformOwner() || (
-        verifiedInviteEmail() && request.auth.token.email == email
-      );
-      allow list, create, update, delete: if isPlatformOwner();
-    }
-
+    // Shared login directory: one Firebase Auth project, different shopId per account.
     match /adminAccounts/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
-      allow create: if isPlatformOwner() || validInviteClaim(uid);
-      allow list, update, delete: if isPlatformOwner();
+      allow list, create, update, delete: if isPlatformOwner();
     }
 
     match /shops/{shopId} {
