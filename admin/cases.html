@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-Hant" class="h-full bg-[#080a0f] text-slate-100">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>案例管理｜管理後台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-full bg-slate-950 text-slate-100">
+  <main class="max-w-5xl mx-auto p-4 sm:p-7 space-y-5">
+    <div class="flex items-center justify-between gap-4"><div><p class="text-xs text-emerald-400 font-black">CASES</p><h1 class="text-2xl font-black">維修／改裝／交車案例</h1></div><a href="index.html" class="bg-slate-900 border border-slate-700 px-4 py-2 rounded-xl text-sm">← 回後台</a></div>
+    <section id="gate" class="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-slate-400">正在確認管理員權限…</section>
+    <section id="app" class="hidden grid lg:grid-cols-[360px_1fr] gap-5">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4 h-fit">
+        <div class="text-xs text-slate-400">目前店家：<b id="shopName" class="text-emerald-400"></b></div>
+        <input id="caseId" type="hidden" />
+        <label class="block"><span class="block text-xs font-bold mb-1">案例標題</span><input id="title" placeholder="例如 Gogoro S2 保養完成" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+        <label class="block"><span class="block text-xs font-bold mb-1">說明</span><textarea id="description" rows="4" placeholder="這次處理了哪些項目" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3"></textarea></label>
+        <label class="block"><span class="block text-xs font-bold mb-1">排序</span><input id="order" type="number" value="100" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label>
+        <label class="flex gap-2 items-center text-sm"><input id="visible" type="checkbox" checked class="accent-emerald-500" />顯示在前台</label>
+        <div class="border border-slate-800 bg-slate-950 rounded-2xl p-4 space-y-3">
+          <span class="block text-xs font-bold">案例照片</span>
+          <input id="photo" type="file" accept="image/*" class="block w-full text-xs text-slate-400" />
+          <img id="preview" class="hidden w-full aspect-video object-cover rounded-xl" alt="案例預覽" />
+        </div>
+        <button id="saveBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl">儲存案例</button>
+        <button id="resetBtn" class="w-full bg-slate-800 border border-slate-700 py-3 rounded-xl text-sm">新增另一筆</button>
+        <div id="status" class="hidden rounded-xl p-3 text-sm bg-slate-950 border border-slate-800"></div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5">
+        <div class="flex items-center justify-between mb-4"><h2 class="font-black">目前案例</h2><button id="refreshBtn" class="text-xs bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl">重新整理</button></div>
+        <div id="caseList" class="grid sm:grid-cols-2 gap-3"></div>
+      </div>
+    </section>
+  </main>
+  <script src="../firebase-config.js"></script>
+  <script type="module" src="cases.js"></script>
+</body>
+</html>
