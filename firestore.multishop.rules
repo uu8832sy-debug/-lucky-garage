@@ -1,0 +1,77 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function account() {
+      return get(/databases/$(database)/documents/adminAccounts/$(request.auth.uid));
+    }
+
+    function enabledAccount() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/adminAccounts/$(request.auth.uid))
+        && account().data.enabled == true;
+    }
+
+    function belongsTo(shopId) {
+      return enabledAccount() && account().data.shopId == shopId;
+    }
+
+    function isPlatformOwner() {
+      return enabledAccount() && account().data.role == 'platformOwner';
+    }
+
+    match /adminAccounts/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if isPlatformOwner();
+    }
+
+    match /shops/{shopId} {
+      allow read: if resource.data.public == true || belongsTo(shopId) || isPlatformOwner();
+      allow create, update, delete: if isPlatformOwner();
+
+      match /products/{productId} {
+        allow read: if true;
+        allow create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /siteSettings/{docId} {
+        allow read: if true;
+        allow create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /deliveryCases/{caseId} {
+        allow read: if true;
+        allow create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /orders/{orderId} {
+        allow read, update, delete: if belongsTo(shopId) || isPlatformOwner();
+        allow create: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /warranties/{warrantyId} {
+        allow read, create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /receipts/{receiptId} {
+        allow read, create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /sales/{saleId} {
+        allow read, create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+
+      match /campaigns/{campaignId} {
+        allow read, create, update, delete: if belongsTo(shopId) || isPlatformOwner();
+      }
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
