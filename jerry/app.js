@@ -7,18 +7,73 @@ const db = getFirestore(app);
 const $ = (selector) => document.querySelector(selector);
 
 const DEFAULTS = {
-  brandName: "傑瑞電動車",
-  heroTitle: "Gogoro 維修、保養、改裝\n一次處理好",
-  heroSubtitle: "從日常保養、故障檢修，到外觀與性能改裝，讓你不用到處找店家。",
-  contactTitle: "要維修、保養、改裝，先直接問",
-  contactText: "把車況、需求、預算先說清楚，到店會比較快。",
-  address: "新北市樹林區保安街一段366號 1樓",
-  phone: "02-8686-0669",
-  hours: "每日 12:00–21:00",
-  lineUrl: "https://lin.ee/XWKMkhd",
-  mapUrl: "https://www.google.com/maps/search/?api=1&query=%E5%82%91%E7%91%9E%E9%9B%BB%E5%8B%95%E8%BB%8A%20%E6%A8%B9%E6%9E%97",
-  primaryColor: "#86efac"
+  brandName: "傑瑞電動自行車",
+  heroTitle: "銷售、維修、保養、改裝\n一間店處理好",
+  heroSubtitle: "樹林實體門市，Gogoro 維修保養、電動車銷售與客製改裝，都可以直接到店詢問。",
+  contactTitle: "直接來店，或先 LINE 問",
+  contactText: "保安街郵局正對面。維修與保養基本上不用預約，依現場工位安排。",
+  address: "新北市樹林區保安街一段366號",
+  phone: "(02) 8686-0669",
+  hours: "週一至週日 12:00–21:00",
+  lineUrl: "https://line.me/R/ti/p/@882npfrm",
+  mapUrl: "https://www.google.com/maps/search/?api=1&query=%E6%96%B0%E5%8C%97%E5%B8%82%E6%A8%B9%E6%9E%97%E5%8D%80%E4%BF%9D%E5%AE%89%E8%A1%97%E4%B8%80%E6%AE%B5366%E8%99%9F",
+  primaryColor: "#e8ad4d"
 };
+
+const PRICE_GROUPS = [
+  {
+    name: "大偉士", mode: "dual", note: "一般版 / 特仕版",
+    rows: [
+      ["鉛酸電池", "表定 40km", 38000, 43000],
+      ["72V 30Ah 鋰電", "表定 60km", 53000, 58000],
+      ["72V 40Ah 鋰電", "表定 80km", 59000, 64000],
+      ["72V 50Ah 鋰電", "表定 100km", 64000, 69000],
+      ["72V 65Ah 鋰電", "表定 130km", 69000, 74000],
+      ["72V 80Ah 鋰電", "表定 160km", 75000, 80000]
+    ]
+  },
+  {
+    name: "Z3 天鵝座", mode: "dual", note: "一般版 / 特仕版",
+    rows: [
+      ["鉛酸電池", "表定 40km", 43000, 48000],
+      ["72V 30Ah 鋰電", "表定 60km", 58000, 63000],
+      ["72V 40Ah 鋰電", "表定 80km", 64000, 69000],
+      ["72V 50Ah 鋰電", "表定 100km", 69000, 74000],
+      ["72V 65Ah 鋰電", "表定 130km", 74000, 79000],
+      ["72V 80Ah 鋰電", "表定 160km", 80000, 85000]
+    ]
+  },
+  {
+    name: "正 9 號", mode: "dual", note: "一般版 / 特仕版",
+    rows: [
+      ["鉛酸電池", "表定 40km", 45000, 50000],
+      ["72V 30Ah 鋰電", "表定 60km", 60000, 65000],
+      ["72V 40Ah 鋰電", "表定 80km", 66000, 71000],
+      ["72V 50Ah 鋰電", "表定 100km", 71000, 76000],
+      ["72V 65Ah 鋰電", "表定 130km", 76000, 81000],
+      ["72V 80Ah 鋰電", "表定 160km", 82000, 87000]
+    ]
+  },
+  {
+    name: "小偉士", mode: "single", note: "鉛酸 / 鋰電",
+    rows: [
+      ["48V20Ah 鉛酸", "表定 40km", 32000],
+      ["60V20Ah 鉛酸", "表定 45km", 33000],
+      ["48V20Ah 鋰電", "表定 40km", 43000],
+      ["60V30Ah 鋰電", "表定 60km", 49000],
+      ["72V30Ah 鋰電", "表定 65km", 52000]
+    ]
+  },
+  {
+    name: "極酷", mode: "single", note: "鉛酸 / 鋰電",
+    rows: [
+      ["48V12Ah 鉛酸", "表定 20km", 20000],
+      ["48V20Ah 鉛酸", "表定 40km", 23000],
+      ["48V20Ah 鋰電", "表定 40km", 29000],
+      ["48V30Ah 鋰電", "表定 60km", 33000]
+    ]
+  }
+];
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>'"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
@@ -26,7 +81,7 @@ function escapeHtml(value) {
 function multilineHtml(value) { return escapeHtml(value).replace(/\n/g, "<br>"); }
 function money(value) {
   const n = Number(value);
-  return Number.isFinite(n) && n > 0 ? `NT$${Math.round(n).toLocaleString("zh-TW")}` : "請洽店家";
+  return Number.isFinite(n) && n > 0 ? `NT$ ${Math.round(n).toLocaleString("zh-TW")}` : "請洽店家";
 }
 function safeUrl(value, fallback = "#") {
   const text = String(value || "").trim();
@@ -43,10 +98,25 @@ function firstImage(item) {
   return typeof primary === "string" ? primary : primary?.url || item?.imageUrl || item?.photoUrl || "";
 }
 
+function renderPrices() {
+  const grid = $("#priceGrid");
+  if (!grid) return;
+  grid.innerHTML = PRICE_GROUPS.map((group) => {
+    const dual = group.mode === "dual";
+    return `<article class="price-card">
+      <div class="price-card-head"><div><span>JERRY E-BIKE</span><h3>${escapeHtml(group.name)}</h3></div><b>${escapeHtml(group.note)}</b></div>
+      <div class="price-table-wrap"><table class="price-table">
+        <thead><tr><th>電池規格</th>${dual ? "<th>一般版</th><th>特仕版</th>" : "<th>售價</th>"}</tr></thead>
+        <tbody>${group.rows.map((row) => `<tr><td><strong>${escapeHtml(row[0])}</strong><small>${escapeHtml(row[1])}</small></td>${dual ? `<td>${money(row[2])}</td><td>${money(row[3])}</td>` : `<td>${money(row[2])}</td>`}</tr>`).join("")}</tbody>
+      </table></div>
+    </article>`;
+  }).join("");
+}
+
 function applySettings(settings) {
   const s = { ...DEFAULTS, ...settings };
   document.documentElement.style.setProperty("--accent", s.primaryColor || DEFAULTS.primaryColor);
-  document.title = `${s.brandName}｜Gogoro 維修・保養・改裝・銷售`;
+  document.title = `${s.brandName}｜銷售・維修・保養・改裝`;
   $("#brandName").textContent = s.brandName;
   $("#footerBrand").textContent = s.brandName;
   $("#storeName").textContent = s.brandName;
@@ -60,6 +130,7 @@ function applySettings(settings) {
   $("#storePhone").textContent = phone;
   $("#storePhone").href = `tel:${phone.replace(/[^0-9+]/g, "")}`;
   $("#lineBtn").href = safeUrl(s.lineUrl || DEFAULTS.lineUrl);
+  $("#reservationLineBtn").href = safeUrl(s.lineUrl || DEFAULTS.lineUrl);
   $("#mapBtn").href = safeUrl(s.mapUrl || DEFAULTS.mapUrl);
   $("#mapBtn").target = "_blank";
   $("#lineBtn").target = "_blank";
@@ -74,13 +145,18 @@ function applySettings(settings) {
 }
 
 async function loadSettings() {
-  const [shopSnap, settingsSnap] = await Promise.all([
-    getDoc(doc(db, "shops", SHOP_ID)),
-    getDoc(doc(db, "shops", SHOP_ID, "siteSettings", "general"))
-  ]);
-  const shop = shopSnap.exists() ? shopSnap.data() : {};
-  const settings = settingsSnap.exists() ? settingsSnap.data() : {};
-  applySettings({ ...shop, ...settings, brandName: settings.brandName || shop.displayName || shop.name || DEFAULTS.brandName });
+  try {
+    const [shopSnap, settingsSnap] = await Promise.all([
+      getDoc(doc(db, "shops", SHOP_ID)),
+      getDoc(doc(db, "shops", SHOP_ID, "siteSettings", "general"))
+    ]);
+    const shop = shopSnap.exists() ? shopSnap.data() : {};
+    const settings = settingsSnap.exists() ? settingsSnap.data() : {};
+    applySettings({ ...shop, ...settings, brandName: settings.brandName || shop.displayName || shop.name || DEFAULTS.brandName });
+  } catch (error) {
+    console.warn("Using Jerry defaults until tenant settings are available.", error);
+    applySettings(DEFAULTS);
+  }
 }
 
 async function loadProducts() {
@@ -91,7 +167,7 @@ async function loadProducts() {
       .filter((item) => item.visible !== false)
       .sort((a,b) => Number(a.order || 999) - Number(b.order || 999));
     if (!products.length) {
-      grid.innerHTML = '<div class="empty-card">目前還沒有公開車款。店家從後台建立商品後，這裡會自動出現。</div>';
+      grid.innerHTML = '<div class="empty-card">目前現車由店家整理中。新車公開價格可先看上方價目表，實際庫存請直接 LINE 詢問。</div>';
       return;
     }
     grid.innerHTML = products.map((item) => {
@@ -109,8 +185,8 @@ async function loadProducts() {
       </article>`;
     }).join("");
   } catch (error) {
-    console.error(error);
-    grid.innerHTML = '<div class="empty-card">車款暫時讀取失敗，請稍後再試。</div>';
+    console.warn(error);
+    grid.innerHTML = '<div class="empty-card">目前現車資料尚未開放。新車價格請先看上方價目表，庫存可直接 LINE 詢問。</div>';
   }
 }
 
@@ -122,7 +198,7 @@ async function loadCases() {
       .filter((item) => item.visible !== false)
       .sort((a,b) => Number(a.order || 999) - Number(b.order || 999));
     if (!cases.length) {
-      grid.innerHTML = '<div class="empty-card">案例正在整理中。之後從後台新增維修、改裝或交車案例，就會顯示在這裡。</div>';
+      grid.innerHTML = '<div class="empty-card">維修與改裝案例正在整理中，之後店家從後台新增就會自動顯示。</div>';
       return;
     }
     grid.innerHTML = cases.map((item) => {
@@ -133,10 +209,11 @@ async function loadCases() {
       </article>`;
     }).join("");
   } catch (error) {
-    console.error(error);
-    grid.innerHTML = '<div class="empty-card">案例暫時讀取失敗，請稍後再試。</div>';
+    console.warn(error);
+    grid.innerHTML = '<div class="empty-card">案例正在整理中。</div>';
   }
 }
 
 $("#year").textContent = new Date().getFullYear();
+renderPrices();
 Promise.allSettled([loadSettings(), loadProducts(), loadCases()]);
