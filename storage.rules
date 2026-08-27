@@ -46,8 +46,20 @@ service firebase.storage {
       allow write: if legacyAdmin() && validImageWrite();
     }
 
-    // New tenant-isolated image path.
+    // Existing 小宇微電 case image path remains compatible during migration.
+    match /cases/{caseId}/{fileName} {
+      allow read: if true;
+      allow write: if legacyAdmin() && validImageWrite();
+    }
+
+    // New tenant-isolated product image path.
     match /shops/{shopId}/products/{productId}/{fileName} {
+      allow read: if true;
+      allow write: if (belongsTo(shopId) || isPlatformOwner()) && validImageWrite();
+    }
+
+    // New tenant-isolated case image path.
+    match /shops/{shopId}/cases/{caseId}/{fileName} {
       allow read: if true;
       allow write: if (belongsTo(shopId) || isPlatformOwner()) && validImageWrite();
     }
