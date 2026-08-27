@@ -6,9 +6,13 @@ service firebase.storage {
       return request.auth != null;
     }
 
+    function emailIs(value) {
+      return signedIn() && request.auth.token.email == value;
+    }
+
     function legacyAdmin() {
       return signedIn() && (
-        (request.auth.token.email_verified == true && request.auth.token.email == 'uu8832sr@gmail.com')
+        emailIs('uu8832sr@gmail.com')
         || request.auth.uid == 'rN911472GUXjc1IYToSPhgf6zbs2'
         || request.auth.uid == 'iRdFBpDpXcNklIQ2tzP8kP1lDu42'
         || request.auth.uid == 'azMaRtblP0VevIvEQQDG6OZj5wh1'
@@ -20,15 +24,21 @@ service firebase.storage {
       return firestore.get(/databases/(default)/documents/adminAccounts/$(request.auth.uid));
     }
 
+    function isJerryAdminEmail() {
+      return emailIs('a0975607339@gmail.com');
+    }
+
     function belongsTo(shopId) {
-      return signedIn()
+      return (shopId == 'jerry' && isJerryAdminEmail()) || (
+        signedIn()
         && tenantAccount().data.enabled == true
-        && tenantAccount().data.shopId == shopId;
+        && tenantAccount().data.shopId == shopId
+      );
     }
 
     function isPlatformOwner() {
       return signedIn() && (
-        request.auth.token.email == 'uu8832sr@gmail.com'
+        emailIs('uu8832sr@gmail.com')
         || (tenantAccount().data.enabled == true && tenantAccount().data.role == 'platformOwner')
       );
     }
@@ -40,25 +50,21 @@ service firebase.storage {
       );
     }
 
-    // Existing 小宇微電 image path remains compatible during migration.
     match /products/{productId}/{fileName} {
       allow read: if true;
       allow write: if legacyAdmin() && validImageWrite();
     }
 
-    // Existing 小宇微電 case image path remains compatible during migration.
     match /cases/{caseId}/{fileName} {
       allow read: if true;
       allow write: if legacyAdmin() && validImageWrite();
     }
 
-    // New tenant-isolated product image path.
     match /shops/{shopId}/products/{productId}/{fileName} {
       allow read: if true;
       allow write: if (belongsTo(shopId) || isPlatformOwner()) && validImageWrite();
     }
 
-    // New tenant-isolated case image path.
     match /shops/{shopId}/cases/{caseId}/{fileName} {
       allow read: if true;
       allow write: if (belongsTo(shopId) || isPlatformOwner()) && validImageWrite();
