@@ -44,6 +44,18 @@ const copyBrandAsset=(source,relative)=>{
   fs.mkdirSync(path.dirname(to),{recursive:true});
   fs.copyFileSync(from,to);
 };
+const copyRuntimeFile=(source,relative=source)=>{
+  const from=path.resolve(source),to=path.join(outDir,relative);
+  if(!fs.existsSync(from))throw new Error(`Runtime file missing: ${source}`);
+  fs.mkdirSync(path.dirname(to),{recursive:true});
+  fs.copyFileSync(from,to);
+};
+const copyRuntimeDir=(source,relative=source)=>{
+  const from=path.resolve(source),to=path.join(outDir,relative);
+  if(!fs.existsSync(from))throw new Error(`Runtime directory missing: ${source}`);
+  fs.mkdirSync(path.dirname(to),{recursive:true});
+  fs.cpSync(from,to,{recursive:true,force:true});
+};
 copyBrandAsset("brand-logo-round-v2.webp","assets/brand/logo-round.webp");
 copyBrandAsset("brand-logo-round-v2.webp","assets/brand/logo-round-v2.webp");
 copyBrandAsset("brand-logo-horizontal-v2.webp","assets/brand/logo-horizontal-v2.webp");
@@ -105,8 +117,32 @@ const installmentFloating=extract(/<div class="floating-sales-cta"[\s\S]*?<\/div
 const installmentDock=extract(/<nav class="mobile-dock"[\s\S]*?<\/nav>/,"mobile menu")
   .replace('href="/installment.html"','href="/installment.html" aria-current="page"');
 fs.writeFileSync(path.join(outDir,"installment.html"),`<!doctype html>\n<html lang="zh-Hant">\n${installmentHead}\n<body class="installment-page">\n${installmentHeader}\n<main>\n${installmentSection}\n</main>\n${installmentFooter}\n<script src="config.js?v=32.1.4"></script><script src="firebase-config.js?v=32.1.4"></script><script src="catalog.js?v=32.1.4"></script><script src="home.js?v=32.1.4"></script>\n${installmentFloating}\n${installmentDock}\n</body></html>\n`,"utf8");
-fs.writeFileSync(path.join(outDir,"BUILD_VERSION.txt"),"32.1.4\n","utf8");
-const required=["index.html","products.html","plate.html","installment.html","garage.html","warranty.html","admin/index.html","assets/brand/logo-round.webp","public-theme-v32.css","admin/admin-theme-v32.css"];
+
+// Overlay multi-shop runtime files that are intentionally maintained outside the legacy ZIP payload.
+copyRuntimeFile("multi-shop-core.js");
+copyRuntimeFile("admin/admin.js");
+for(const file of [
+  "platform.html","platform.js",
+  "site-settings.html","site-settings.js",
+  "cases.html","cases.js"
+]) copyRuntimeFile(`admin/${file}`);
+copyRuntimeDir("jerry");
+
+// Add direct management links to the existing admin shell without replacing its current UI.
+patchText("admin/index.html",(html)=>{
+  if(html.includes("site-settings.html")) return html;
+  return html.replace(
+    '<a href="orders.html"',
+    '<a href="site-settings.html" class="bg-slate-900 border border-slate-800 text-emerald-400 font-bold rounded-xl p-3 text-xs text-center">網站設定</a><a href="cases.html" class="bg-slate-900 border border-slate-800 text-amber-400 font-bold rounded-xl p-3 text-xs text-center">案例管理</a><a href="platform.html" class="bg-slate-900 border border-slate-800 text-sky-400 font-bold rounded-xl p-3 text-xs text-center">代理店管理</a><a href="orders.html"'
+  );
+});
+
+fs.writeFileSync(path.join(outDir,"BUILD_VERSION.txt"),"32.1.4-multishop\n","utf8");
+const required=[
+  "index.html","products.html","plate.html","installment.html","garage.html","warranty.html",
+  "admin/index.html","admin/admin.js","admin/platform.html","admin/site-settings.html","admin/cases.html",
+  "multi-shop-core.js","jerry/index.html","jerry/app.js","jerry/style.css",
+  "assets/brand/logo-round.webp","public-theme-v32.css","admin/admin-theme-v32.css"
+];
 for(const file of required){ if(!fs.existsSync(path.join(outDir,file))) throw new Error(`Deployment payload missing: ${file}`); }
 console.log(`Extracted ${count} runtime files to ${outDir}`);
-
