@@ -7,9 +7,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function emailIs(value) {
+      return signedIn() && request.auth.token.email == value;
+    }
+
     function isOwnerEmail() {
-      return signedIn()
-        && request.auth.token.email == 'uu8832sr@gmail.com';
+      return emailIs('uu8832sr@gmail.com');
+    }
+
+    function isJerryAdminEmail() {
+      return emailIs('a0975607339@gmail.com');
     }
 
     function legacyAdmin() {
@@ -32,8 +39,10 @@ service cloud.firestore {
     }
 
     function belongsTo(shopId) {
-      return hasTenantAccount()
-        && get(/databases/$(database)/documents/adminAccounts/$(request.auth.uid)).data.shopId == shopId;
+      return (shopId == 'jerry' && isJerryAdminEmail()) || (
+        hasTenantAccount()
+        && get(/databases/$(database)/documents/adminAccounts/$(request.auth.uid)).data.shopId == shopId
+      );
     }
 
     function isPlatformOwner() {
@@ -99,7 +108,6 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
     }
 
-    // Existing 小宇微電 collections remain available during migration.
     match /admins/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list, create, update, delete: if false;
@@ -157,7 +165,6 @@ service cloud.firestore {
       allow read, create, update, delete: if legacyAdmin();
     }
 
-    // Shared login directory: one Firebase Auth project, different shopId per account.
     match /adminAccounts/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
       allow list, create, update, delete: if isPlatformOwner();
