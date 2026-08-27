@@ -1,9 +1,9 @@
-import { doc, getDoc, collection } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { doc, getDoc, collection } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
 
 /**
  * Multi-shop tenant core.
- * Each Firebase Auth user is mapped by /adminAccounts/{uid} => { enabled, shopId, role }.
- * Shop-owned content lives under /shops/{shopId}/...
+ * Firebase Auth user => /adminAccounts/{uid} => { enabled, shopId, role }.
+ * Shop-owned data => /shops/{shopId}/...
  */
 export async function resolveShopContext(db, user) {
   if (!user || user.isAnonymous) throw new Error("尚未登入");
