@@ -14,6 +14,8 @@
     document.querySelectorAll(".backend-logo-img,.admin-login-logo").forEach(img => { img.src=brand.logo; img.alt=`${brand.name} Logo`; });
     const title = document.querySelector(".backend-brand strong");
     if (title) title.textContent=`${brand.name} 後台管理系統`;
+    const publisher = document.querySelector(".backend-brand small");
+    if (publisher) publisher.textContent="小宇微電E-BIKE 出品・歡迎代理";
     const front = document.querySelector(".header-front-link");
     if (front) front.href=brand.front;
     document.querySelectorAll("[data-shop-choice]").forEach(button => button.classList.toggle("is-active",button.dataset.shopChoice===selected));
