@@ -2,8 +2,8 @@ import { doc, getDoc, collection } from "https://www.gstatic.com/firebasejs/12.1
 
 const LEGACY_OWNER_EMAIL = "uu8832sr@gmail.com";
 const OWNER_SHOPS = {
-  xiaoyu:{ id:"xiaoyu", name:"小宇微電", enabled:true },
-  jerry:{ id:"jerry", name:"傑瑞電動車", enabled:true }
+  xiaoyu:{ id:"xiaoyu", name:"小宇微電", displayName:"小宇微電", enabled:true },
+  jerry:{ id:"jerry", name:"傑瑞電動車", displayName:"傑瑞電動車", enabled:true }
 };
 const OWNER_SHOP_KEY = "luckyGarageAdminShop";
 
@@ -35,7 +35,7 @@ export async function resolveShopContext(db, user) {
   if (!user || user.isAnonymous) throw new Error("尚未登入");
 
   const email = String(user.email || "").toLowerCase();
-  const isPlatformOwner = user.emailVerified && email === LEGACY_OWNER_EMAIL;
+  const isPlatformOwner = email === LEGACY_OWNER_EMAIL;
   if (isPlatformOwner) {
     const shopId = requestedOwnerShop();
     if (shopId === "xiaoyu") {
@@ -49,8 +49,16 @@ export async function resolveShopContext(db, user) {
       };
     }
 
-    const shopSnap = await getDoc(doc(db, "shops", shopId));
-    const shop = shopSnap.exists() ? shopSnap.data() || {} : OWNER_SHOPS[shopId];
+    // Platform owner must never be locked out just because the tenant shop
+    // document is missing, incomplete, or temporarily unreadable.
+    let remoteShop = {};
+    try {
+      const shopSnap = await getDoc(doc(db, "shops", shopId));
+      if (shopSnap.exists()) remoteShop = shopSnap.data() || {};
+    } catch (error) {
+      console.warn("Platform owner shop metadata fallback:", error);
+    }
+    const shop = { ...OWNER_SHOPS[shopId], ...remoteShop, id:shopId };
     if (shop.enabled === false) throw new Error("此車行目前已停用");
     return {
       uid:user.uid,
@@ -58,7 +66,7 @@ export async function resolveShopContext(db, user) {
       shopId,
       role:"platformOwner",
       legacy:false,
-      shop:{ ...OWNER_SHOPS[shopId], ...shop, id:shopId }
+      shop
     };
   }
 
