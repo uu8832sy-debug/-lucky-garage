@@ -3,14 +3,12 @@ import {
   getAuth,
   GoogleAuthProvider,
   onAuthStateChanged,
+  signInWithEmailAndPassword,
   signInWithPopup,
   signInWithRedirect,
   signOut
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 import {
-  collection,
-  doc,
-  getDoc,
   getDocs,
   getFirestore,
   serverTimestamp,
@@ -25,8 +23,13 @@ import {
   ref,
   uploadBytes
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-storage.js";
+import {
+  resolveShopContext,
+  shopCollection,
+  shopDoc,
+  shopStoragePrefix
+} from "../multi-shop-core.js";
 
-const OWNER_EMAIL = "uu8832sr@gmail.com";
 const firebaseConfig = window.LUCKY_GARAGE_FIREBASE_CONFIG || {};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -51,11 +54,11 @@ const DEFAULT_PRODUCTS = [
 ];
 
 let currentUser = null;
+let currentContext = null;
 let products = [];
 let orders = [];
 let editingProductId = null;
 
-function normalizeEmail(value) { return String(value || "").trim().toLowerCase(); }
 function money(value) { return `NT$${Math.max(0, Number(value) || 0).toLocaleString("zh-TW")}`; }
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>'"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c])); }
 function timestampMillis(value) {
@@ -74,18 +77,43 @@ function showToast(message) {
   t.classList.remove("translate-y-20", "opacity-0");
   setTimeout(() => t.classList.add("translate-y-20", "opacity-0"), 2600);
 }
+function requireContext() {
+  if (!currentContext?.shopId) throw new Error("尚未載入車行權限");
+  return currentContext;
+}
 
-async function isAdminUser(user) {
-  if (!user || user.isAnonymous) return false;
-  if (user.emailVerified && normalizeEmail(user.email) === OWNER_EMAIL) return true;
+function installPasswordLogin() {
+  const card = $("#loginCard");
+  const googleBtn = $("#loginBtn");
+  if (!card || !googleBtn || $("#emailLoginBtn")) return;
+  const wrap = document.createElement("div");
+  wrap.className = "space-y-3 text-left";
+  wrap.innerHTML = `
+    <input id="adminEmailInput" type="email" autocomplete="username" placeholder="管理員 Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm" />
+    <input id="adminPasswordInput" type="password" autocomplete="current-password" placeholder="密碼" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm" />
+    <button id="emailLoginBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl"><i class="fa-solid fa-right-to-bracket mr-2"></i>Email／密碼登入</button>
+    <div class="text-center text-[10px] text-slate-500">或使用原本的 Google 管理員登入</div>`;
+  googleBtn.before(wrap);
+  $("#emailLoginBtn").addEventListener("click", beginEmailLogin);
+  $("#adminPasswordInput").addEventListener("keydown", (event) => { if (event.key === "Enter") beginEmailLogin(); });
+}
+
+async function beginEmailLogin() {
+  const email = $("#adminEmailInput")?.value.trim() || "";
+  const password = $("#adminPasswordInput")?.value || "";
+  if (!email || !password) return showToast("請輸入 Email 與密碼");
+  $("#loginMessage").textContent = "登入中…";
+  $("#emailLoginBtn").disabled = true;
   try {
-    const snap = await getDoc(doc(db, "admins", user.uid));
-    return snap.exists() && snap.data().enabled === true;
-  } catch {
-    return false;
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    console.error(error);
+    $("#loginMessage").textContent = "登入失敗，請確認帳號密碼與 Firebase Email/Password 登入是否已啟用。";
+  } finally {
+    $("#emailLoginBtn").disabled = false;
   }
 }
-async function beginLogin() {
+async function beginGoogleLogin() {
   $("#loginMessage").textContent = "正在開啟 Google 登入…";
   $("#loginBtn").disabled = true;
   try {
@@ -107,27 +135,32 @@ async function beginLogin() {
 }
 function showLoggedOut() {
   currentUser = null;
+  currentContext = null;
   $("#loginCard").classList.remove("hidden");
   $("#deniedCard").classList.add("hidden");
   $("#adminApp").classList.add("hidden");
   $("#headerActions").classList.add("hidden");
   $("#headerActions").classList.remove("flex");
 }
-function showDenied(user) {
+function showDenied(user, message = "此帳號沒有管理權限") {
   currentUser = user;
+  currentContext = null;
   $("#loginCard").classList.add("hidden");
   $("#deniedCard").classList.remove("hidden");
   $("#adminApp").classList.add("hidden");
-  $("#deniedMessage").textContent = `目前登入：${user.email || user.uid}`;
+  $("#deniedMessage").textContent = `${message}｜${user?.email || user?.uid || "未知帳號"}`;
 }
-async function showAdmin(user) {
+async function showAdmin(user, context) {
   currentUser = user;
+  currentContext = context;
   $("#loginCard").classList.add("hidden");
   $("#deniedCard").classList.add("hidden");
   $("#adminApp").classList.remove("hidden");
   $("#headerActions").classList.remove("hidden");
   $("#headerActions").classList.add("flex");
-  $("#adminIdentity").textContent = user.email || user.uid;
+  const shopName = context.shop?.name || context.shop?.displayName || context.shopId;
+  $("#adminIdentity").textContent = `${shopName}｜${user.email || user.uid}`;
+  document.title = `${shopName}｜管理員後台`;
   await Promise.all([loadOrders(), loadProducts()]);
 }
 
@@ -143,15 +176,15 @@ function normalizeOrder(item) {
     variant:data.vehicleVariant || data.battery || "",
     price:Number(data.price || String(data.totalAmount || "").replace(/\D/g, "")) || 0,
     status:data.status || "待訂金",
-    createdAt:data.createdAt || data.timestamp || "",
-    raw:data
+    createdAt:data.createdAt || data.timestamp || ""
   };
 }
 async function loadOrders() {
+  const context = requireContext();
   const tbody = $("#adminOrderTableBody");
   tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">讀取訂單中…</td></tr>';
   try {
-    const snap = await getDocs(collection(db, "orders"));
+    const snap = await getDocs(shopCollection(db, context, "orders"));
     orders = snap.docs.map(normalizeOrder).sort((a,b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt));
     renderOrders();
   } catch (error) {
@@ -180,7 +213,7 @@ function renderOrders() {
   $$(".order-status").forEach((select) => select.addEventListener("change", async () => {
     select.disabled = true;
     try {
-      await updateDoc(doc(db,"orders",select.dataset.orderId), { status:select.value, updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
+      await updateDoc(shopDoc(db, requireContext(), "orders", select.dataset.orderId), { status:select.value, updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
       const found = orders.find((o) => o.id === select.dataset.orderId);
       if (found) found.status = select.value;
       showToast("訂單狀態已更新");
@@ -191,10 +224,11 @@ function renderOrders() {
 }
 
 async function loadProducts() {
+  const context = requireContext();
   const tbody = $("#adminProductTableBody");
   tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">讀取商品中…</td></tr>';
   try {
-    const snap = await getDocs(collection(db,"products"));
+    const snap = await getDocs(shopCollection(db, context, "products"));
     products = snap.docs.map((item) => ({ id:item.id, ...item.data() })).sort((a,b) => Number(a.order||999)-Number(b.order||999));
     renderProducts();
   } catch (error) {
@@ -212,16 +246,17 @@ function renderProducts() {
   $$(".edit-product").forEach((button) => button.addEventListener("click", () => openProductModal(button.dataset.productId)));
 }
 async function seedProducts() {
+  const context = requireContext();
   const batch = writeBatch(db);
   const existing = new Set(products.map((p) => p.id));
   let count = 0;
   for (const product of DEFAULT_PRODUCTS) {
     if (!existing.has(product.id)) {
-      batch.set(doc(db,"products",product.id), { ...product, createdAt:serverTimestamp(), updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
+      batch.set(shopDoc(db, context, "products", product.id), { ...product, shopId:context.shopId, createdAt:serverTimestamp(), updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
       count += 1;
     }
   }
-  if (!count) return showToast("12 款商品已經齊全");
+  if (!count) return showToast("預設商品已經齊全");
   await batch.commit();
   showToast(`已補齊 ${count} 款商品`);
   await loadProducts();
@@ -256,6 +291,7 @@ function renderGallery(product) {
   $$(".delete-image").forEach((button) => button.addEventListener("click", () => deleteImage(Number(button.dataset.index))));
 }
 async function uploadImages(files) {
+  const context = requireContext();
   const product = products.find((p) => p.id === editingProductId);
   if (!product || !files.length) return;
   if (!Array.isArray(product.images)) product.images = [];
@@ -263,34 +299,37 @@ async function uploadImages(files) {
     const file = files[i];
     $("#uploadProgressText").textContent = `上傳 ${i+1}/${files.length}`;
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
-    const path = `products/${product.id}/${Date.now()}_${i}_${safeName}`;
+    const path = `${shopStoragePrefix(context)}/products/${product.id}/${Date.now()}_${i}_${safeName}`;
     const objectRef = ref(storage,path);
     await uploadBytes(objectRef,file,{ contentType:file.type || "image/jpeg" });
     const url = await getDownloadURL(objectRef);
     product.images.push({ url, path, isPrimary:product.images.length===0 });
   }
-  await updateDoc(doc(db,"products",product.id), { images:product.images, updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
+  await setDoc(shopDoc(db, context, "products", product.id), { images:product.images, shopId:context.shopId, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
   $("#uploadProgressText").textContent = "上傳完成";
   renderGallery(product); renderProducts();
 }
 async function setPrimaryImage(index) {
+  const context = requireContext();
   const product = products.find((p) => p.id === editingProductId);
   if (!product) return;
   product.images = (product.images || []).map((img,i) => ({...img,isPrimary:i===index}));
-  await updateDoc(doc(db,"products",product.id), { images:product.images, updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
+  await setDoc(shopDoc(db, context, "products", product.id), { images:product.images, shopId:context.shopId, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
   renderGallery(product); renderProducts();
 }
 async function deleteImage(index) {
+  const context = requireContext();
   const product = products.find((p) => p.id === editingProductId);
   const image = product?.images?.[index];
   if (!product || !image || !confirm("確定刪除這張照片？")) return;
   if (image.path) { try { await deleteObject(ref(storage,image.path)); } catch (error) { console.warn(error); } }
   product.images.splice(index,1);
   if (product.images.length && !product.images.some((img) => img.isPrimary)) product.images[0].isPrimary = true;
-  await updateDoc(doc(db,"products",product.id), { images:product.images, updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
+  await setDoc(shopDoc(db, context, "products", product.id), { images:product.images, shopId:context.shopId, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
   renderGallery(product); renderProducts();
 }
 async function saveProduct() {
+  const context = requireContext();
   const product = products.find((p) => p.id === editingProductId);
   if (!product) return;
   const colors = $("#editColorsInput").value.split(/[、,，]/).map((v) => v.trim()).filter(Boolean);
@@ -302,10 +341,11 @@ async function saveProduct() {
     priceLead:Math.max(0,Number($("#editPriceLeadInput").value)||0),
     priceLithium:$("#editPriceLithiumInput").value===""?null:Math.max(0,Number($("#editPriceLithiumInput").value)||0),
     visible:$("#editVisibleInput").checked,
+    shopId:context.shopId,
     updatedAt:serverTimestamp(),
     updatedBy:currentUser.uid
   };
-  await updateDoc(doc(db,"products",product.id),update);
+  await setDoc(shopDoc(db, context, "products", product.id), update, { merge:true });
   Object.assign(product,update);
   renderProducts(); closeProductModal(); showToast("商品設定已儲存");
 }
@@ -318,8 +358,9 @@ function switchTab(tab) {
   });
 }
 
-$("#loginBtn").addEventListener("click",beginLogin);
-$("#switchAccountBtn").addEventListener("click",async()=>{await signOut(auth);beginLogin();});
+installPasswordLogin();
+$("#loginBtn").addEventListener("click",beginGoogleLogin);
+$("#switchAccountBtn").addEventListener("click",async()=>{await signOut(auth);showLoggedOut();});
 $("#logoutBtn").addEventListener("click",()=>signOut(auth));
 $("#refreshOrdersBtn").addEventListener("click",loadOrders);
 $("#orderSearch").addEventListener("input",renderOrders);
@@ -333,6 +374,11 @@ $("#saveProductBtn").addEventListener("click",()=>saveProduct().catch((e)=>{cons
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) return showLoggedOut();
-  if (!(await isAdminUser(user))) return showDenied(user);
-  await showAdmin(user);
+  try {
+    const context = await resolveShopContext(db, user);
+    await showAdmin(user, context);
+  } catch (error) {
+    console.error(error);
+    showDenied(user, error?.message || "此帳號沒有管理權限");
+  }
 });
