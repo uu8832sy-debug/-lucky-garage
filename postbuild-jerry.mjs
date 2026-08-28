@@ -14,7 +14,7 @@ if (!html.includes(marker)) {
 
 const publicJerryDir = path.resolve("public/jerry");
 fs.mkdirSync(publicJerryDir, { recursive:true });
-const jerryStaticFiles = ["reservation.js","shop-photos.js","catalog.js","orders.html","orders.js","wheel.svg","mechanic.svg","workshop.svg","thumbs.svg","storefront.svg"];
+const jerryStaticFiles = ["reservation.js","shop-photos.js","catalog.js","admin-products.js","orders.html","orders.js","wheel.svg","mechanic.svg","workshop.svg","thumbs.svg","storefront.svg"];
 for (const fileName of jerryStaticFiles) {
   const source = path.resolve("jerry", fileName);
   const target = path.join(publicJerryDir, fileName);
@@ -38,7 +38,7 @@ fs.writeFileSync(jerryIndexPath, jerryHtml, "utf8");
 const jerryAdminPath = path.resolve("public/jerry/admin.html");
 if (!fs.existsSync(jerryAdminPath)) throw new Error("public/jerry/admin.html missing after build");
 let jerryAdminHtml = fs.readFileSync(jerryAdminPath, "utf8");
-jerryAdminHtml = jerryAdminHtml.replace(/\/admin\/admin\.js\?v=[^\"']+/g, "/admin/admin.js?v=32.4");
+jerryAdminHtml = jerryAdminHtml.replace(/\/admin\/admin\.js\?v=[^\"']+/g, "/admin/admin.js?v=32.5");
 if (!/rel=["']icon["']/i.test(jerryAdminHtml)) {
   jerryAdminHtml = jerryAdminHtml.replace("</title>", '</title>\n  <link rel="icon" type="image/png" href="/jerry/admin-logo.png" />\n  <link rel="apple-touch-icon" href="/jerry/admin-logo.png" />');
 }
@@ -47,6 +47,8 @@ if (!jerryAdminHtml.includes('/admin/orders.html?shop=jerry')) {
   jerryAdminHtml = jerryAdminHtml.replace('</nav>', '<a href="/admin/orders.html?shop=jerry" class="bg-slate-900 border border-slate-800 text-fuchsia-300 font-black rounded-xl p-3 text-xs text-center"><i class="fa-solid fa-clipboard-list mr-1"></i>完整訂單管理</a></nav>');
 }
 jerryAdminHtml = jerryAdminHtml.replace(/href=["']\/jerry\/orders\.html["']/g,'href="/admin/orders.html?shop=jerry"');
+jerryAdminHtml = jerryAdminHtml.replace(/\s*<script[^>]+src=["']\/jerry\/admin-products\.js[^"']*["'][^>]*><\/script>/gi, "");
+jerryAdminHtml = jerryAdminHtml.replace("</body>",'  <script type="module" src="/jerry/admin-products.js?v=1"></script>\n</body>');
 fs.writeFileSync(jerryAdminPath, jerryAdminHtml, "utf8");
 
 const sharedOrdersPath = path.resolve("public/admin/orders.html");
@@ -59,4 +61,4 @@ if (!sharedOrdersHtml.includes(ordersBrandMarker)) {
 }
 fs.writeFileSync(sharedOrdersPath, sharedOrdersHtml, "utf8");
 
-console.log("Jerry fixed catalog, reservation, photos, navigation, shared full orders backend, favicon, and admin branding injected");
+console.log("Jerry fixed five-model official catalog, photo-only product admin, reservation, photos, navigation, shared full orders backend, favicon, and admin branding injected");
