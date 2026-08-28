@@ -54,6 +54,7 @@ const fieldIds = [
   "deliveredAt", "notes"
 ];
 const fields = Object.fromEntries(fieldIds.map((id) => [id, $("#" + id)]));
+fields.style = $("#style");
 
 let auth;
 let db;
@@ -63,6 +64,16 @@ let currentOrders = [];
 let currentDocumentName = "小宇微電文件";
 let currentTextMap = {};
 const selectedOrderIds = new Set();
+
+const JERRY_CATALOG = {
+  "大偉士": { dual:true, batteries:[["鉛酸",38000,43000],["72V30Ah鋰電",53000,58000],["72V40Ah鋰電",59000,64000],["72V50Ah鋰電",64000,69000],["72V65Ah鋰電",69000,74000],["72V80Ah鋰電",75000,80000]] },
+  "Z3 天鵝座": { dual:true, batteries:[["鉛酸",43000,48000],["72V30Ah鋰電",58000,63000],["72V40Ah鋰電",64000,69000],["72V50Ah鋰電",69000,74000],["72V65Ah鋰電",74000,79000],["72V80Ah鋰電",80000,85000]] },
+  "正9號": { dual:true, batteries:[["鉛酸",45000,50000],["72V30Ah鋰電",60000,65000],["72V40Ah鋰電",66000,71000],["72V50Ah鋰電",71000,76000],["72V65Ah鋰電",76000,81000],["72V80Ah鋰電",82000,87000]] },
+  "小偉士": { dual:false, batteries:[["48V20Ah鉛酸",32000],["60V20Ah鉛酸",33000],["48V20Ah鋰電",43000],["60V30Ah鋰電",49000],["72V30Ah鋰電",52000]] },
+  "極酷": { dual:false, batteries:[["48V12Ah鉛酸",20000],["48V20Ah鉛酸",23000],["48V20Ah鋰電",29000],["48V30Ah鋰電",33000]] }
+};
+
+function isJerry() { return currentContext?.shopId === "jerry" && !currentContext?.legacy; }
 
 function activeBrand() {
   return currentContext?.legacy ? "小宇微電" : (currentContext?.shop?.name || "傑瑞電動車");
@@ -241,6 +252,15 @@ function inferVariant(order) {
   return variants[0].label;
 }
 function normalizedOrderModel(order) {
+  if (isJerry()) {
+    const compact = String(order.model || "").replace(/\s+/g, "").toLowerCase();
+    if (compact.includes("大偉士")) return "大偉士";
+    if (compact.includes("天鵝座") || compact === "z3") return "Z3 天鵝座";
+    if (compact.includes("正9號") || compact.includes("正九號")) return "正9號";
+    if (compact.includes("小偉士")) return "小偉士";
+    if (compact.includes("極酷")) return "極酷";
+    return order.model || "";
+  }
   if (VEHICLE_COSTS[order.model]) return order.model;
   return interpretVehicleText(order.model).model;
 }
@@ -262,6 +282,38 @@ function updateVariantOptions({ savedVariant = "", savedCost = null } = {}) {
   fields.cost.value = savedCost === null ? String(info.cost) : String(numberValue(savedCost));
   updateMoneyPreview();
 }
+function updateJerryPrice() {
+  const config = JERRY_CATALOG[fields.model.value];
+  const row = config?.batteries.find((item) => item[0] === fields.battery.value);
+  if (!row) return;
+  fields.price.value = String(row[config.dual && fields.style.value === "特仕版" ? 2 : 1]);
+  updateMoneyPreview();
+}
+function updateJerryOptions({ savedStyle = "", savedBattery = "" } = {}) {
+  const config = JERRY_CATALOG[fields.model.value];
+  $("#jerryStyleWrap").classList.toggle("hidden", !config?.dual);
+  fields.style.innerHTML = "";
+  fields.battery.innerHTML = "";
+  if (!config) {
+    fields.style.add(new Option("請先選擇車款", ""));
+    fields.battery.add(new Option("請先選擇車款", ""));
+    fields.style.disabled = true;
+    fields.style.required = false;
+    fields.battery.disabled = true;
+    fields.price.value = "0";
+    updateMoneyPreview();
+    return;
+  }
+  const styles = config.dual ? ["一般版", "特仕版"] : ["一般版"];
+  styles.forEach((style) => fields.style.add(new Option(style, style)));
+  config.batteries.forEach(([battery]) => fields.battery.add(new Option(battery, battery)));
+  fields.style.disabled = !config.dual;
+  fields.style.required = config.dual;
+  fields.battery.disabled = false;
+  fields.style.value = styles.includes(savedStyle) ? savedStyle : "一般版";
+  fields.battery.value = config.batteries.some(([battery]) => battery === savedBattery) ? savedBattery : config.batteries[0][0];
+  updateJerryPrice();
+}
 function applySelectedVariantCost() {
   const info = selectedVariantInfo();
   fields.battery.value = info.battery;
@@ -269,7 +321,13 @@ function applySelectedVariantCost() {
   updateMoneyPreview();
 }
 function orderFromForm() {
-  const data = Object.fromEntries(fieldIds.map((id) => [id, fields[id].value.trim ? fields[id].value.trim() : fields[id].value]));
+  const activeFieldIds = isJerry() ? fieldIds.filter((id) => !["chassisNo", "batteryNo"].includes(id)) : fieldIds;
+  const data = Object.fromEntries(activeFieldIds.map((id) => [id, fields[id].value.trim ? fields[id].value.trim() : fields[id].value]));
+  if (isJerry()) {
+    data.style = fields.style.value;
+    data.vehicleVariant = fields.style.value;
+    data.battery = fields.battery.value;
+  }
   data.customerName = cleanName(data.customerName);
   data.phone = cleanPhone(data.phone);
   data.address = String(data.address || "").normalize("NFKC").trim().replace(/\s+/g, " ");
@@ -292,7 +350,7 @@ function resetForm() {
   elements.orderForm.reset();
   elements.editingId.value = "";
   elements.formTitle.textContent = "建立訂單";
-  fields.model.value = currentContext?.legacy ? "小偉士" : (fields.model.options[1]?.value || "其他");
+  fields.model.value = currentContext?.legacy ? "小偉士" : "";
   fields.price.value = "0";
   fields.deposit.value = "0";
   fields.balancePaid.value = "0";
@@ -300,7 +358,7 @@ function resetForm() {
   fields.deliveryMode.value = "到府交車";
   fields.paymentMethod.value = "轉帳";
   fields.status.value = "待訂金";
-  updateVariantOptions();
+  if (isJerry()) updateJerryOptions(); else updateVariantOptions();
   setMessage("");
   updateMoneyPreview();
 }
@@ -309,12 +367,18 @@ function fillForm(order) {
   const simpleFields = fieldIds.filter((id) => !["model", "vehicleVariant", "battery", "cost", "netProfit", "licenseMode"].includes(id));
   for (const id of simpleFields) fields[id].value = order[id] ?? "";
   const formModel = normalizedOrderModel(order);
-  if (!Array.from(fields.model.options).some((option) => option.value === formModel)) {
+  if (!isJerry() && !Array.from(fields.model.options).some((option) => option.value === formModel)) {
     fields.model.add(new Option(formModel || "其他", formModel || "其他"));
   }
-  fields.model.value = formModel || "其他";
-  updateVariantOptions({ savedVariant: order.vehicleVariant || inferVariant({ ...order, model: formModel }), savedCost: effectiveCost(order) });
-  fields.battery.value = order.battery || selectedVariantInfo().battery;
+  fields.model.value = Array.from(fields.model.options).some((option) => option.value === formModel) ? formModel : (isJerry() ? "" : "其他");
+  if (isJerry()) {
+    updateJerryOptions({ savedStyle:order.style || order.vehicleVariant || "一般版", savedBattery:order.battery || "" });
+    fields.price.value = String(numberValue(order.price));
+    fields.cost.value = String(numberValue(order.cost));
+  } else {
+    updateVariantOptions({ savedVariant: order.vehicleVariant || inferVariant({ ...order, model: formModel }), savedCost: effectiveCost(order) });
+    fields.battery.value = order.battery || selectedVariantInfo().battery;
+  }
   fields.licenseMode.value = normalizeInsuranceHandling(order.licenseMode);
   fields.netProfit.value = String(calculateNetProfit(order));
   elements.formTitle.textContent = `編輯訂單｜${order.id}`;
@@ -398,12 +462,27 @@ async function showApp(user, context) {
   elements.loginCard.classList.add("hidden");
   elements.deniedCard.classList.add("hidden");
   elements.appArea.classList.remove("hidden");
+  const jerry = isJerry();
+  $("#vehicleVariantWrap").classList.toggle("hidden", jerry);
+  $("#jerryStyleWrap").classList.toggle("hidden", !jerry);
+  $("#batteryWrap").classList.toggle("hidden", !jerry);
+  $("#chassisNoWrap").classList.toggle("hidden", jerry);
+  $("#batteryNoWrap").classList.toggle("hidden", jerry);
+  fields.vehicleVariant.required = !jerry;
+  fields.style.required = jerry;
+  fields.battery.required = jerry;
   await loadTenantModels();
   await loadOrders();
 }
 
 async function loadTenantModels() {
   if (currentContext?.legacy) return;
+  if (isJerry()) {
+    fields.model.innerHTML = '<option value="">請先選擇車款</option>';
+    Object.keys(JERRY_CATALOG).forEach((name) => fields.model.add(new Option(name, name)));
+    updateJerryOptions();
+    return;
+  }
   const snapshot = await getDocs(shopCollection(db, currentContext, "products"));
   const names = [...new Set(snapshot.docs.map((item) => String(item.data()?.name || "").trim()).filter(Boolean))];
   fields.model.innerHTML = "";
@@ -692,7 +771,7 @@ function renderOrders() {
     <article class="order-row ${selected ? "selected" : ""}" data-id="${escapeHtml(order.id)}">
       <label class="order-select-wrap" title="選取訂單"><input class="order-select" type="checkbox" data-order-id="${escapeHtml(order.id)}" ${selected ? "checked" : ""} aria-label="選取 ${escapeHtml(order.customerName || order.id)}" /></label>
       <div class="order-main"><strong>${escapeHtml(order.customerName || "未命名")}</strong><small>${escapeHtml(order.phone || "—")}｜${escapeHtml(order.id)}</small></div>
-      <div class="order-car"><strong>${escapeHtml(order.color || "")} ${escapeHtml(order.model || "")}</strong><small>${escapeHtml(order.vehicleVariant || order.battery || "")}｜領牌強制險：${escapeHtml(normalizeInsuranceHandling(order.licenseMode))}</small></div>
+      <div class="order-car"><strong>${escapeHtml(order.color || "")} ${escapeHtml(order.model || "")}</strong><small>${escapeHtml(isJerry() ? [order.style || order.vehicleVariant, order.battery].filter(Boolean).join("｜") : (order.vehicleVariant || order.battery || ""))}｜領牌強制險：${escapeHtml(normalizeInsuranceHandling(order.licenseMode))}</small></div>
       <div class="order-money"><span class="badge">${escapeHtml(order.status || "未設定")}</span><strong>${formatProfit(calculateNetProfit(order))}</strong><small>成交 ${formatMoney(order.price)}｜成本 ${formatMoney(effectiveCost(order))}｜待收 ${formatMoney(calculateUnpaid(order))}</small></div>
       <div class="row-actions">
         <button class="secondary" data-action="edit">編輯</button>
@@ -844,6 +923,9 @@ async function createAndShowReceipt(order, type) {
 }
 
 function warrantyHtml(order, warrantyId, warrantyUrl, dates) {
+  const serialFields = isJerry() ? "" : `
+          <div class="doc-field"><span>車架號</span><strong>${escapeHtml(order.chassisNo || "未登錄")}</strong></div>
+          <div class="doc-field"><span>電池編號</span><strong>${escapeHtml(order.batteryNo || "未登錄")}</strong></div>`;
   return `
     <section class="doc-sheet warranty-sheet" data-file="${escapeHtml(warrantyId)}">
       <div class="doc-brand"><p>${escapeHtml(activeSlogan())}</p><h1>${escapeHtml(activeBrand())}</h1><h2>車輛保固卡</h2></div>
@@ -853,8 +935,7 @@ function warrantyHtml(order, warrantyId, warrantyUrl, dates) {
           <div class="doc-field"><span>訂單編號</span><strong>${escapeHtml(order.id)}</strong></div>
           <div class="doc-field"><span>車主姓名</span><strong>${escapeHtml(order.customerName)}</strong></div>
           <div class="doc-field"><span>車款／顏色</span><strong>${escapeHtml(order.model)}／${escapeHtml(order.color)}</strong></div>
-          <div class="doc-field"><span>車架號</span><strong>${escapeHtml(order.chassisNo || "未登錄")}</strong></div>
-          <div class="doc-field"><span>電池編號</span><strong>${escapeHtml(order.batteryNo || "未登錄")}</strong></div>
+          ${serialFields}
           <div class="doc-field"><span>交車日期</span><strong>${displayDate(dates.delivery)}</strong></div>
           <div class="doc-field"><span>電池類型</span><strong>${escapeHtml(order.battery || "—")}</strong></div>
         </div>
@@ -862,7 +943,7 @@ function warrantyHtml(order, warrantyId, warrantyUrl, dates) {
       </div>
       <div class="amount-box"><span>整車保固期限</span><strong>${displayDate(dates.delivery)} ～ ${displayDate(dates.vehicleEnd)}</strong><span style="margin-top:12px">電池保固期限</span><strong style="font-size:24px">${displayDate(dates.delivery)} ～ ${displayDate(dates.batteryEnd)}</strong></div>
       <div class="check-list"><strong>保固範圍：依交車時約定之整車、電機、控制器、儀表及線組保固內容辦理。</strong><span>不保固：人為損壞、泡水、事故、耗材自然磨損、非授權改裝或拆修。</span><span>維修前請先聯絡官方 LINE，未經確認自行拆修可能影響保固。</span></div>
-      <p class="doc-note">QR Code 公開頁僅顯示遮蔽後的車主與車架資料，不顯示電話、地址、售價及收款資訊。</p>
+      <p class="doc-note">QR Code 公開頁僅顯示必要的保固資料，不顯示電話、地址、售價及收款資訊。</p>
       <div class="doc-footer"><div><strong>官方 LINE：${escapeHtml(activeLineId())}</strong><br><small>${escapeHtml(warrantyUrl)}</small></div><div class="doc-stamp">保固<br>有效</div></div>
     </section>`;
 }
@@ -878,7 +959,7 @@ async function createAndShowWarranty(order) {
     customerDisplayName: maskName(order.customerName),
     model: order.model,
     color: order.color,
-    chassisMasked: maskSerial(order.chassisNo),
+    ...(isJerry() ? {} : { chassisMasked: maskSerial(order.chassisNo) }),
     battery: order.battery || "—",
     deliveryDate: dates.delivery,
     vehicleWarrantyEnd: dates.vehicleEnd,
@@ -994,8 +1075,10 @@ elements.bulkOrdersInput?.addEventListener("input", () => {
   elements.bulkMessage.textContent = "";
   elements.bulkMessage.classList.remove("success");
 });
-fields.model.addEventListener("change", () => updateVariantOptions());
+fields.model.addEventListener("change", () => isJerry() ? updateJerryOptions() : updateVariantOptions());
 fields.vehicleVariant.addEventListener("change", applySelectedVariantCost);
+fields.style.addEventListener("change", updateJerryPrice);
+fields.battery.addEventListener("change", updateJerryPrice);
 fields.cost.addEventListener("input", updateMoneyPreview);
 elements.summaryScope?.addEventListener("change", renderMonthlySummary);
 elements.monthPicker.addEventListener("change", renderMonthlySummary);
@@ -1177,3 +1260,4 @@ async function start() {
   }
 }
 start();
+

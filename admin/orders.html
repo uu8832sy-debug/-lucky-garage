@@ -111,10 +111,12 @@
               <option>小酷龍</option><option>微型三輪</option><option>Dio</option><option>其他</option>
             </select></label>
             <label><span>顏色 *</span><input id="color" required maxlength="30" placeholder="紫色" /></label>
-            <label><span>車款版本 *</span><select id="vehicleVariant" required></select><input id="battery" type="hidden" /></label>
+            <label id="vehicleVariantWrap"><span>車款版本 *</span><select id="vehicleVariant" required></select></label>
+            <label id="jerryStyleWrap" class="hidden"><span>版本 *</span><select id="style"><option value="">請先選擇車款</option></select></label>
+            <label id="batteryWrap" class="hidden"><span>電池規格 *</span><select id="battery"><option value="">請先選擇車款</option></select></label>
 
-            <label><span>車架號</span><input id="chassisNo" maxlength="60" /></label>
-            <label><span>電池編號</span><input id="batteryNo" maxlength="60" /></label>
+            <label id="chassisNoWrap"><span>車架號</span><input id="chassisNo" maxlength="60" /></label>
+            <label id="batteryNoWrap"><span>電池編號</span><input id="batteryNo" maxlength="60" /></label>
             <label><span>領牌強制險</span><select id="licenseMode"><option>代辦（另加 NT$2,500）</option><option>自行辦理</option></select></label>
             <label><span>交車方式</span><select id="deliveryMode"><option>到府交車</option><option>自取</option><option>貨運配送</option></select></label>
 
@@ -214,6 +216,7 @@
   <script src="../firebase-config.js?v=12.2"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script type="module" src="orders.js?v=12.2"></script>
+  <script type="module" src="orders.js?v=13.0"></script>
 </body>
 </html>
+
