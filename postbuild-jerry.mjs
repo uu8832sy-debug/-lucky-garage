@@ -13,7 +13,7 @@ if(!html.includes(marker)){
 
 const publicJerryDir=path.resolve("public/jerry");
 fs.mkdirSync(publicJerryDir,{recursive:true});
-const jerryStaticFiles=["reservation.js","shop-photos.js","catalog.js","carousel.js","installment.js","online-review.js","short-videos.js","social-links.js","stability.css","admin-products.js","orders.html","orders.js","wheel.svg","mechanic.svg","workshop.svg","thumbs.svg","storefront.svg"];
+const jerryStaticFiles=["reservation.js","shop-photos.js","catalog.js","carousel.js","installment.js","online-review.js","media-admin.js","short-videos.js","social-links.js","stability.css","admin-products.js","orders.html","orders.js","wheel.svg","mechanic.svg","workshop.svg","thumbs.svg","storefront.svg"];
 for(const fileName of jerryStaticFiles){
   const source=path.resolve("jerry",fileName),target=path.join(publicJerryDir,fileName);
   if(!fs.existsSync(source))throw new Error(`Jerry static file missing: ${source}`);
@@ -43,7 +43,6 @@ if(fs.existsSync(commerceJsPath)){
   commerceJs=commerceJs.replace(/(async function renderCommerceProducts\(\)\{[\s\S]*?)renderCards\(\);(\}catch)/,"$1$2");
   commerceJs=commerceJs.replace(/if\(grid\)\{new MutationObserver\([\s\S]*?\.observe\(grid,\{childList:true\}\);\}/g,"");
   commerceJs=commerceJs.replace(/injectModals\(\);\s*renderCommerceProducts\(\);/,`injectModals();\nwindow.JerryCommerce={order:(name,label,price)=>{const key=String(name||'').replace(/\\s/g,'').toLowerCase();const p=products.find(x=>String(x.name||'').replace(/\\s/g,'').toLowerCase().includes(key))||{id:'catalog-fixed',name,style:'',images:[],colors:[]};openOrder(p,{key:'catalog',label,price:Number(price)||0});}};\nrenderCommerceProducts();`);
-  // Public submissions must stay in the review queue. Only admin approval promotes them to formal orders.
   commerceJs=commerceJs.replace(/doc\(db,"shops",SHOP_ID,"orders",orderId\)/g,'doc(db,"shops",SHOP_ID,"onlineOrders",orderId)');
   commerceJs=commerceJs.replace(/status:"待驗證"/g,'status:"待審核",reviewStatus:"pending"');
   commerceJs=commerceJs.replace(/<h2>訂單等待驗證<\/h2>/g,'<h2>訂單已送出，等待店家確認</h2>');
@@ -63,8 +62,9 @@ if(!jerryAdminHtml.includes('/admin/orders.html?shop=jerry')){
 jerryAdminHtml=jerryAdminHtml.replace(/href=["']\/jerry\/orders\.html["']/g,'href="/admin/orders.html?shop=jerry"');
 jerryAdminHtml=jerryAdminHtml
   .replace(/\s*<script[^>]+src=["']\/jerry\/admin-products\.js[^"']*["'][^>]*><\/script>/gi,"")
-  .replace(/\s*<script[^>]+src=["']\/jerry\/online-review\.js[^"']*["'][^>]*><\/script>/gi,"");
-jerryAdminHtml=jerryAdminHtml.replace("</body>",'  <script type="module" src="/jerry/admin-products.js?v=1"></script>\n  <script type="module" src="/jerry/online-review.js?v=1"></script>\n</body>');
+  .replace(/\s*<script[^>]+src=["']\/jerry\/online-review\.js[^"']*["'][^>]*><\/script>/gi,"")
+  .replace(/\s*<script[^>]+src=["']\/jerry\/media-admin\.js[^"']*["'][^>]*><\/script>/gi,"");
+jerryAdminHtml=jerryAdminHtml.replace("</body>",'  <script type="module" src="/jerry/admin-products.js?v=2"></script>\n  <script type="module" src="/jerry/online-review.js?v=2"></script>\n  <script type="module" src="/jerry/media-admin.js?v=1"></script>\n</body>');
 fs.writeFileSync(jerryAdminPath,jerryAdminHtml,"utf8");
 
 const sharedOrdersPath=path.resolve("public/admin/orders.html");
@@ -76,4 +76,4 @@ if(!sharedOrdersHtml.includes(ordersBrandMarker)){
   sharedOrdersHtml=sharedOrdersHtml.replace(/<head(\s[^>]*)?>/i,m=>`${m}\n  ${brandingScript}`);
 }
 fs.writeFileSync(sharedOrdersPath,sharedOrdersHtml,"utf8");
-console.log("Jerry storefront: carousel, installment calculator, review-first orders, lazy short-video reels, and social links enabled");
+console.log("Jerry storefront: review orders, working Cloudinary product/photo uploads, short-video admin, lazy reels, and social links enabled");
