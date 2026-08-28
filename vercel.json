@@ -5,139 +5,38 @@
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        }
+        {"key": "X-Content-Type-Options", "value": "nosniff"},
+        {"key": "Referrer-Policy", "value": "strict-origin-when-cross-origin"}
       ]
     },
-    {
-      "source": "/front.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/index.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/products.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0"
-        }
-      ]
-    },
-    {
-      "source": "/garage.html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0"
-        }
-      ]
-    },
+    {"source": "/front.html", "headers": [{"key": "Cache-Control", "value": "no-store, max-age=0"}]},
+    {"source": "/index.html", "headers": [{"key": "Cache-Control", "value": "no-store, max-age=0"}]},
+    {"source": "/products.html", "headers": [{"key": "Cache-Control", "value": "no-store, max-age=0"}]},
+    {"source": "/garage.html", "headers": [{"key": "Cache-Control", "value": "no-store, max-age=0"}]},
+    {"source": "/jerry/(.*)", "headers": [{"key": "Cache-Control", "value": "no-store, max-age=0"}]},
     {
       "source": "/admin/(.*)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, max-age=0"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow, noarchive"
-        }
+        {"key": "Cache-Control", "value": "no-store, max-age=0"},
+        {"key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive"}
       ]
     }
   ],
   "rewrites": [
-    {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "jerrye-bike.com"
-        }
-      ],
-      "destination": "/jerry/index.html"
-    },
-    {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.jerrye-bike.com"
-        }
-      ],
-      "destination": "/jerry/index.html"
-    }
+    {"source": "/", "has": [{"type": "host", "value": "jerrye-bike.com"}], "destination": "/jerry/index.html"},
+    {"source": "/", "has": [{"type": "host", "value": "www.jerrye-bike.com"}], "destination": "/jerry/index.html"}
   ],
   "redirects": [
-    {
-      "source": "/admin",
-      "destination": "/admin/index.html",
-      "permanent": false
-    },
-    {
-      "source": "/admin/",
-      "destination": "/admin/index.html",
-      "permanent": false
-    },
-    {
-      "source": "/admin.html",
-      "destination": "/admin/index.html",
-      "permanent": false
-    },
-    {
-      "source": "/business.html",
-      "destination": "/admin/index.html?view=orders-full",
-      "permanent": false
-    },
-    {
-      "source": "/owner.html",
-      "destination": "/admin/index.html?view=orders-full",
-      "permanent": false
-    },
-    {
-      "source": "/garage.html",
-      "destination": "/?v=32.1.2",
-      "permanent": false
-    },
-    {
-      "source": "/garage",
-      "destination": "/?v=32.1.2",
-      "permanent": false
-    },
-    {
-      "source": "/garage-admin.html",
-      "destination": "/admin/index.html",
-      "permanent": false
-    },
-    {
-      "source": "/raffle-now.html",
-      "destination": "/?v=32.1.2",
-      "permanent": false
-    },
-    {
-      "source": "/raffle-now-v2.html",
-      "destination": "/?v=32.1.2",
-      "permanent": false
-    }
+    {"source": "/admin", "destination": "/admin/index.html", "permanent": false},
+    {"source": "/admin/", "destination": "/admin/index.html", "permanent": false},
+    {"source": "/admin.html", "destination": "/admin/index.html", "permanent": false},
+    {"source": "/business.html", "destination": "/admin/index.html?view=orders-full", "permanent": false},
+    {"source": "/owner.html", "destination": "/admin/index.html?view=orders-full", "permanent": false},
+    {"source": "/garage.html", "destination": "/?v=32.1.2", "permanent": false},
+    {"source": "/garage", "destination": "/?v=32.1.2", "permanent": false},
+    {"source": "/garage-admin.html", "destination": "/admin/index.html", "permanent": false},
+    {"source": "/raffle-now.html", "destination": "/?v=32.1.2", "permanent": false},
+    {"source": "/raffle-now-v2.html", "destination": "/?v=32.1.2", "permanent": false}
   ],
   "outputDirectory": "public",
   "buildCommand": "npm run build"
