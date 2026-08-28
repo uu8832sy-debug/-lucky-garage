@@ -1,0 +1,17 @@
+/* Jerry mobile hero: compact logo and keep the primary actions above the fold. */
+@media (max-width: 680px) {
+  .hero-grid { min-height: auto; padding: 18px 0 22px; gap: 16px; }
+  .hero-visual { min-height: 172px; border-radius: 26px; background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.16), transparent 38%); }
+  .hero-logo-disc { width: min(140px, 42%); border-width: 5px; box-shadow: 0 18px 42px rgba(0, 0, 0, 0.24); }
+  .hero-label { left: 22px; right: 22px; bottom: 8px; min-height: 34px; padding: 7px 11px; border-radius: 11px; align-items: center; font-size: 8px; line-height: 1.2; }
+  .community-pill { padding: 6px 10px 6px 12px; }
+  .community-pill b { font-size: 16px; }
+  .hero-brand-name { margin: 13px 0 2px; font-size: 15px; }
+  .hero h1 { font-size: 38px; line-height: 1.04; }
+  .hero-copy > p:last-of-type { margin: 10px 0 0; font-size: 14px; line-height: 1.5; }
+  .hero-actions { display: flex; gap: 8px; margin-top: 16px; }
+  .hero-actions .btn { flex: 1; min-height: 46px; padding: 0 14px; }
+  .strip-inner { min-height: 44px; gap: 18px; }
+  .strip-inner b { font-size: 15px; }
+  .strip-inner span { font-size: 11px; }
+}
