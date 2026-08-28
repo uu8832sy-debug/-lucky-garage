@@ -1,0 +1,21 @@
+name: Jerry Handoff QA
+
+on:
+  push:
+    branches:
+      - main
+      - multi-shop-admin
+
+jobs:
+  jerry-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run full Jerry build and click-link QA
+        run: npm run build
