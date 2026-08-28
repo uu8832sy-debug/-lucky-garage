@@ -17,6 +17,7 @@ fs.mkdirSync(publicJerryDir, { recursive:true });
 const jerryStaticFiles = [
   "reservation.js",
   "shop-photos.js",
+  "catalog.js",
   "wheel.svg",
   "mechanic.svg",
   "workshop.svg",
@@ -35,10 +36,11 @@ if (!fs.existsSync(jerryIndexPath)) throw new Error("public/jerry/index.html mis
 let jerryHtml = fs.readFileSync(jerryIndexPath, "utf8");
 jerryHtml = jerryHtml
   .replace(/\s*<script[^>]+src=["']\/jerry\/reservation\.js[^"']*["'][^>]*><\/script>/gi, "")
-  .replace(/\s*<script[^>]+src=["']\/jerry\/shop-photos\.js[^"']*["'][^>]*><\/script>/gi, "");
+  .replace(/\s*<script[^>]+src=["']\/jerry\/shop-photos\.js[^"']*["'][^>]*><\/script>/gi, "")
+  .replace(/\s*<script[^>]+src=["']\/jerry\/catalog\.js[^"']*["'][^>]*><\/script>/gi, "");
 jerryHtml = jerryHtml.replace(
   "</body>",
-  '  <script src="/jerry/reservation.js?v=2"></script>\n  <script src="/jerry/shop-photos.js?v=1"></script>\n</body>'
+  '  <script src="/jerry/reservation.js?v=3"></script>\n  <script src="/jerry/shop-photos.js?v=2"></script>\n  <script type="module" src="/jerry/catalog.js?v=1"></script>\n</body>'
 );
 fs.writeFileSync(jerryIndexPath, jerryHtml, "utf8");
 
@@ -48,4 +50,4 @@ let jerryAdminHtml = fs.readFileSync(jerryAdminPath, "utf8");
 jerryAdminHtml = jerryAdminHtml.replace(/\/admin\/admin\.js\?v=[^\"']+/g, "/admin/admin.js?v=32.3");
 fs.writeFileSync(jerryAdminPath, jerryAdminHtml, "utf8");
 
-console.log("Jerry domain redirect, 3-field reservation, real shop photos, navigation photo, and admin cache bust injected");
+console.log("Jerry fixed five-model catalog, 3-field reservation, construction photos, navigation photo, and admin cache bust injected");
