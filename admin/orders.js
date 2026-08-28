@@ -3,6 +3,7 @@ import {
   getAuth,
   GoogleAuthProvider,
   onAuthStateChanged,
+  signInWithEmailAndPassword,
   signInWithPopup,
   signInWithRedirect,
   signOut
@@ -19,6 +20,7 @@ import {
   updateDoc,
   writeBatch
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+import { resolveShopContext, shopCollection, shopDoc } from "../multi-shop-core.js";
 
 const OWNER_EMAIL = "uu8832sr@gmail.com";
 const firebaseConfig = window.LUCKY_GARAGE_FIREBASE_CONFIG || {};
@@ -56,10 +58,27 @@ const fields = Object.fromEntries(fieldIds.map((id) => [id, $("#" + id)]));
 let auth;
 let db;
 let currentUser = null;
+let currentContext = null;
 let currentOrders = [];
 let currentDocumentName = "小宇微電文件";
 let currentTextMap = {};
 const selectedOrderIds = new Set();
+
+function activeBrand() {
+  return currentContext?.legacy ? "小宇微電" : (currentContext?.shop?.name || "傑瑞電動車");
+}
+
+function activeSlogan() {
+  return currentContext?.legacy ? "找小宇買微電，不走彎路" : "傑瑞電動車・安心選車與交車服務";
+}
+
+function activeHashtag() {
+  return currentContext?.legacy ? "#小宇微電" : "#傑瑞電動車";
+}
+
+function activeLineId() {
+  return currentContext?.legacy ? (uiConfig.lineId || "@762eqvlg") : "@882npfrm";
+}
 
 
 const VEHICLE_COSTS = {
@@ -273,11 +292,11 @@ function resetForm() {
   elements.orderForm.reset();
   elements.editingId.value = "";
   elements.formTitle.textContent = "建立訂單";
-  fields.model.value = "小偉士";
+  fields.model.value = currentContext?.legacy ? "小偉士" : (fields.model.options[1]?.value || "其他");
   fields.price.value = "0";
   fields.deposit.value = "0";
   fields.balancePaid.value = "0";
-  fields.licenseMode.value = "代辦";
+  fields.licenseMode.value = "代辦（另加 NT$2,500）";
   fields.deliveryMode.value = "到府交車";
   fields.paymentMethod.value = "轉帳";
   fields.status.value = "待訂金";
@@ -304,14 +323,10 @@ function fillForm(order) {
 }
 
 async function isAdminUser(user) {
-  if (!user || user.isAnonymous) return false;
-  const emailOwner = user.emailVerified === true && normalizeEmail(user.email) === OWNER_EMAIL;
-  if (emailOwner) return true;
   try {
-    const snapshot = await getDoc(doc(db, "admins", user.uid));
-    return snapshot.exists() && snapshot.data().enabled === true;
+    return await resolveShopContext(db, user);
   } catch {
-    return false;
+    return null;
   }
 }
 async function beginGoogleLogin() {
@@ -340,8 +355,28 @@ async function beginGoogleLogin() {
     elements.loginBtn.disabled = false;
   }
 }
+async function beginEmailLogin() {
+  const email = $("#adminEmailInput")?.value.trim() || "";
+  const password = $("#adminPasswordInput")?.value || "";
+  if (!email || !password) {
+    elements.loginMessage.textContent = "請輸入 Email 與密碼";
+    return;
+  }
+  const button = $("#emailLoginBtn");
+  button.disabled = true;
+  elements.loginMessage.textContent = "登入中…";
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    console.error(error);
+    elements.loginMessage.textContent = "登入失敗，請確認帳號與密碼。";
+  } finally {
+    button.disabled = false;
+  }
+}
 function showLoggedOut() {
   currentUser = null;
+  currentContext = null;
   elements.loginCard.classList.remove("hidden");
   elements.deniedCard.classList.add("hidden");
   elements.appArea.classList.add("hidden");
@@ -353,13 +388,28 @@ function showDenied(user) {
   elements.deniedCard.classList.remove("hidden");
   elements.appArea.classList.add("hidden");
 }
-async function showApp(user) {
+async function showApp(user, context) {
   currentUser = user;
+  currentContext = context;
+  currentDocumentName = context.legacy ? "小宇微電文件" : `${context.shop?.name || context.shopId}文件`;
+  document.title = `${context.shop?.name || "車行"}｜訂單與保固管理`;
+  document.querySelector(".topbar .eyebrow").textContent = context.shop?.name || context.shopId;
   elements.adminEmail.textContent = user.email || user.uid;
   elements.loginCard.classList.add("hidden");
   elements.deniedCard.classList.add("hidden");
   elements.appArea.classList.remove("hidden");
+  await loadTenantModels();
   await loadOrders();
+}
+
+async function loadTenantModels() {
+  if (currentContext?.legacy) return;
+  const snapshot = await getDocs(shopCollection(db, currentContext, "products"));
+  const names = [...new Set(snapshot.docs.map((item) => String(item.data()?.name || "").trim()).filter(Boolean))];
+  fields.model.innerHTML = "";
+  fields.model.add(new Option("請選擇傑瑞後台已上架車款", ""));
+  names.forEach((name) => fields.model.add(new Option(name, name)));
+  fields.model.add(new Option("其他", "其他"));
 }
 
 
@@ -518,7 +568,7 @@ async function importBulkOrders() {
       while (generatedIds.has(id)) id = createOrderId();
       generatedIds.add(id);
       const data = bulkOrderDefaults(item);
-      batch.set(doc(db, "orders", id), {
+      batch.set(shopDoc(db, currentContext, "orders", id), {
         ...data,
         orderNo: id,
         createdAt: serverTimestamp(),
@@ -566,9 +616,9 @@ async function saveOrder({ openDepositReceipt = false } = {}) {
   elements.saveAndReceiptBtn.disabled = true;
   try {
     if (editingId) {
-      await updateDoc(doc(db, "orders", id), { ...data, updatedAt: serverTimestamp(), updatedBy: currentUser.uid });
+      await updateDoc(shopDoc(db, currentContext, "orders", id), { ...data, updatedAt: serverTimestamp(), updatedBy: currentUser.uid });
     } else {
-      await setDoc(doc(db, "orders", id), {
+      await setDoc(shopDoc(db, currentContext, "orders", id), {
         ...data,
         orderNo: id,
         createdAt: serverTimestamp(),
@@ -596,9 +646,9 @@ async function saveOrder({ openDepositReceipt = false } = {}) {
 async function loadOrders() {
   elements.orderList.innerHTML = '<p class="empty">讀取中…</p>';
   try {
-    const snapshot = await getDocs(collection(db, "orders"));
+    const snapshot = await getDocs(shopCollection(db, currentContext, "orders"));
     currentOrders = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
-    const statusRank = { "待訂金": 1, "已付訂金": 2, "備車中": 3, "待交車": 4, "已交車": 5, "取消": 6 };
+    const statusRank = { "待驗證": 0, "待訂金": 1, "已付訂金": 2, "備車中": 3, "待交車": 4, "已交車": 5, "取消": 6 };
     currentOrders.sort((a, b) => {
       const statusDiff = (statusRank[a.status] || 99) - (statusRank[b.status] || 99);
       if (statusDiff !== 0) return statusDiff;
@@ -667,7 +717,7 @@ async function deleteSelectedOrders() {
   try {
     for (let index = 0; index < ids.length; index += 450) {
       const batch = writeBatch(db);
-      ids.slice(index, index + 450).forEach((id) => batch.delete(doc(db, "orders", id)));
+      ids.slice(index, index + 450).forEach((id) => batch.delete(shopDoc(db, currentContext, "orders", id)));
       await batch.commit();
     }
     selectedOrderIds.clear();
@@ -751,7 +801,7 @@ function receiptHtml(order, type, receiptId) {
   const tilt = ((Math.random() - .5) * 1.4).toFixed(2) + "deg";
   return `
     <section class="doc-sheet receipt-sheet" data-file="${escapeHtml(receiptId)}">
-      <div class="doc-brand"><p>找小宇買微電，不走彎路</p><h1>小宇微電</h1><h2>${title}</h2></div>
+      <div class="doc-brand"><p>${escapeHtml(activeSlogan())}</p><h1>${escapeHtml(activeBrand())}</h1><h2>${title}</h2></div>
       <div class="doc-meta">
         <div class="doc-field"><span>收據編號</span><strong>${escapeHtml(receiptId)}</strong></div>
         <div class="doc-field"><span>開立日期</span><strong>${displayDate(todayString())}</strong></div>
@@ -767,8 +817,8 @@ function receiptHtml(order, type, receiptId) {
         <div class="doc-field"><span>尚未收款</span><strong>${formatMoney(calculateUnpaid(order))}</strong></div>
         <div class="doc-field"><span>款項用途</span><strong>${depositReceipt ? "車輛訂金／保留車輛" : "交車尾款"}</strong></div>
       </div>
-      <p class="doc-note">本收據由「小宇微電｜訂單系統」依實際收款資料開立，請妥善保存。訂單內容、交車安排及退款條件依雙方實際約定辦理。</p>
-      <div class="doc-footer"><div><strong>官方 LINE：${escapeHtml(uiConfig.lineId || "@762eqvlg")}</strong><br><small>系統開立・可依收據編號查核</small></div><div class="doc-stamp">小宇微電<br>收訖</div></div>
+      <p class="doc-note">本收據由「${escapeHtml(activeBrand())}｜訂單系統」依實際收款資料開立，請妥善保存。訂單內容、交車安排及退款條件依雙方實際約定辦理。</p>
+      <div class="doc-footer"><div><strong>官方 LINE：${escapeHtml(activeLineId())}</strong><br><small>系統開立・可依收據編號查核</small></div><div class="doc-stamp">${escapeHtml(activeBrand())}<br>收訖</div></div>
     </section>`;
 }
 async function createAndShowReceipt(order, type) {
@@ -780,7 +830,7 @@ async function createAndShowReceipt(order, type) {
     return;
   }
   try {
-    await setDoc(doc(db, "receipts", receiptId), {
+    await setDoc(shopDoc(db, currentContext, "receipts", receiptId), {
       receiptId, orderId: order.id, type, amount, customerName: order.customerName, model: order.model, color: order.color,
       price: numberValue(order.price), deposit: numberValue(order.deposit), balancePaid: numberValue(order.balancePaid),
       paymentMethod: order.paymentMethod || "", issuedAt: serverTimestamp(), issuedBy: currentUser.uid
@@ -796,7 +846,7 @@ async function createAndShowReceipt(order, type) {
 function warrantyHtml(order, warrantyId, warrantyUrl, dates) {
   return `
     <section class="doc-sheet warranty-sheet" data-file="${escapeHtml(warrantyId)}">
-      <div class="doc-brand"><p>找小宇買微電，不走彎路</p><h1>小宇微電</h1><h2>車輛保固卡</h2></div>
+      <div class="doc-brand"><p>${escapeHtml(activeSlogan())}</p><h1>${escapeHtml(activeBrand())}</h1><h2>車輛保固卡</h2></div>
       <div class="warranty-layout">
         <div class="doc-meta">
           <div class="doc-field"><span>保固編號</span><strong>${escapeHtml(warrantyId)}</strong></div>
@@ -813,7 +863,7 @@ function warrantyHtml(order, warrantyId, warrantyUrl, dates) {
       <div class="amount-box"><span>整車保固期限</span><strong>${displayDate(dates.delivery)} ～ ${displayDate(dates.vehicleEnd)}</strong><span style="margin-top:12px">電池保固期限</span><strong style="font-size:24px">${displayDate(dates.delivery)} ～ ${displayDate(dates.batteryEnd)}</strong></div>
       <div class="check-list"><strong>保固範圍：依交車時約定之整車、電機、控制器、儀表及線組保固內容辦理。</strong><span>不保固：人為損壞、泡水、事故、耗材自然磨損、非授權改裝或拆修。</span><span>維修前請先聯絡官方 LINE，未經確認自行拆修可能影響保固。</span></div>
       <p class="doc-note">QR Code 公開頁僅顯示遮蔽後的車主與車架資料，不顯示電話、地址、售價及收款資訊。</p>
-      <div class="doc-footer"><div><strong>官方 LINE：${escapeHtml(uiConfig.lineId || "@762eqvlg")}</strong><br><small>${escapeHtml(warrantyUrl)}</small></div><div class="doc-stamp">保固<br>有效</div></div>
+      <div class="doc-footer"><div><strong>官方 LINE：${escapeHtml(activeLineId())}</strong><br><small>${escapeHtml(warrantyUrl)}</small></div><div class="doc-stamp">保固<br>有效</div></div>
     </section>`;
 }
 async function createAndShowWarranty(order) {
@@ -834,13 +884,13 @@ async function createAndShowWarranty(order) {
     vehicleWarrantyEnd: dates.vehicleEnd,
     batteryWarrantyEnd: dates.batteryEnd,
     terms: "整車保固一年、電池保固六個月；人為損壞、泡水、事故、耗材自然磨損及非授權改裝或拆修不在保固範圍內。",
-    lineId: uiConfig.lineId || "@762eqvlg",
+    lineId: activeLineId(),
     updatedAt: serverTimestamp(),
     updatedBy: currentUser.uid
   };
   try {
-    await setDoc(doc(db, "warranties", warrantyId), publicWarranty, { merge: true });
-    await updateDoc(doc(db, "orders", order.id), { warrantyId, updatedAt: serverTimestamp(), updatedBy: currentUser.uid });
+    await setDoc(shopDoc(db, currentContext, "warranties", warrantyId), publicWarranty, { merge: true });
+    await updateDoc(shopDoc(db, currentContext, "orders", order.id), { warrantyId, updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
     currentDocumentName = `${warrantyId}-${order.customerName}`;
     showDocument("車輛保固卡", warrantyHtml(order, warrantyId, warrantyUrl, dates));
     requestAnimationFrame(() => {
@@ -855,7 +905,7 @@ async function createAndShowWarranty(order) {
 function deliveryCardHtml(order) {
   const customer = order.customerName ? `${order.customerName.slice(0, 1)}先生／小姐` : "新車主";
   const date = order.deliveredAt || order.deliveryDate || todayString();
-  return `<section class="doc-sheet delivery-card" data-file="delivery-${escapeHtml(order.id)}"><p>小宇微電｜交車紀錄</p><div class="big">🎉 恭喜交車 🎉</div><p>${escapeHtml(customer)}</p><div class="car-name">${escapeHtml(order.color)} ${escapeHtml(order.model)}</div><p>${escapeHtml(order.battery || "")}｜${escapeHtml(order.deliveryMode || "到府交車")}</p><p>${displayDate(date)}</p><div class="slogan">找小宇買微電，不走彎路</div><div class="line">官方 LINE：${escapeHtml(uiConfig.lineId || "@762eqvlg")}</div></section>`;
+  return `<section class="doc-sheet delivery-card" data-file="delivery-${escapeHtml(order.id)}"><p>${escapeHtml(activeBrand())}｜交車紀錄</p><div class="big">🎉 恭喜交車 🎉</div><p>${escapeHtml(customer)}</p><div class="car-name">${escapeHtml(order.color)} ${escapeHtml(order.model)}</div><p>${escapeHtml(order.battery || "")}｜${escapeHtml(order.deliveryMode || "到府交車")}</p><p>${displayDate(date)}</p><div class="slogan">${escapeHtml(activeSlogan())}</div><div class="line">官方 LINE：${escapeHtml(activeLineId())}</div></section>`;
 }
 function showDeliveryCard(order) {
   currentDocumentName = `交車卡-${order.id}-${order.customerName}`;
@@ -872,12 +922,15 @@ function buildTextMap(order) {
   const deliveryDone = order.status === "已交車" || Boolean(order.deliveredAt);
   const action = deliveryDone ? "順利完成交車" : "已完成下訂，準備安排交車";
   const licenseText = normalizeInsuranceHandling(order.licenseMode) === "代辦" ? "可協助代辦領牌與強制險" : "由車主自行辦理領牌與強制險";
+  const brand = activeBrand();
+  const slogan = activeSlogan();
+  const hashtag = activeHashtag();
   return {
-    "Facebook": `🎉 ${vehicle} ${action}！\n\n感謝車主對小宇微電的信任😊\n這次選擇的是 ${order.model}｜${order.color}｜${order.battery || "電池版本依訂單"}。\n\n✔ 全台可安排配送\n✔ 家用插座即可充電\n✔ ${licenseText}\n✔ 完整售後與保固服務\n\n想了解車款、現貨或最新優惠，歡迎加入官方 LINE：${uiConfig.lineId || "@762eqvlg"}\n\n#小宇微電 #微型電動二輪 #電動車 #${String(order.model || "").replaceAll(" ", "")} #到府交車`,
-    "Instagram": `${vehicle} ${deliveryDone ? "交車成功" : "訂購完成"}🛵✨\n\n感謝車主支持！\n📍全台配送\n📍領牌強制險可代辦／自行辦理\n📍售後保固\n\n官方 LINE：${uiConfig.lineId || "@762eqvlg"}\n\n#小宇微電 #微型電動二輪 #電動車 #交車日常`,
+    "Facebook": `🎉 ${vehicle} ${action}！\n\n感謝車主對${brand}的信任😊\n這次選擇的是 ${order.model}｜${order.color}｜${order.battery || "電池版本依訂單"}。\n\n✔ 全台可安排配送\n✔ 家用插座即可充電\n✔ ${licenseText}\n✔ 完整售後與保固服務\n\n想了解車款、現貨或最新優惠，歡迎加入官方 LINE：${activeLineId()}\n\n${hashtag} #微型電動二輪 #電動車 #${String(order.model || "").replaceAll(" ", "")} #到府交車`,
+    "Instagram": `${vehicle} ${deliveryDone ? "交車成功" : "訂購完成"}🛵✨\n\n感謝車主支持！\n📍全台配送\n📍領牌強制險可代辦／自行辦理\n📍售後保固\n\n官方 LINE：${activeLineId()}\n\n${hashtag} #微型電動二輪 #電動車 #交車日常`,
     "Threads": `今天${deliveryDone ? "交了一台" : "接到一台訂單"} ${vehicle}。\n\n${order.color}實車真的很好看，照片跟現場的感覺又不太一樣。想看其他顏色或車款的，也可以直接留言或私訊我。`,
-    "限時動態": `🎉 ${deliveryDone ? "今日交車" : "訂購完成"}\n${vehicle}\n${order.deliveryMode || "全台配送"}\n找小宇買微電，不走彎路\nLINE：${uiConfig.lineId || "@762eqvlg"}`,
-    "影片口白": `今天跟大家分享的是${order.color}的${order.model}。這台已經${deliveryDone ? "順利完成交車" : "完成下訂，接下來會安排備車與配送"}。感謝車主選擇小宇微電，有車款、續航、領牌或分期問題，都可以直接加入官方 LINE 詢問。`,
+    "限時動態": `🎉 ${deliveryDone ? "今日交車" : "訂購完成"}\n${vehicle}\n${order.deliveryMode || "全台配送"}\n${slogan}\nLINE：${activeLineId()}`,
+    "影片口白": `今天跟大家分享的是${order.color}的${order.model}。這台已經${deliveryDone ? "順利完成交車" : "完成下訂，接下來會安排備車與配送"}。感謝車主選擇${brand}，有車款、續航、領牌或分期問題，都可以直接加入官方 LINE 詢問。`,
     "收到訂金 LINE": `您好😊 已收到您的訂金，${order.color}${order.model}已正式為您保留。\n\n訂單編號：${order.id}\n已收訂金：${formatMoney(order.deposit)}\n待付尾款：${formatMoney(calculateUnpaid(order))}\n領牌強制險：${normalizeInsuranceHandling(order.licenseMode)}\n\n後續文件或送車安排確認後，我會再提前通知您，請留意陌生來電，謝謝您的信任🙏`,
     "送車提醒 LINE": `您好😊 您的${order.color}${order.model}即將安排送車。\n\n送車地址：${order.address}\n交車方式：${order.deliveryMode || "到府交車"}\n領牌強制險：${normalizeInsuranceHandling(order.licenseMode)}\n\n送車前會有專人電話聯繫，還請您留意陌生來電，避免漏接，謝謝您🙏`,
     "自行辦理領牌強制險 LINE": `您好😊 您本次選擇自行辦理領牌與強制險，請依監理機關規定完成辦理；如有資料問題可直接聯絡我協助確認。`
@@ -901,7 +954,7 @@ function exportCsv() {
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = `小宇微電訂單-${todayString()}.csv`;
+  link.download = `${activeBrand()}訂單-${todayString()}.csv`;
   link.click();
   URL.revokeObjectURL(link.href);
 }
@@ -920,7 +973,7 @@ async function handleOrderAction(button) {
   if (action === "delete") {
     if (!confirm(`確定刪除訂單 ${order.id}？已開立的保固卡不會自動刪除。`)) return;
     try {
-      await deleteDoc(doc(db, "orders", order.id));
+      await deleteDoc(shopDoc(db, currentContext, "orders", order.id));
       showToast("訂單已刪除");
       await loadOrders();
     } catch (error) {
@@ -978,6 +1031,8 @@ elements.orderList.addEventListener("click", (event) => {
   if (button) handleOrderAction(button);
 });
 elements.loginBtn.addEventListener("click", beginGoogleLogin);
+$("#emailLoginBtn").addEventListener("click", beginEmailLogin);
+$("#adminPasswordInput").addEventListener("keydown", (event) => { if (event.key === "Enter") beginEmailLogin(); });
 elements.switchAccountBtn.addEventListener("click", beginGoogleLogin);
 elements.copyUidBtn.addEventListener("click", async () => {
   if (!auth.currentUser) return;
@@ -1105,8 +1160,9 @@ async function start() {
           await signOut(auth);
           return;
         }
-        if (!(await isAdminUser(user))) return showDenied(user);
-        await showApp(user);
+        const context = await isAdminUser(user);
+        if (!context) return showDenied(user);
+        await showApp(user, context);
       } catch (error) {
         console.error(error);
         showLoggedOut();

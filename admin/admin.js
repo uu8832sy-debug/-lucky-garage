@@ -272,6 +272,7 @@ function openProductModal(productId) {
   $("#editStyleInput").value = p.style || "";
   $("#editTagInput").value = p.tag || "";
   $("#editColorsInput").value = Array.isArray(p.colors) ? p.colors.join("、") : "";
+  $("#editDescriptionInput").value = p.description || "";
   $("#editPriceLeadInput").value = Number(p.priceLead || 0);
   $("#editPriceLithiumInput").value = Number(p.priceLithium || 0) || "";
   $("#editVisibleInput").checked = p.visible !== false;
@@ -354,6 +355,7 @@ async function saveProduct() {
     name:$("#editNameInput").value.trim(),
     style:$("#editStyleInput").value.trim(),
     tag:$("#editTagInput").value.trim(),
+    description:$("#editDescriptionInput").value.trim(),
     colors,
     priceLead:Math.max(0,Number($("#editPriceLeadInput").value)||0),
     priceLithium:$("#editPriceLithiumInput").value===""?null:Math.max(0,Number($("#editPriceLithiumInput").value)||0),

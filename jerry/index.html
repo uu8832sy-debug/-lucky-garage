@@ -23,7 +23,7 @@
         <span><small>GOGORO 社區店</small><strong id="brandName">傑瑞電動車</strong></span>
       </a>
       <nav class="nav-links">
-        <a href="#services">服務</a><a href="#products">車款</a><a href="#prices">價目</a><a href="#cases">案例</a><a href="#contact">門市</a>
+        <a href="#services">服務</a><a href="#products">車款</a><a href="#cases">案例</a><a href="#contact">門市</a>
       </nav>
       <a id="headerCta" class="btn btn-black" href="#contact">LINE 詢問</a>
     </div>
@@ -71,13 +71,6 @@
       </div>
     </section>
 
-    <section id="prices" class="section price-section">
-      <div class="wrap">
-        <div class="section-head"><div><p class="eyebrow">PRICE</p><h2>新車價目。</h2></div><p>實際售價、規格與現場活動，以門市最新報價為準。</p></div>
-        <div id="priceGrid" class="price-grid"></div>
-      </div>
-    </section>
-
     <section id="cases" class="section cases-section">
       <div class="wrap">
         <div class="section-head"><div><p class="eyebrow">REAL WORKS</p><h2>施工照就是最好的介紹。</h2></div><p>維修、改裝、交車案例由後台持續更新。</p></div>
@@ -90,7 +83,7 @@
         <div class="assurance-grid">
           <article><span>電池</span><h3>鋰電 1 年</h3><p>鉛酸 6 個月</p></article>
           <article><span>車輛</span><h3>馬達・控制器 1 年</h3><p>依保固條件與檢測結果</p></article>
-          <article><span>付款</span><h3>現金・LINE Pay・信用卡</h3><p>信用卡滿 NT$1,500 可使用</p></article>
+          <article><span>付款</span><h3>現金・LINE Pay・信用卡</h3><p>代辦領牌 + NT$2,500；信用卡加收 3.5%</p></article>
           <article><span>分期</span><h3>多期方案</h3><p>前台即時試算月付</p></article>
         </div>
       </div>
@@ -118,7 +111,7 @@
     </section>
   </main>
 
-  <footer><div class="wrap footer-row"><span>© <span id="year"></span> <b id="footerBrand">傑瑞電動車</b></span><a href="/admin/">管理員登入</a></div></footer>
+  <footer><div class="wrap footer-row"><span>© <span id="year"></span> <b id="footerBrand">傑瑞電動車</b></span></div></footer>
 
   <div id="financeModal" class="finance-modal" hidden>
     <div class="finance-backdrop" data-close-finance></div>
@@ -126,6 +119,7 @@
       <button class="finance-close" type="button" data-close-finance aria-label="關閉">×</button>
       <p class="eyebrow">PAYMENT CALCULATOR</p><h2 id="financeTitle">分期試算</h2><p id="financeProduct" class="finance-product"></p>
       <div class="finance-inputs"><label>車價<input id="financePrice" type="number" min="0" step="1"></label><label>頭期款<input id="financeDownPayment" type="number" min="0" step="1"></label></div>
+      <label class="finance-label"><input id="financeLicense" type="checkbox" checked> 代辦領牌 + NT$2,500</label>
       <div><span class="finance-label">選擇期數</span><div id="financeTerms" class="finance-terms"></div></div>
       <div class="finance-results"><div><span>刷卡總額</span><b id="cardTotal">—</b></div><div><span>分期總額</span><b id="installmentTotal">—</b></div><div class="monthly"><span>每月月付</span><b id="monthlyPayment">—</b></div></div>
       <p id="financeNote" class="finance-note"></p><a id="financeLine" class="btn btn-black full-btn" href="https://line.me/R/ti/p/@882npfrm" target="_blank">帶著試算結果 LINE 詢問</a>

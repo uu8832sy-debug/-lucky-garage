@@ -4,7 +4,7 @@ import { getDoc, getFirestore, serverTimestamp, setDoc } from "https://www.gstat
 import { resolveShopContext, shopDoc } from "../multi-shop-core.js";
 
 const TERMS = [3,6,12,18,24,30,36];
-const DEFAULTS = { cardSurcharge:3, minimumCardAmount:1500, defaultDownPayment:0, roundAmounts:true, plans:{3:{enabled:true,feePercent:3},6:{enabled:true,feePercent:5},12:{enabled:true,feePercent:8},18:{enabled:false,feePercent:10},24:{enabled:true,feePercent:12},30:{enabled:false,feePercent:15},36:{enabled:false,feePercent:18}} };
+const DEFAULTS = { cardSurcharge:3.5, minimumCardAmount:1500, defaultDownPayment:0, roundAmounts:true, plans:{3:{enabled:true,feePercent:3},6:{enabled:true,feePercent:5},12:{enabled:true,feePercent:8},18:{enabled:false,feePercent:10},24:{enabled:true,feePercent:12},30:{enabled:false,feePercent:15},36:{enabled:false,feePercent:18}} };
 const app = initializeApp(window.LUCKY_GARAGE_FIREBASE_CONFIG || {}), auth = getAuth(app), db = getFirestore(app), $ = s => document.querySelector(s);
 let context;
 

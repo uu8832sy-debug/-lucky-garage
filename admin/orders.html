@@ -31,7 +31,11 @@
 
     <section id="loginCard" class="card login-card">
       <h2>管理員登入</h2>
-      <p>請使用管理員 Google 帳號登入。建議用 Safari 或 Chrome，不要在 LINE 內建瀏覽器開啟。</p>
+      <p>請使用已授權的管理員帳號登入。</p>
+      <input id="adminEmailInput" type="email" autocomplete="username" placeholder="管理員 Email" />
+      <input id="adminPasswordInput" type="password" autocomplete="current-password" placeholder="密碼" />
+      <button id="emailLoginBtn" class="primary" type="button">Email／密碼登入</button>
+      <p class="note">或使用原本的 Google 管理員登入</p>
       <button id="loginBtn" class="primary" type="button">使用 Google 登入</button>
       <p id="loginMessage" class="message"></p>
     </section>
@@ -111,7 +115,7 @@
 
             <label><span>車架號</span><input id="chassisNo" maxlength="60" /></label>
             <label><span>電池編號</span><input id="batteryNo" maxlength="60" /></label>
-            <label><span>領牌強制險</span><select id="licenseMode"><option>代辦</option><option>自行辦理</option></select></label>
+            <label><span>領牌強制險</span><select id="licenseMode"><option>代辦（另加 NT$2,500）</option><option>自行辦理</option></select></label>
             <label><span>交車方式</span><select id="deliveryMode"><option>到府交車</option><option>自取</option><option>貨運配送</option></select></label>
 
             <label><span>成交價</span><input id="price" type="number" inputmode="numeric" min="0" step="1" value="0" /></label>
@@ -120,11 +124,11 @@
             <label><span>已收訂金</span><input id="deposit" type="number" inputmode="numeric" min="0" step="1" value="0" /></label>
 
             <label><span>已收尾款</span><input id="balancePaid" type="number" inputmode="numeric" min="0" step="1" value="0" /></label>
-            <label><span>付款方式</span><select id="paymentMethod"><option>轉帳</option><option>現金</option><option>無卡分期</option><option>其他</option></select></label>
-            <label><span>訂單狀態</span><select id="status"><option>待訂金</option><option>已付訂金</option><option>備車中</option><option>待交車</option><option>已交車</option><option>取消</option></select></label>
+            <label><span>付款方式</span><select id="paymentMethod"><option>轉帳</option><option>現金</option><option>信用卡（另加 3.5%）</option><option>無卡分期</option><option>其他</option></select></label>
+            <label><span>訂單狀態</span><select id="status"><option>待驗證</option><option>待訂金</option><option>已付訂金</option><option>備車中</option><option>待交車</option><option>已交車</option><option>取消</option></select></label>
             <label><span>實際交車日</span><input id="deliveredAt" type="date" /></label>
 
-            <label class="span-four"><span>備註／特殊需求</span><textarea id="notes" rows="3" maxlength="500" placeholder="例如：客人自行領牌、送車前先電話聯絡"></textarea></label>
+            <label class="span-four"><span>備註／特殊需求</span><textarea id="notes" rows="3" maxlength="500" placeholder="例如：客人自行領牌、送車前先電話聯絡"></textarea><small>傑瑞計價規則：代辦領牌 + NT$2,500；信用卡付款加 3.5%。成交價請填最終議定總額。</small></label>
           </div>
           <div class="money-preview">
             <span>未收金額</span><strong id="unpaidPreview">NT$0</strong>
@@ -166,7 +170,7 @@
           </div>
           <div class="filters">
             <input id="searchInput" type="search" placeholder="搜尋姓名、電話、地址、車款、訂單編號" />
-            <select id="statusFilter"><option value="">全部狀態</option><option>待訂金</option><option>已付訂金</option><option>備車中</option><option>待交車</option><option>已交車</option><option>取消</option></select>
+            <select id="statusFilter"><option value="">全部狀態</option><option>待驗證</option><option>待訂金</option><option>已付訂金</option><option>備車中</option><option>待交車</option><option>已交車</option><option>取消</option></select>
             <button id="refreshOrdersBtn" class="secondary compact" type="button">重新整理</button>
             <button id="exportCsvBtn" class="secondary compact" type="button">匯出 CSV</button>
           </div>

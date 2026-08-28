@@ -120,9 +120,11 @@ fs.writeFileSync(path.join(outDir,"installment.html"),`<!doctype html>\n<html la
 
 // Overlay multi-shop runtime files that are intentionally maintained outside the legacy ZIP payload.
 copyRuntimeFile("multi-shop-core.js");
+copyRuntimeFile("admin/index.html");
 copyRuntimeFile("admin/admin.js");
 copyRuntimeFile("admin/shop-branding.js");
 for(const file of [
+  "orders.html","orders.js","orders.css",
   "platform.html","platform.js",
   "site-settings.html","site-settings.js",
   "cases.html","cases.js",
@@ -143,7 +145,7 @@ patchText("admin/index.html",(html)=>html.includes("shop-branding.js")?html.repl
 fs.writeFileSync(path.join(outDir,"BUILD_VERSION.txt"),"32.1.4-multishop\n","utf8");
 const required=[
   "index.html","products.html","plate.html","installment.html","garage.html","warranty.html",
-  "admin/index.html","admin/admin.js","admin/shop-branding.js","admin/platform.html","admin/site-settings.html","admin/cases.html","admin/payment-settings.html","admin/payment-settings.js",
+  "admin/index.html","admin/admin.js","admin/shop-branding.js","admin/orders.html","admin/orders.js","admin/orders.css","admin/platform.html","admin/site-settings.html","admin/cases.html","admin/payment-settings.html","admin/payment-settings.js",
   "multi-shop-core.js","jerry/index.html","jerry/app.js","jerry/style.css","jerry/finance.css","jerry/hero.css","jerry/admin-logo.png",
   "assets/brand/logo-round.webp","public-theme-v32.css","admin/admin-theme-v32.css"
 ];
