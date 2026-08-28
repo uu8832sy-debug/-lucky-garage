@@ -49,9 +49,25 @@ for (const fileName of ["commerce.js","catalog.js"]) {
 const frontPath=path.resolve("public/jerry/index.html");
 if(!fs.existsSync(frontPath)) throw new Error("Jerry storefront missing");
 let front=fs.readFileSync(frontPath,"utf8");
+const fixedMapUrl='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent('新北市樹林區保安街一段366號');
 front=front.replace('<script src="/jerry/installment.js?v=2"></script>','<script type="module" src="/jerry/installment.js?v=3"></script>');
+front=front.replace(/(<a\s+id=["']mapBtn["'][^>]*?href=)["'][^"']*["']/i,`$1"${fixedMapUrl}"`);
 front=front.replace(/\s*<script[^>]*data-jerry-fixed-nav[^>]*>[\s\S]*?<\/script>/gi,"");
-const navScript=`<script data-jerry-fixed-nav>(function(){var u='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent('新北市樹林區保安街一段366號');function f(){var b=document.getElementById('mapBtn');if(!b)return;if(b.getAttribute('href')!==u)b.setAttribute('href',u);b.setAttribute('target','_blank');b.setAttribute('rel','noopener');b.setAttribute('aria-label','導航至傑瑞電動車｜新北市樹林區保安街一段366號');}f();document.addEventListener('DOMContentLoaded',f,{once:true});setTimeout(f,500);setTimeout(f,1500);var o=new MutationObserver(f);o.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['href']});})();</script>`;
+const navScript=`<script data-jerry-fixed-nav>(function(){var u='${fixedMapUrl}';function f(){var b=document.getElementById('mapBtn');if(!b)return;if(b.getAttribute('href')!==u)b.setAttribute('href',u);b.setAttribute('target','_blank');b.setAttribute('rel','noopener');b.setAttribute('aria-label','導航至傑瑞電動車｜新北市樹林區保安街一段366號');}f();document.addEventListener('DOMContentLoaded',f,{once:true});setTimeout(f,500);setTimeout(f,1500);var o=new MutationObserver(f);o.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['href']});})();</script>`;
 front=front.replace("</body>",`${navScript}\n</body>`);
 fs.writeFileSync(frontPath,front,"utf8");
-console.log("Jerry final overrides applied: complete storefront, Cloudinary uploads, editable cases, backend-driven installment, LINE prefills, fixed navigation.");
+
+// Shared admin detail pages are also used by XiaoYu. When ?shop=jerry is present,
+// every "back to admin" link must return to Jerry admin instead of /admin/index.html.
+for (const name of ["site-settings.html","payment-settings.html","cases.html"]) {
+  const filePath=path.resolve("public/admin",name);
+  if(!fs.existsSync(filePath)) throw new Error(`Missing shared admin page: ${name}`);
+  let page=fs.readFileSync(filePath,"utf8");
+  page=page.replace(/<a\s+href=["']index\.html["']([^>]*)>← 回後台<\/a>/i,'<a href="/admin/index.html" data-admin-back$1>← 回後台</a>');
+  page=page.replace(/\s*<script[^>]*data-jerry-admin-back[^>]*>[\s\S]*?<\/script>/gi,"");
+  const backScript=`<script data-jerry-admin-back>/* JERRY_ADMIN_BACK_LINK_V1 */(function(){var q=new URLSearchParams(location.search);if(q.get('shop')!=='jerry')return;var a=document.querySelector('[data-admin-back]');if(a)a.href='/jerry/admin.html?shop=jerry';})();</script>`;
+  page=page.replace("</body>",`${backScript}\n</body>`);
+  fs.writeFileSync(filePath,page,"utf8");
+}
+
+console.log("Jerry final overrides applied: complete storefront, Cloudinary uploads, editable cases, backend-driven installment, LINE prefills, fixed navigation, Jerry-safe admin back links.");
