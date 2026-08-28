@@ -23,7 +23,6 @@
       <label>日期／時段<input id="reservationDateTime" type="datetime-local" required></label>
       <label>貴姓<input id="reservationSurname" type="text" maxlength="20" placeholder="例如：陳先生／陳小姐" required></label>
       <label>手機<input id="reservationPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="09xxxxxxxx" required></label>
-      <label>車牌<input id="reservationPlate" type="text" maxlength="12" placeholder="例如：ABC-1234" required></label>
       <p class="jerry-reservation-note">送出後會直接開啟傑瑞官方 LINE，預約內容會自動帶入，您只要按傳送即可。</p>
       <p id="reservationStatus" class="jerry-reservation-status" aria-live="polite"></p>
       <button class="btn btn-black full-btn jerry-reservation-submit" type="submit">送出預約 → LINE</button>
@@ -33,7 +32,6 @@
   const dateTime = document.querySelector('#reservationDateTime');
   const surname = document.querySelector('#reservationSurname');
   const phone = document.querySelector('#reservationPhone');
-  const plate = document.querySelector('#reservationPlate');
   const status = document.querySelector('#reservationStatus');
 
   const now = new Date();
@@ -43,21 +41,17 @@
   phone.addEventListener('input', () => {
     phone.value = phone.value.replace(/\D/g, '').slice(0, 10);
   });
-  plate.addEventListener('input', () => {
-    plate.value = plate.value.toUpperCase().replace(/\s+/g, '');
-  });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const values = {
       dateTime: dateTime.value.trim(),
       surname: surname.value.trim(),
-      phone: phone.value.trim(),
-      plate: plate.value.trim()
+      phone: phone.value.trim()
     };
 
-    if (!values.dateTime || !values.surname || !values.phone || !values.plate) {
-      status.textContent = '請先把四個欄位填完整。';
+    if (!values.dateTime || !values.surname || !values.phone) {
+      status.textContent = '請先把三個欄位填完整。';
       return;
     }
     if (!/^09\d{8}$/.test(values.phone)) {
@@ -72,7 +66,6 @@
       `日期／時段：${formattedDate}`,
       `貴姓：${values.surname}`,
       `手機：${values.phone}`,
-      `車牌：${values.plate}`,
       '',
       '麻煩店家協助確認預約，謝謝。'
     ].join('\n');
