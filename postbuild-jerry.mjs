@@ -14,16 +14,7 @@ if (!html.includes(marker)) {
 
 const publicJerryDir = path.resolve("public/jerry");
 fs.mkdirSync(publicJerryDir, { recursive:true });
-const jerryStaticFiles = [
-  "reservation.js",
-  "shop-photos.js",
-  "catalog.js",
-  "wheel.svg",
-  "mechanic.svg",
-  "workshop.svg",
-  "thumbs.svg",
-  "storefront.svg"
-];
+const jerryStaticFiles = ["reservation.js","shop-photos.js","catalog.js","wheel.svg","mechanic.svg","workshop.svg","thumbs.svg","storefront.svg"];
 for (const fileName of jerryStaticFiles) {
   const source = path.resolve("jerry", fileName);
   const target = path.join(publicJerryDir, fileName);
@@ -38,10 +29,7 @@ jerryHtml = jerryHtml
   .replace(/\s*<script[^>]+src=["']\/jerry\/reservation\.js[^"']*["'][^>]*><\/script>/gi, "")
   .replace(/\s*<script[^>]+src=["']\/jerry\/shop-photos\.js[^"']*["'][^>]*><\/script>/gi, "")
   .replace(/\s*<script[^>]+src=["']\/jerry\/catalog\.js[^"']*["'][^>]*><\/script>/gi, "");
-jerryHtml = jerryHtml.replace(
-  "</body>",
-  '  <script src="/jerry/reservation.js?v=3"></script>\n  <script src="/jerry/shop-photos.js?v=2"></script>\n  <script type="module" src="/jerry/catalog.js?v=1"></script>\n</body>'
-);
+jerryHtml = jerryHtml.replace("</body>",'  <script src="/jerry/reservation.js?v=3"></script>\n  <script src="/jerry/shop-photos.js?v=2"></script>\n  <script type="module" src="/jerry/catalog.js?v=2"></script>\n</body>');
 fs.writeFileSync(jerryIndexPath, jerryHtml, "utf8");
 
 const jerryAdminPath = path.resolve("public/jerry/admin.html");
