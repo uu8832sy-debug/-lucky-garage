@@ -20,4 +20,10 @@ if (!jerryHtml.includes('/jerry/reservation.js')) {
   fs.writeFileSync(jerryIndexPath, jerryHtml, "utf8");
 }
 
-console.log("Jerry custom-domain redirect and reservation LINE handoff injected");
+const jerryAdminPath = path.resolve("public/jerry/admin.html");
+if (!fs.existsSync(jerryAdminPath)) throw new Error("public/jerry/admin.html missing after build");
+let jerryAdminHtml = fs.readFileSync(jerryAdminPath, "utf8");
+jerryAdminHtml = jerryAdminHtml.replace(/\/admin\/admin\.js\?v=[^\"']+/g, "/admin/admin.js?v=32.3");
+fs.writeFileSync(jerryAdminPath, jerryAdminHtml, "utf8");
+
+console.log("Jerry custom-domain redirect, reservation LINE handoff, and admin cache bust injected");
