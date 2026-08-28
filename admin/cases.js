@@ -8,9 +8,22 @@ const app = initializeApp(window.LUCKY_GARAGE_FIREBASE_CONFIG || {});
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const CLOUDINARY_CLOUD_NAME = "k6e9e4bl";
+const CLOUDINARY_UPLOAD_PRESET = "jerry_products_unsigned";
 const $ = (selector) => document.querySelector(selector);
 let context = null;
 let cases = [];
+
+async function uploadToCloudinary(file, folder) {
+  const body = new FormData();
+  body.append("file", file);
+  body.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  body.append("folder", folder);
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method:"POST", body });
+  const result = await response.json();
+  if (!response.ok || !result.secure_url) throw new Error(result?.error?.message || "Cloudinary 圖片上傳失敗");
+  return { url:result.secure_url, publicId:result.public_id, provider:"cloudinary", isPrimary:true };
+}
 
 function escapeHtml(value) {
   return String(value ?? "").replace(/[&<>'"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
@@ -84,13 +97,16 @@ async function saveCase() {
   let images = Array.isArray(existing.images) ? existing.images : [];
   const file = $("#photo").files?.[0];
   if (file) {
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const prefix = shopStoragePrefix(context);
-    const path = `${prefix ? prefix + "/" : ""}cases/${id}/${Date.now()}_${safeName}`;
-    const objectRef = ref(storage, path);
-    await uploadBytes(objectRef, file, { contentType:file.type || "image/jpeg" });
-    const url = await getDownloadURL(objectRef);
-    images = [{ url, path, isPrimary:true }];
+    if (context.legacy) {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `cases/${id}/${Date.now()}_${safeName}`;
+      const objectRef = ref(storage, path);
+      await uploadBytes(objectRef, file, { contentType:file.type || "image/jpeg" });
+      const url = await getDownloadURL(objectRef);
+      images = [{ url, path, provider:"firebase", isPrimary:true }];
+    } else {
+      images = [await uploadToCloudinary(file, `shops/${context.shopId}/cases/${id}`)];
+    }
   }
   await setDoc(shopDoc(db, context, "deliveryCases", id), {
     title,

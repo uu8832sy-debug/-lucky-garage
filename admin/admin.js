@@ -35,10 +35,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const CLOUDINARY_CLOUD_NAME = "k6e9e4bl";
+const CLOUDINARY_UPLOAD_PRESET = "jerry_products_unsigned";
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
-const JERRY_PREVIEW_ADMIN = "https://lucky-garage-git-multi-shop-admin-uu8832sr-7011s-projects.vercel.app/admin/index.html?shop=jerry";
-const isJerryCustomDomain = /(^|\.)jerrye-bike\.com$/i.test(location.hostname);
 
 const DEFAULT_PRODUCTS = [
   { id:"scooter-1", order:1, name:"大偉士", style:"頂規改裝版", tag:"72V", visible:true, priceLead:35000, priceLithium:58800, colors:["黑色","白色","灰色"], images:[] },
@@ -94,7 +94,7 @@ function installPasswordLogin() {
     <input id="adminEmailInput" type="email" autocomplete="username" placeholder="管理員 Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm" />
     <input id="adminPasswordInput" type="password" autocomplete="current-password" placeholder="密碼" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm" />
     <button id="emailLoginBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl"><i class="fa-solid fa-right-to-bracket mr-2"></i>Email／密碼登入</button>
-    <div class="text-center text-[10px] text-slate-500">店家 Email 帳號需先由平台管理員建立；或使用 Google 管理員登入</div>`;
+    <div class="text-center text-[10px] text-slate-500">或使用原本的 Google 管理員登入</div>`;
   googleBtn.before(wrap);
   $("#emailLoginBtn").addEventListener("click", beginEmailLogin);
   $("#adminPasswordInput").addEventListener("keydown", (event) => { if (event.key === "Enter") beginEmailLogin(); });
@@ -110,20 +110,12 @@ async function beginEmailLogin() {
     await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
     console.error(error);
-    const code = String(error?.code || "");
-    $("#loginMessage").textContent = code.includes("invalid-credential") || code.includes("user-not-found")
-      ? "這組店家帳號尚未建立，或密碼不正確。可先用 Google 管理員登入。"
-      : `登入失敗：${code || error?.message || "未知錯誤"}`;
+    $("#loginMessage").textContent = "登入失敗，請確認帳號密碼與 Firebase Email/Password 登入是否已啟用。";
   } finally {
     $("#emailLoginBtn").disabled = false;
   }
 }
 async function beginGoogleLogin() {
-  if (isJerryCustomDomain) {
-    $("#loginMessage").textContent = "正在前往管理登入頁…";
-    location.assign(JERRY_PREVIEW_ADMIN);
-    return;
-  }
   $("#loginMessage").textContent = "正在開啟 Google 登入…";
   $("#loginBtn").disabled = true;
   try {
@@ -138,12 +130,7 @@ async function beginGoogleLogin() {
       await signInWithRedirect(auth, provider);
       return;
     }
-    if (code.includes("unauthorized-domain")) {
-      $("#loginMessage").textContent = "此網址尚未加入 Firebase 授權網域，正在改用可登入的管理網址…";
-      setTimeout(() => location.assign(JERRY_PREVIEW_ADMIN), 500);
-      return;
-    }
-    $("#loginMessage").textContent = `登入失敗：${code || error?.message || "未知錯誤"}`;
+    $("#loginMessage").textContent = error?.message || "登入失敗。";
   } finally {
     $("#loginBtn").disabled = false;
   }
@@ -305,6 +292,16 @@ function renderGallery(product) {
   $$(".set-primary").forEach((button) => button.addEventListener("click", () => setPrimaryImage(Number(button.dataset.index))));
   $$(".delete-image").forEach((button) => button.addEventListener("click", () => deleteImage(Number(button.dataset.index))));
 }
+async function uploadToCloudinary(file, folder) {
+  const body = new FormData();
+  body.append("file", file);
+  body.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  body.append("folder", folder);
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method:"POST", body });
+  const result = await response.json();
+  if (!response.ok || !result.secure_url) throw new Error(result?.error?.message || "Cloudinary 圖片上傳失敗");
+  return { url:result.secure_url, publicId:result.public_id, provider:"cloudinary" };
+}
 async function uploadImages(files) {
   const context = requireContext();
   const product = products.find((p) => p.id === editingProductId);
@@ -313,12 +310,17 @@ async function uploadImages(files) {
   for (let i=0;i<files.length;i+=1) {
     const file = files[i];
     $("#uploadProgressText").textContent = `上傳 ${i+1}/${files.length}`;
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
-    const path = `${shopStoragePrefix(context)}/products/${product.id}/${Date.now()}_${i}_${safeName}`;
-    const objectRef = ref(storage,path);
-    await uploadBytes(objectRef,file,{ contentType:file.type || "image/jpeg" });
-    const url = await getDownloadURL(objectRef);
-    product.images.push({ url, path, isPrimary:product.images.length===0 });
+    if (context.legacy) {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+      const path = `products/${product.id}/${Date.now()}_${i}_${safeName}`;
+      const objectRef = ref(storage,path);
+      await uploadBytes(objectRef,file,{ contentType:file.type || "image/jpeg" });
+      const url = await getDownloadURL(objectRef);
+      product.images.push({ url, path, provider:"firebase", isPrimary:product.images.length===0 });
+    } else {
+      const uploaded = await uploadToCloudinary(file, `shops/${context.shopId}/products/${product.id}`);
+      product.images.push({ ...uploaded, isPrimary:product.images.length===0 });
+    }
   }
   await setDoc(shopDoc(db, context, "products", product.id), { images:product.images, shopId:context.shopId, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
   $("#uploadProgressText").textContent = "上傳完成";
@@ -337,7 +339,7 @@ async function deleteImage(index) {
   const product = products.find((p) => p.id === editingProductId);
   const image = product?.images?.[index];
   if (!product || !image || !confirm("確定刪除這張照片？")) return;
-  if (image.path) { try { await deleteObject(ref(storage,image.path)); } catch (error) { console.warn(error); } }
+  if (image.path && image.provider !== "cloudinary") { try { await deleteObject(ref(storage,image.path)); } catch (error) { console.warn(error); } }
   product.images.splice(index,1);
   if (product.images.length && !product.images.some((img) => img.isPrimary)) product.images[0].isPrimary = true;
   await setDoc(shopDoc(db, context, "products", product.id), { images:product.images, shopId:context.shopId, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
