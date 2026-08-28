@@ -13,7 +13,7 @@ if(!html.includes(marker)){
 
 const publicJerryDir=path.resolve("public/jerry");
 fs.mkdirSync(publicJerryDir,{recursive:true});
-const jerryStaticFiles=["reservation.js","shop-photos.js","catalog.js","stability.css","admin-products.js","orders.html","orders.js","wheel.svg","mechanic.svg","workshop.svg","thumbs.svg","storefront.svg"];
+const jerryStaticFiles=["reservation.js","shop-photos.js","catalog.js","carousel.js","installment.js","online-review.js","stability.css","admin-products.js","orders.html","orders.js","wheel.svg","mechanic.svg","workshop.svg","thumbs.svg","storefront.svg"];
 for(const fileName of jerryStaticFiles){
   const source=path.resolve("jerry",fileName),target=path.join(publicJerryDir,fileName);
   if(!fs.existsSync(source))throw new Error(`Jerry static file missing: ${source}`);
@@ -26,10 +26,8 @@ let jerryHtml=fs.readFileSync(jerryIndexPath,"utf8");
 if(!/rel=["']icon["']/i.test(jerryHtml))jerryHtml=jerryHtml.replace("</title>",'</title>\n  <link rel="icon" type="image/png" href="/jerry/admin-logo.png" />\n  <link rel="apple-touch-icon" href="/jerry/admin-logo.png" />');
 if(!jerryHtml.includes('/jerry/stability.css'))jerryHtml=jerryHtml.replace(/(<link rel="stylesheet" href="\/jerry\/styles\.css[^>]*>)/i,'$1\n  <link rel="stylesheet" href="/jerry/stability.css?v=2" />');
 jerryHtml=jerryHtml
-  .replace(/\s*<script[^>]+src=["']\/jerry\/reservation\.js[^"']*["'][^>]*><\/script>/gi,"")
-  .replace(/\s*<script[^>]+src=["']\/jerry\/shop-photos\.js[^"']*["'][^>]*><\/script>/gi,"")
-  .replace(/\s*<script[^>]+src=["']\/jerry\/catalog\.js[^"']*["'][^>]*><\/script>/gi,"");
-jerryHtml=jerryHtml.replace("</body>",'  <script src="/jerry/reservation.js?v=4"></script>\n  <script src="/jerry/shop-photos.js?v=3"></script>\n  <script type="module" src="/jerry/catalog.js?v=3"></script>\n</body>');
+  .replace(/\s*<script[^>]+src=["']\/jerry\/(reservation|shop-photos|catalog|carousel|installment)\.js[^"']*["'][^>]*><\/script>/gi,"");
+jerryHtml=jerryHtml.replace("</body>",'  <script src="/jerry/carousel.js?v=1"></script>\n  <script src="/jerry/reservation.js?v=4"></script>\n  <script src="/jerry/shop-photos.js?v=3"></script>\n  <script type="module" src="/jerry/catalog.js?v=4"></script>\n  <script src="/jerry/installment.js?v=1"></script>\n</body>');
 fs.writeFileSync(jerryIndexPath,jerryHtml,"utf8");
 
 // One owner per storefront area: app.js only settings/payment, catalog.js owns products, shop-photos.js owns cases.
@@ -45,21 +43,28 @@ if(fs.existsSync(commerceJsPath)){
   commerceJs=commerceJs.replace(/(async function renderCommerceProducts\(\)\{[\s\S]*?)renderCards\(\);(\}catch)/,"$1$2");
   commerceJs=commerceJs.replace(/if\(grid\)\{new MutationObserver\([\s\S]*?\.observe\(grid,\{childList:true\}\);\}/g,"");
   commerceJs=commerceJs.replace(/injectModals\(\);\s*renderCommerceProducts\(\);/,`injectModals();\nwindow.JerryCommerce={order:(name,label,price)=>{const key=String(name||'').replace(/\\s/g,'').toLowerCase();const p=products.find(x=>String(x.name||'').replace(/\\s/g,'').toLowerCase().includes(key))||{id:'catalog-fixed',name,style:'',images:[],colors:[]};openOrder(p,{key:'catalog',label,price:Number(price)||0});}};\nrenderCommerceProducts();`);
+  // Public submissions must stay in the review queue. Only admin approval promotes them to formal orders.
+  commerceJs=commerceJs.replace(/doc\(db,"shops",SHOP_ID,"orders",orderId\)/g,'doc(db,"shops",SHOP_ID,"onlineOrders",orderId)');
+  commerceJs=commerceJs.replace(/status:"待驗證"/g,'status:"待審核",reviewStatus:"pending"');
+  commerceJs=commerceJs.replace(/<h2>訂單等待驗證<\/h2>/g,'<h2>訂單已送出，等待店家確認</h2>');
+  commerceJs=commerceJs.replace(/店家核對後訂單才正式成立。/g,'店家會先在後台確認；確認後才會正式加入訂單管理。');
   fs.writeFileSync(commerceJsPath,commerceJs,"utf8");
 }
 
 const jerryAdminPath=path.resolve("public/jerry/admin.html");
 if(!fs.existsSync(jerryAdminPath))throw new Error("public/jerry/admin.html missing after build");
 let jerryAdminHtml=fs.readFileSync(jerryAdminPath,"utf8");
-jerryAdminHtml=jerryAdminHtml.replace(/\/admin\/admin\.js\?v=[^\"']+/g,"/admin/admin.js?v=32.5");
+jerryAdminHtml=jerryAdminHtml.replace(/\/admin\/admin\.js\?v=[^\"']+/g,"/admin/admin.js?v=32.6");
 if(!/rel=["']icon["']/i.test(jerryAdminHtml))jerryAdminHtml=jerryAdminHtml.replace("</title>",'</title>\n  <link rel="icon" type="image/png" href="/jerry/admin-logo.png" />\n  <link rel="apple-touch-icon" href="/jerry/admin-logo.png" />');
 if(!jerryAdminHtml.includes('/admin/orders.html?shop=jerry')){
   jerryAdminHtml=jerryAdminHtml.replace('lg:grid-cols-5','lg:grid-cols-6');
   jerryAdminHtml=jerryAdminHtml.replace('</nav>','<a href="/admin/orders.html?shop=jerry" class="bg-slate-900 border border-slate-800 text-fuchsia-300 font-black rounded-xl p-3 text-xs text-center"><i class="fa-solid fa-clipboard-list mr-1"></i>完整訂單管理</a></nav>');
 }
 jerryAdminHtml=jerryAdminHtml.replace(/href=["']\/jerry\/orders\.html["']/g,'href="/admin/orders.html?shop=jerry"');
-jerryAdminHtml=jerryAdminHtml.replace(/\s*<script[^>]+src=["']\/jerry\/admin-products\.js[^"']*["'][^>]*><\/script>/gi,"");
-jerryAdminHtml=jerryAdminHtml.replace("</body>",'  <script type="module" src="/jerry/admin-products.js?v=1"></script>\n</body>');
+jerryAdminHtml=jerryAdminHtml
+  .replace(/\s*<script[^>]+src=["']\/jerry\/admin-products\.js[^"']*["'][^>]*><\/script>/gi,"")
+  .replace(/\s*<script[^>]+src=["']\/jerry\/online-review\.js[^"']*["'][^>]*><\/script>/gi,"");
+jerryAdminHtml=jerryAdminHtml.replace("</body>",'  <script type="module" src="/jerry/admin-products.js?v=1"></script>\n  <script type="module" src="/jerry/online-review.js?v=1"></script>\n</body>');
 fs.writeFileSync(jerryAdminPath,jerryAdminHtml,"utf8");
 
 const sharedOrdersPath=path.resolve("public/admin/orders.html");
@@ -71,4 +76,4 @@ if(!sharedOrdersHtml.includes(ordersBrandMarker)){
   sharedOrdersHtml=sharedOrdersHtml.replace(/<head(\s[^>]*)?>/i,m=>`${m}\n  ${brandingScript}`);
 }
 fs.writeFileSync(sharedOrdersPath,sharedOrdersHtml,"utf8");
-console.log("Jerry storefront stabilized: single render owner, compact hero, fixed catalog, orders preserved");
+console.log("Jerry storefront: carousel, installment calculator, review-first online orders, and formal-order approval flow enabled");
