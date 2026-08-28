@@ -161,6 +161,7 @@ async function showAdmin(user, context) {
   $("#headerActions").classList.remove("hidden");
   $("#headerActions").classList.add("flex");
   const shopName = context.shop?.name || context.shop?.displayName || context.shopId;
+  $("#seedProductsBtn").classList.toggle("hidden", !context.legacy);
   $("#adminIdentity").textContent = `${shopName}｜${user.email || user.uid}`;
   document.title = `${shopName}｜管理員後台`;
   await Promise.all([loadOrders(), loadProducts()]);
@@ -202,7 +203,7 @@ function renderOrders() {
     tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">沒有符合的訂單</td></tr>';
     return;
   }
-  const statuses = ["待訂金","已付訂金","備車中","待交車","已交車","取消"];
+  const statuses = ["待驗證","待訂金","已付訂金","備車中","待交車","已交車","取消"];
   tbody.innerHTML = list.map((o) => `<tr class="hover:bg-slate-900/50">
     <td class="p-3 text-emerald-400 font-bold">${escapeHtml(o.orderNo)}</td>
     <td class="p-3"><strong class="text-white block">${escapeHtml(o.customerName)}</strong><small class="text-slate-500">${escapeHtml(o.phone)}</small></td>
@@ -231,7 +232,7 @@ async function loadProducts() {
   tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">讀取商品中…</td></tr>';
   try {
     const snap = await getDocs(shopCollection(db, context, "products"));
-    products = snap.docs.map((item) => ({ id:item.id, ...item.data() })).sort((a,b) => Number(a.order||999)-Number(b.order||999));
+    products = snap.docs.map((item) => ({ id:item.id, ...item.data() })).filter((item) => context.legacy || item.approvedForJerry === true).sort((a,b) => Number(a.order||999)-Number(b.order||999));
     renderProducts();
   } catch (error) {
     console.error(error);
@@ -241,7 +242,7 @@ async function loadProducts() {
 function renderProducts() {
   const tbody = $("#adminProductTableBody");
   if (!products.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">尚未建立商品，請按「建立／補齊 12 款預設商品」。</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">尚未建立傑瑞商品，請按「新增車款」。</td></tr>';
     return;
   }
   tbody.innerHTML = products.map((p) => `<tr class="hover:bg-slate-900/50"><td class="p-3 text-emerald-400">${Array.isArray(p.images)?p.images.length:0} 張</td><td class="p-3 font-bold text-white">${escapeHtml(p.name)}</td><td class="p-3 text-slate-400">${escapeHtml(p.style||"")}</td><td class="p-3">${money(p.priceLead)}</td><td class="p-3">${Number(p.priceLithium||0)>0?money(p.priceLithium):"不提供"}</td><td class="p-3">${p.visible===false?'<span class="text-rose-400">隱藏</span>':'<span class="text-emerald-400">顯示</span>'}</td><td class="p-3 text-right"><button class="edit-product text-emerald-400 underline" data-product-id="${escapeHtml(p.id)}">管理</button></td></tr>`).join("");
@@ -292,6 +293,18 @@ function renderGallery(product) {
   grid.innerHTML = images.map((img,i) => `<div class="relative rounded-xl overflow-hidden border ${img.isPrimary?'border-emerald-500':'border-slate-800'}"><img src="${escapeHtml(img.url)}" class="w-full h-24 object-cover" /><div class="absolute inset-x-0 bottom-0 bg-slate-950/90 p-1 flex gap-1 justify-center">${img.isPrimary?'<span class="text-[9px] text-emerald-400 px-1">主圖</span>':`<button class="set-primary bg-emerald-500 text-slate-950 px-1.5 rounded text-[9px]" data-index="${i}">設主圖</button>`}<button class="delete-image bg-rose-500 text-white px-1.5 rounded text-[9px]" data-index="${i}">刪除</button></div></div>`).join("");
   $$(".set-primary").forEach((button) => button.addEventListener("click", () => setPrimaryImage(Number(button.dataset.index))));
   $$(".delete-image").forEach((button) => button.addEventListener("click", () => deleteImage(Number(button.dataset.index))));
+}
+async function createProduct() {
+  const context = requireContext();
+  const id = `jerry-${Date.now()}`;
+  await setDoc(shopDoc(db, context, "products", id), {
+    name:"新車款", style:"", tag:"JERRY E-BIKE", description:"", colors:[],
+    priceLead:0, priceLithium:null, images:[], visible:false,
+    approvedForJerry:!context.legacy, shopId:context.shopId,
+    createdAt:serverTimestamp(), updatedAt:serverTimestamp(), updatedBy:currentUser.uid
+  });
+  await loadProducts();
+  openProductModal(id);
 }
 async function uploadToCloudinary(file, folder) {
   const body = new FormData();
@@ -360,6 +373,7 @@ async function saveProduct() {
     priceLead:Math.max(0,Number($("#editPriceLeadInput").value)||0),
     priceLithium:$("#editPriceLithiumInput").value===""?null:Math.max(0,Number($("#editPriceLithiumInput").value)||0),
     visible:$("#editVisibleInput").checked,
+    approvedForJerry:context.legacy ? Boolean(product.approvedForJerry) : true,
     shopId:context.shopId,
     updatedAt:serverTimestamp(),
     updatedBy:currentUser.uid
@@ -384,6 +398,7 @@ $("#logoutBtn").addEventListener("click",()=>signOut(auth));
 $("#refreshOrdersBtn").addEventListener("click",loadOrders);
 $("#orderSearch").addEventListener("input",renderOrders);
 $("#refreshProductsBtn").addEventListener("click",loadProducts);
+$("#newProductBtn").addEventListener("click",()=>createProduct().catch((e)=>{console.error(e);showToast("新增車款失敗");}));
 $("#seedProductsBtn").addEventListener("click",()=>seedProducts().catch((e)=>{console.error(e);showToast("建立商品失敗");}));
 $$(".admin-tab").forEach((button)=>button.addEventListener("click",()=>switchTab(button.dataset.adminTab)));
 $("#closeProductModalBtn").addEventListener("click",closeProductModal);

@@ -114,7 +114,7 @@ async function loadProducts() {
   try {
     const snap = await getDocs(collection(db, "shops", SHOP_ID, "products"));
     const products = snap.docs.map((item) => ({ id:item.id, ...item.data() }))
-      .filter((item) => item.visible !== false)
+      .filter((item) => item.visible !== false && item.approvedForJerry === true)
       .sort((a,b) => Number(a.order || 999) - Number(b.order || 999));
     if (!products.length) {
       grid.innerHTML = '<div class="empty-card">目前現車由店家整理中。新車公開價格可先看上方價目表，實際庫存請直接 LINE 詢問。</div>';
