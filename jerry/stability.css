@@ -1,0 +1,20 @@
+/* Jerry storefront stability + mobile hero hotfix */
+html,body{overflow-x:hidden}
+.hero-visual{background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.16),transparent 42%)!important;background-image:radial-gradient(circle at 50% 42%,rgba(255,255,255,.16),transparent 42%)!important}
+.hero-visual.has-photo{background-image:radial-gradient(circle at 50% 42%,rgba(255,255,255,.16),transparent 42%)!important}
+@media(max-width:680px){
+  .hero-grid{display:flex!important;flex-direction:column!important;min-height:auto!important;padding:18px 0 26px!important;gap:18px!important}
+  .hero-visual{order:0!important;width:100%!important;min-height:205px!important;border-radius:26px!important}
+  .hero-logo-disc{width:138px!important;max-width:42vw!important;border-width:5px!important;box-shadow:0 16px 38px rgba(0,0,0,.24)!important}
+  .hero-label{left:18px!important;right:18px!important;bottom:8px!important;min-height:34px!important;padding:7px 11px!important;border-radius:12px!important;font-size:8px!important;line-height:1.2!important;align-items:center!important}
+  .hero-copy{order:1!important;width:100%!important}
+  .community-pill{padding:6px 10px 6px 12px!important}
+  .community-pill b{font-size:16px!important}
+  .hero-brand-name{margin:12px 0 3px!important;font-size:15px!important}
+  .hero h1{font-size:36px!important;line-height:1.05!important;letter-spacing:-.04em!important}
+  .hero-copy>p:last-of-type{margin:10px 0 0!important;font-size:14px!important;line-height:1.5!important}
+  .hero-actions{display:flex!important;gap:8px!important;margin-top:15px!important}
+  .hero-actions .btn{flex:1!important;min-height:46px!important;padding:0 12px!important}
+  .strip-inner{min-height:44px!important;gap:18px!important}
+  .strip-inner b{font-size:15px!important}.strip-inner span{font-size:11px!important}
+}
