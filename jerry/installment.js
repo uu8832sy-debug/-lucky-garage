@@ -1,3 +1,10 @@
+import { getApps, getApp, initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+import { doc, getDoc, getFirestore } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
+
+const SHOP_ID = "jerry";
+const app = getApps().length ? getApp() : initializeApp(window.LUCKY_GARAGE_FIREBASE_CONFIG || {});
+const db = getFirestore(app);
+
 (() => {
   if (document.querySelector('#jerryInstallment')) return;
   const productsSection = document.querySelector('#products');
@@ -11,8 +18,18 @@
     '極酷': {dual:false, variants:[['48V 12Ah 鉛酸',20000],['48V 20Ah 鉛酸',23000],['48V 20Ah 鋰電',29000],['48V 30Ah 鋰電',33000]]}
   };
 
-  const FEES={3:3,6:5,9:6,12:7.5,18:9.5,24:12,30:14.5,36:17};
-  const terms=Object.keys(FEES).map(Number);
+  const DEFAULT_PLANS = {
+    3:{enabled:true,feePercent:3},
+    6:{enabled:true,feePercent:5},
+    12:{enabled:true,feePercent:8},
+    18:{enabled:false,feePercent:10},
+    24:{enabled:true,feePercent:12},
+    30:{enabled:false,feePercent:15},
+    36:{enabled:false,feePercent:18}
+  };
+  let plans = {...DEFAULT_PLANS};
+  let terms = [];
+  let term = 12;
   const money=n=>`NT$${Math.round(Number(n)||0).toLocaleString('zh-TW')}`;
 
   const style=document.createElement('style');
@@ -35,10 +52,16 @@
   const phone=document.querySelector('#jiPhone');
   const termsBox=document.querySelector('#jiTerms');
   const line=document.querySelector('#jiLine');
-  let term=12;
 
   model.innerHTML=Object.keys(MODELS).map(x=>`<option>${x}</option>`).join('');
-  termsBox.innerHTML=terms.map(t=>`<button type="button" data-term="${t}" class="${t===term?'active':''}">${t}期</button>`).join('');
+
+  const renderTerms=()=>{
+    terms=Object.entries(plans).filter(([,value])=>value?.enabled).map(([key])=>Number(key)).filter(Number.isFinite).sort((a,b)=>a-b);
+    if(!terms.length) terms=[12];
+    if(!terms.includes(term)) term=terms.includes(12)?12:terms[0];
+    termsBox.innerHTML=terms.map(t=>`<button type="button" data-term="${t}" class="${t===term?'active':''}">${t}期</button>`).join('');
+    termsBox.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{term=Number(btn.dataset.term);termsBox.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===btn));calc();}));
+  };
 
   const calc=()=>{
     const data=MODELS[model.value];
@@ -46,7 +69,7 @@
     const special=data.dual&&edition.value==='special';
     const base=Number(row[special?2:1])||0;
     const principal=base+(license.value==='agent'?2500:0);
-    const fee=FEES[term]||0;
+    const fee=Number(plans[term]?.feePercent)||0;
     const total=Math.round(principal*(1+fee/100));
     const monthly=Math.round(total/term);
     document.querySelector('#jiMonthly').textContent=money(monthly);
@@ -93,6 +116,23 @@
   edition.addEventListener('change',calc);
   license.addEventListener('change',calc);
   phone.addEventListener('input',()=>{phone.value=phone.value.replace(/\D/g,'').slice(0,10);calc();});
-  termsBox.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{term=Number(btn.dataset.term);termsBox.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===btn));calc();}));
+
+  async function loadPaymentSettings(){
+    try{
+      const snap=await getDoc(doc(db,'shops',SHOP_ID,'siteSettings','payment'));
+      const data=snap.exists()?snap.data():{};
+      const remote=data?.plans||{};
+      plans={...DEFAULT_PLANS};
+      Object.keys(DEFAULT_PLANS).forEach(key=>{plans[key]={...DEFAULT_PLANS[key],...(remote[key]||{})};});
+    }catch(error){
+      console.warn('Jerry installment settings fallback.',error);
+      plans={...DEFAULT_PLANS};
+    }
+    renderTerms();
+    calc();
+  }
+
+  renderTerms();
   fillBattery();
+  loadPaymentSettings();
 })();
