@@ -6,12 +6,12 @@ const app = getApps().length ? getApp() : initializeApp(window.LUCKY_GARAGE_FIRE
 const db = getFirestore(app);
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
-const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+const esc = (value) => String(value ?? "").replace(/[&<>'\"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'\"':"&quot;"}[c]));
 
 const placeholderItems = [
-  { title:"維修施工", caption:"短影音上架後會顯示在這裡", poster:"/jerry/mechanic.svg?v=2" },
-  { title:"保養紀錄", caption:"影片不會在首頁一次全部載入", poster:"/jerry/wheel.svg?v=2" },
-  { title:"店內實拍", caption:"滑到這一區才會準備影片", poster:"/jerry/workshop.svg?v=2" }
+  { title:"維修施工", caption:"實際維修與施工紀錄", poster:"/jerry/mechanic.svg?v=2" },
+  { title:"保養紀錄", caption:"日常保養與檢修分享", poster:"/jerry/wheel.svg?v=2" },
+  { title:"店內實拍", caption:"門市現場與完工實拍", poster:"/jerry/workshop.svg?v=2" }
 ];
 
 function injectStyles() {
@@ -100,7 +100,7 @@ function ensureSection(items) {
   section.className = "section";
   const hasVideos = items.length > 0;
   const displayItems = hasVideos ? items.slice(0,8) : placeholderItems;
-  section.innerHTML = `<div class="wrap"><div class="short-video-head"><div><p class="eyebrow">JERRY SHORTS</p><h2>短影音。<br>施工現場直接看。</h2></div><p>影片採延遲載入，滑到這一區才準備影片；一次只播放一支，不拖慢首頁。</p></div><div class="short-video-track">${displayItems.map((item,index)=>cardHtml(item,index,!hasVideos)).join("")}</div><div class="short-video-tip">↔ 手機可左右滑動｜影片不會在首頁一次全部下載</div></div>`;
+  section.innerHTML = `<div class="wrap"><div class="short-video-head"><div><p class="eyebrow">JERRY SHORTS</p><h2>短影音。<br>施工現場直接看。</h2></div><p>維修、保養、改裝與實車紀錄，直接看現場。</p></div><div class="short-video-track">${displayItems.map((item,index)=>cardHtml(item,index,!hasVideos)).join("")}</div><div class="short-video-tip">↔ 手機可左右滑動查看更多</div></div>`;
   anchor.before(section);
   const nav = $(".nav-links");
   if (nav && !nav.querySelector('a[href="#short-videos"]')) {
