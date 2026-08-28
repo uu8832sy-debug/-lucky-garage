@@ -12,4 +12,12 @@ if (!html.includes(marker)) {
   fs.writeFileSync(indexPath, html, "utf8");
 }
 
-console.log("Jerry custom-domain redirect injected into public/index.html");
+const jerryIndexPath = path.resolve("public/jerry/index.html");
+if (!fs.existsSync(jerryIndexPath)) throw new Error("public/jerry/index.html missing after build");
+let jerryHtml = fs.readFileSync(jerryIndexPath, "utf8");
+if (!jerryHtml.includes('/jerry/reservation.js')) {
+  jerryHtml = jerryHtml.replace('</body>', '  <script src="/jerry/reservation.js?v=1"></script>\n</body>');
+  fs.writeFileSync(jerryIndexPath, jerryHtml, "utf8");
+}
+
+console.log("Jerry custom-domain redirect and reservation LINE handoff injected");
