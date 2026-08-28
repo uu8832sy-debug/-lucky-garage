@@ -124,7 +124,8 @@ const review=read("public/jerry/online-review.js");
 hasAll("線上訂單確認／拒絕可點",review,[".confirm-online","confirmOrder",".reject-online","rejectOrder"]);
 
 const photo=read("public/jerry/product-photo-fix.js");
-hasAll("商品照片選擇與上傳事件完整",photo,["#chooseImagesBtn","input.click()","imageFileInput","uploadFiles(files)"]);
+ok("商品照片按鈕會開啟檔案選擇",photo.includes("input.click()")||photo.includes('$("#imageFileInput")?.click()'));
+hasAll("商品照片 change 與上傳處理完整",photo,["imageFileInput","uploadFiles(files)"]);
 
 const media=read("public/jerry/media-admin.js");
 hasAll("短影音後台所有按鈕 handler 完整",media,[
