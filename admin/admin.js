@@ -74,8 +74,10 @@ function formatDate(value) {
   return ms ? new Intl.DateTimeFormat("zh-TW", { dateStyle:"short", timeStyle:"short" }).format(new Date(ms)) : "—";
 }
 function showToast(message) {
-  $("#toastMsg").textContent = message;
+  const msg = $("#toastMsg");
   const t = $("#toast");
+  if (!msg || !t) return;
+  msg.textContent = message;
   t.classList.remove("translate-y-20", "opacity-0");
   setTimeout(() => t.classList.add("translate-y-20", "opacity-0"), 2600);
 }
@@ -96,28 +98,40 @@ function installPasswordLogin() {
     <button id="emailLoginBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl"><i class="fa-solid fa-right-to-bracket mr-2"></i>Email／密碼登入</button>
     <div class="text-center text-[10px] text-slate-500">或使用原本的 Google 管理員登入</div>`;
   googleBtn.before(wrap);
-  $("#emailLoginBtn").addEventListener("click", beginEmailLogin);
-  $("#adminPasswordInput").addEventListener("keydown", (event) => { if (event.key === "Enter") beginEmailLogin(); });
+  $("#emailLoginBtn")?.addEventListener("click", beginEmailLogin);
+  $("#adminPasswordInput")?.addEventListener("keydown", (event) => { if (event.key === "Enter") beginEmailLogin(); });
 }
 
 async function beginEmailLogin() {
   const email = $("#adminEmailInput")?.value.trim() || "";
   const password = $("#adminPasswordInput")?.value || "";
   if (!email || !password) return showToast("請輸入 Email 與密碼");
-  $("#loginMessage").textContent = "登入中…";
-  $("#emailLoginBtn").disabled = true;
+  const message = $("#loginMessage");
+  const button = $("#emailLoginBtn");
+  if (message) message.textContent = "登入中…";
+  if (button) button.disabled = true;
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    await Promise.race([
+      signInWithEmailAndPassword(auth, email, password),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("登入逾時，請重新整理後再試一次")), 12000))
+    ]);
   } catch (error) {
     console.error(error);
-    $("#loginMessage").textContent = "登入失敗，請確認帳號密碼與 Firebase Email/Password 登入是否已啟用。";
+    const code = String(error?.code || "");
+    let text = error?.message || "登入失敗";
+    if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found")) text = "帳號或密碼錯誤";
+    else if (code.includes("operation-not-allowed")) text = "Firebase 尚未啟用 Email／密碼登入";
+    else if (code.includes("too-many-requests")) text = "嘗試次數過多，請稍後再試";
+    if (message) message.textContent = text;
   } finally {
-    $("#emailLoginBtn").disabled = false;
+    if (button) button.disabled = false;
   }
 }
 async function beginGoogleLogin() {
-  $("#loginMessage").textContent = "正在開啟 Google 登入…";
-  $("#loginBtn").disabled = true;
+  const message = $("#loginMessage");
+  const button = $("#loginBtn");
+  if (message) message.textContent = "正在開啟 Google 登入…";
+  if (button) button.disabled = true;
   try {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt:"select_account" });
@@ -130,39 +144,40 @@ async function beginGoogleLogin() {
       await signInWithRedirect(auth, provider);
       return;
     }
-    $("#loginMessage").textContent = error?.message || "登入失敗。";
+    if (message) message.textContent = error?.message || "登入失敗。";
   } finally {
-    $("#loginBtn").disabled = false;
+    if (button) button.disabled = false;
   }
 }
 function showLoggedOut() {
   currentUser = null;
   currentContext = null;
-  $("#loginCard").classList.remove("hidden");
-  $("#deniedCard").classList.add("hidden");
-  $("#adminApp").classList.add("hidden");
-  $("#headerActions").classList.add("hidden");
-  $("#headerActions").classList.remove("flex");
+  $("#loginCard")?.classList.remove("hidden");
+  $("#deniedCard")?.classList.add("hidden");
+  $("#adminApp")?.classList.add("hidden");
+  $("#headerActions")?.classList.add("hidden");
+  $("#headerActions")?.classList.remove("flex");
 }
 function showDenied(user, message = "此帳號沒有管理權限") {
   currentUser = user;
   currentContext = null;
-  $("#loginCard").classList.add("hidden");
-  $("#deniedCard").classList.remove("hidden");
-  $("#adminApp").classList.add("hidden");
-  $("#deniedMessage").textContent = `${message}｜${user?.email || user?.uid || "未知帳號"}`;
+  $("#loginCard")?.classList.add("hidden");
+  $("#deniedCard")?.classList.remove("hidden");
+  $("#adminApp")?.classList.add("hidden");
+  const denied = $("#deniedMessage");
+  if (denied) denied.textContent = `${message}｜${user?.email || user?.uid || "未知帳號"}`;
 }
 async function showAdmin(user, context) {
   currentUser = user;
   currentContext = context;
-  $("#loginCard").classList.add("hidden");
-  $("#deniedCard").classList.add("hidden");
-  $("#adminApp").classList.remove("hidden");
-  $("#headerActions").classList.remove("hidden");
-  $("#headerActions").classList.add("flex");
+  $("#loginCard")?.classList.add("hidden");
+  $("#deniedCard")?.classList.add("hidden");
+  $("#adminApp")?.classList.remove("hidden");
+  $("#headerActions")?.classList.remove("hidden");
+  $("#headerActions")?.classList.add("flex");
   const shopName = context.shop?.name || context.shop?.displayName || context.shopId;
-  $("#seedProductsBtn").classList.toggle("hidden", !context.legacy);
-  $("#adminIdentity").textContent = `${shopName}｜${user.email || user.uid}`;
+  $("#seedProductsBtn")?.classList.toggle("hidden", !context.legacy);
+  if ($("#adminIdentity")) $("#adminIdentity").textContent = `${shopName}｜${user.email || user.uid}`;
   document.title = `${shopName}｜管理員後台`;
   await Promise.all([loadOrders(), loadProducts()]);
 }
@@ -185,6 +200,7 @@ function normalizeOrder(item) {
 async function loadOrders() {
   const context = requireContext();
   const tbody = $("#adminOrderTableBody");
+  if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">讀取訂單中…</td></tr>';
   try {
     const snap = await getDocs(shopCollection(db, context, "orders"));
@@ -196,9 +212,11 @@ async function loadOrders() {
   }
 }
 function renderOrders() {
-  const keyword = $("#orderSearch").value.trim().toLowerCase();
-  const list = orders.filter((o) => [o.orderNo,o.customerName,o.phone,o.address,o.model].join(" ").toLowerCase().includes(keyword));
+  const search = $("#orderSearch");
   const tbody = $("#adminOrderTableBody");
+  if (!search || !tbody) return;
+  const keyword = search.value.trim().toLowerCase();
+  const list = orders.filter((o) => [o.orderNo,o.customerName,o.phone,o.address,o.model].join(" ").toLowerCase().includes(keyword));
   if (!list.length) {
     tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">沒有符合的訂單</td></tr>';
     return;
@@ -229,6 +247,7 @@ function renderOrders() {
 async function loadProducts() {
   const context = requireContext();
   const tbody = $("#adminProductTableBody");
+  if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">讀取商品中…</td></tr>';
   try {
     const snap = await getDocs(shopCollection(db, context, "products"));
@@ -241,6 +260,7 @@ async function loadProducts() {
 }
 function renderProducts() {
   const tbody = $("#adminProductTableBody");
+  if (!tbody) return;
   if (!products.length) {
     tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">尚未建立傑瑞商品，請按「新增車款」。</td></tr>';
     return;
@@ -268,27 +288,28 @@ function openProductModal(productId) {
   editingProductId = productId;
   const p = products.find((item) => item.id === productId);
   if (!p) return;
-  $("#editModalProductTitle").textContent = `管理 ${p.name}（${p.style || ""}）`;
-  $("#editNameInput").value = p.name || "";
-  $("#editStyleInput").value = p.style || "";
-  $("#editTagInput").value = p.tag || "";
-  $("#editColorsInput").value = Array.isArray(p.colors) ? p.colors.join("、") : "";
-  $("#editDescriptionInput").value = p.description || "";
-  $("#editPriceLeadInput").value = Number(p.priceLead || 0);
-  $("#editPriceLithiumInput").value = Number(p.priceLithium || 0) || "";
-  $("#editVisibleInput").checked = p.visible !== false;
+  if ($("#editModalProductTitle")) $("#editModalProductTitle").textContent = `管理 ${p.name}（${p.style || ""}）`;
+  if ($("#editNameInput")) $("#editNameInput").value = p.name || "";
+  if ($("#editStyleInput")) $("#editStyleInput").value = p.style || "";
+  if ($("#editTagInput")) $("#editTagInput").value = p.tag || "";
+  if ($("#editColorsInput")) $("#editColorsInput").value = Array.isArray(p.colors) ? p.colors.join("、") : "";
+  if ($("#editDescriptionInput")) $("#editDescriptionInput").value = p.description || "";
+  if ($("#editPriceLeadInput")) $("#editPriceLeadInput").value = Number(p.priceLead || 0);
+  if ($("#editPriceLithiumInput")) $("#editPriceLithiumInput").value = Number(p.priceLithium || 0) || "";
+  if ($("#editVisibleInput")) $("#editVisibleInput").checked = p.visible !== false;
   renderGallery(p);
   const modal = $("#editProductModal");
-  modal.classList.remove("hidden"); modal.classList.add("flex");
+  if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
 }
 function closeProductModal() {
   const modal = $("#editProductModal");
-  modal.classList.add("hidden"); modal.classList.remove("flex");
+  if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
   editingProductId = null;
 }
 function renderGallery(product) {
   const images = Array.isArray(product.images) ? product.images : [];
   const grid = $("#productGalleryGrid");
+  if (!grid) return;
   if (!images.length) { grid.innerHTML = '<div class="col-span-full text-slate-500 text-center py-4">尚無圖片</div>'; return; }
   grid.innerHTML = images.map((img,i) => `<div class="relative rounded-xl overflow-hidden border ${img.isPrimary?'border-emerald-500':'border-slate-800'}"><img src="${escapeHtml(img.url)}" class="w-full h-24 object-cover" /><div class="absolute inset-x-0 bottom-0 bg-slate-950/90 p-1 flex gap-1 justify-center">${img.isPrimary?'<span class="text-[9px] text-emerald-400 px-1">主圖</span>':`<button class="set-primary bg-emerald-500 text-slate-950 px-1.5 rounded text-[9px]" data-index="${i}">設主圖</button>`}<button class="delete-image bg-rose-500 text-white px-1.5 rounded text-[9px]" data-index="${i}">刪除</button></div></div>`).join("");
   $$(".set-primary").forEach((button) => button.addEventListener("click", () => setPrimaryImage(Number(button.dataset.index))));
@@ -323,7 +344,7 @@ async function uploadImages(files) {
   if (!Array.isArray(product.images)) product.images = [];
   for (let i=0;i<files.length;i+=1) {
     const file = files[i];
-    $("#uploadProgressText").textContent = `上傳 ${i+1}/${files.length}`;
+    if ($("#uploadProgressText")) $("#uploadProgressText").textContent = `上傳 ${i+1}/${files.length}`;
     if (context.legacy) {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
       const path = `products/${product.id}/${Date.now()}_${i}_${safeName}`;
@@ -337,7 +358,7 @@ async function uploadImages(files) {
     }
   }
   await setDoc(shopDoc(db, context, "products", product.id), { images:product.images, shopId:context.shopId, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
-  $("#uploadProgressText").textContent = "上傳完成";
+  if ($("#uploadProgressText")) $("#uploadProgressText").textContent = "上傳完成";
   renderGallery(product); renderProducts();
 }
 async function setPrimaryImage(index) {
@@ -363,16 +384,16 @@ async function saveProduct() {
   const context = requireContext();
   const product = products.find((p) => p.id === editingProductId);
   if (!product) return;
-  const colors = $("#editColorsInput").value.split(/[、,，]/).map((v) => v.trim()).filter(Boolean);
+  const colors = ($("#editColorsInput")?.value || "").split(/[、,，]/).map((v) => v.trim()).filter(Boolean);
   const update = {
-    name:$("#editNameInput").value.trim(),
-    style:$("#editStyleInput").value.trim(),
-    tag:$("#editTagInput").value.trim(),
-    description:$("#editDescriptionInput").value.trim(),
+    name:$("#editNameInput")?.value.trim() || "",
+    style:$("#editStyleInput")?.value.trim() || "",
+    tag:$("#editTagInput")?.value.trim() || "",
+    description:$("#editDescriptionInput")?.value.trim() || "",
     colors,
-    priceLead:Math.max(0,Number($("#editPriceLeadInput").value)||0),
-    priceLithium:$("#editPriceLithiumInput").value===""?null:Math.max(0,Number($("#editPriceLithiumInput").value)||0),
-    visible:$("#editVisibleInput").checked,
+    priceLead:Math.max(0,Number($("#editPriceLeadInput")?.value)||0),
+    priceLithium:$("#editPriceLithiumInput")?.value===""?null:Math.max(0,Number($("#editPriceLithiumInput")?.value)||0),
+    visible:Boolean($("#editVisibleInput")?.checked),
     approvedForJerry:context.legacy ? Boolean(product.approvedForJerry) : true,
     shopId:context.shopId,
     updatedAt:serverTimestamp(),
@@ -383,8 +404,8 @@ async function saveProduct() {
   renderProducts(); closeProductModal(); showToast("商品設定已儲存");
 }
 function switchTab(tab) {
-  $("#admin-section-orders").classList.toggle("hidden",tab!=="orders");
-  $("#admin-section-products").classList.toggle("hidden",tab!=="products");
+  $("#admin-section-orders")?.classList.toggle("hidden",tab!=="orders");
+  $("#admin-section-products")?.classList.toggle("hidden",tab!=="products");
   $$(".admin-tab").forEach((button) => {
     const active = button.dataset.adminTab===tab;
     button.className = `admin-tab ${active?'bg-emerald-500 text-slate-950 font-black':'bg-slate-900 border border-slate-800 text-slate-300 font-bold'} rounded-xl p-3 text-xs`;
@@ -392,19 +413,19 @@ function switchTab(tab) {
 }
 
 installPasswordLogin();
-$("#loginBtn").addEventListener("click",beginGoogleLogin);
-$("#switchAccountBtn").addEventListener("click",async()=>{await signOut(auth);showLoggedOut();});
-$("#logoutBtn").addEventListener("click",()=>signOut(auth));
-$("#refreshOrdersBtn").addEventListener("click",loadOrders);
-$("#orderSearch").addEventListener("input",renderOrders);
-$("#refreshProductsBtn").addEventListener("click",loadProducts);
-$("#newProductBtn").addEventListener("click",()=>createProduct().catch((e)=>{console.error(e);showToast("新增車款失敗");}));
-$("#seedProductsBtn").addEventListener("click",()=>seedProducts().catch((e)=>{console.error(e);showToast("建立商品失敗");}));
+$("#loginBtn")?.addEventListener("click",beginGoogleLogin);
+$("#switchAccountBtn")?.addEventListener("click",async()=>{await signOut(auth);showLoggedOut();});
+$("#logoutBtn")?.addEventListener("click",()=>signOut(auth));
+$("#refreshOrdersBtn")?.addEventListener("click",loadOrders);
+$("#orderSearch")?.addEventListener("input",renderOrders);
+$("#refreshProductsBtn")?.addEventListener("click",loadProducts);
+$("#newProductBtn")?.addEventListener("click",()=>createProduct().catch((e)=>{console.error(e);showToast("新增車款失敗");}));
+$("#seedProductsBtn")?.addEventListener("click",()=>seedProducts().catch((e)=>{console.error(e);showToast("建立商品失敗");}));
 $$(".admin-tab").forEach((button)=>button.addEventListener("click",()=>switchTab(button.dataset.adminTab)));
-$("#closeProductModalBtn").addEventListener("click",closeProductModal);
-$("#chooseImagesBtn").addEventListener("click",()=>$("#imageFileInput").click());
-$("#imageFileInput").addEventListener("change",(event)=>uploadImages([...event.target.files]).catch((e)=>{console.error(e);showToast("圖片上傳失敗，請確認 Storage 規則");}));
-$("#saveProductBtn").addEventListener("click",()=>saveProduct().catch((e)=>{console.error(e);showToast("商品儲存失敗");}));
+$("#closeProductModalBtn")?.addEventListener("click",closeProductModal);
+$("#chooseImagesBtn")?.addEventListener("click",()=>$("#imageFileInput")?.click());
+$("#imageFileInput")?.addEventListener("change",(event)=>uploadImages([...event.target.files]).catch((e)=>{console.error(e);showToast("圖片上傳失敗");}));
+$("#saveProductBtn")?.addEventListener("click",()=>saveProduct().catch((e)=>{console.error(e);showToast("商品儲存失敗");}));
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) return showLoggedOut();
