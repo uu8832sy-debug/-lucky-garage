@@ -14,7 +14,7 @@ if (!html.includes(marker)) {
 
 const publicJerryDir = path.resolve("public/jerry");
 fs.mkdirSync(publicJerryDir, { recursive:true });
-const jerryStaticFiles = ["reservation.js","shop-photos.js","catalog.js","wheel.svg","mechanic.svg","workshop.svg","thumbs.svg","storefront.svg"];
+const jerryStaticFiles = ["reservation.js","shop-photos.js","catalog.js","orders.html","orders.js","wheel.svg","mechanic.svg","workshop.svg","thumbs.svg","storefront.svg"];
 for (const fileName of jerryStaticFiles) {
   const source = path.resolve("jerry", fileName);
   const target = path.join(publicJerryDir, fileName);
@@ -36,6 +36,10 @@ const jerryAdminPath = path.resolve("public/jerry/admin.html");
 if (!fs.existsSync(jerryAdminPath)) throw new Error("public/jerry/admin.html missing after build");
 let jerryAdminHtml = fs.readFileSync(jerryAdminPath, "utf8");
 jerryAdminHtml = jerryAdminHtml.replace(/\/admin\/admin\.js\?v=[^\"']+/g, "/admin/admin.js?v=32.3");
+if (!jerryAdminHtml.includes('/jerry/orders.html')) {
+  jerryAdminHtml = jerryAdminHtml.replace('lg:grid-cols-5','lg:grid-cols-6');
+  jerryAdminHtml = jerryAdminHtml.replace('</nav>', '<a href="/jerry/orders.html" class="bg-slate-900 border border-slate-800 text-fuchsia-300 font-black rounded-xl p-3 text-xs text-center"><i class="fa-solid fa-clipboard-list mr-1"></i>完整訂單管理</a></nav>');
+}
 fs.writeFileSync(jerryAdminPath, jerryAdminHtml, "utf8");
 
-console.log("Jerry fixed five-model catalog, 3-field reservation, construction photos, navigation photo, and admin cache bust injected");
+console.log("Jerry fixed five-model catalog, 3-field reservation, construction photos, navigation photo, full order manager, and admin cache bust injected");
