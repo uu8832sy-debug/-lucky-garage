@@ -49,6 +49,8 @@ function firstImage(item) {
 
 function applySettings(settings) {
   const s = { ...DEFAULTS, ...settings };
+  if (String(s.heroTitle || "").trim() === "測試") s.heroTitle = DEFAULTS.heroTitle;
+  if (String(s.heroSubtitle || "").trim() === "測試") s.heroSubtitle = DEFAULTS.heroSubtitle;
   document.documentElement.style.setProperty("--accent", s.primaryColor || DEFAULTS.primaryColor);
   document.title = `${s.brandName}｜銷售・維修・保養・改裝`;
   $("#brandName").textContent = s.brandName;
@@ -94,7 +96,7 @@ async function loadSettings() {
 }
 
 async function loadPaymentSettings() {
-  try { const snap = await getDoc(doc(db,"shops",SHOP_ID,"siteSettings","payment")); const data=snap.exists()?snap.data():{}; paymentSettings={...PAYMENT_DEFAULTS,...data,plans:{...PAYMENT_DEFAULTS.plans,...(data.plans||{})}}; }
+  try { const snap = await getDoc(doc(db,"shops",SHOP_ID,"siteSettings","payment")); const data=snap.exists()?snap.data():{}; paymentSettings={...PAYMENT_DEFAULTS,...data,cardSurcharge:3.5,plans:{...PAYMENT_DEFAULTS.plans,...(data.plans||{})}}; }
   catch(error) { console.warn("Using default payment settings.",error); }
   const enabled = Object.entries(paymentSettings.plans).filter(([,p])=>p?.enabled).map(([t])=>Number(t)).sort((a,b)=>a-b);
   if (enabled.length && !enabled.includes(selectedTerm)) selectedTerm=enabled[0];
@@ -148,7 +150,7 @@ async function loadCases() {
   try {
     const snap = await getDocs(collection(db, "shops", SHOP_ID, "deliveryCases"));
     const cases = snap.docs.map((item) => ({ id:item.id, ...item.data() }))
-      .filter((item) => item.visible !== false)
+      .filter((item) => item.visible !== false && !/^測試$/i.test(String(item.title || item.name || "").trim()))
       .sort((a,b) => Number(a.order || 999) - Number(b.order || 999));
     if (!cases.length) {
       grid.innerHTML = '<div class="empty-card">維修與改裝案例正在整理中，之後店家從後台新增就會自動顯示。</div>';
