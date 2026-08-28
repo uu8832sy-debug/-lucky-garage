@@ -48,7 +48,7 @@
       </section>
 
       <section id="admin-section-products" class="hidden space-y-4">
-        <div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-xs text-sky-400 font-bold">JERRY PRODUCTS</p><h2 class="text-xl font-black">商品、售價與實車圖庫</h2></div><div class="flex gap-2"><button id="seedProductsBtn" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">建立／補齊預設商品</button><button id="refreshProductsBtn" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">重新整理</button></div></div>
+        <div class="flex flex-wrap justify-between items-end gap-3"><div><p class="text-xs text-sky-400 font-bold">JERRY PRODUCTS</p><h2 class="text-xl font-black">商品、售價與實車圖庫</h2></div><div class="flex gap-2"><button id="newProductBtn" class="bg-sky-500 text-white px-3 py-2 rounded-xl text-xs font-bold">新增車款</button><button id="seedProductsBtn" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">建立／補齊預設商品</button><button id="refreshProductsBtn" class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-xl text-xs">重新整理</button></div></div>
         <div class="glass-card rounded-2xl overflow-x-auto"><table class="w-full text-left text-xs min-w-[800px]"><thead><tr class="border-b border-slate-800 text-slate-500"><th class="p-3">圖庫</th><th class="p-3">車款</th><th class="p-3">款式</th><th class="p-3">鉛酸售價</th><th class="p-3">鋰電售價</th><th class="p-3">前台</th><th class="p-3 text-right">操作</th></tr></thead><tbody id="adminProductTableBody" class="divide-y divide-slate-800/80"></tbody></table></div>
       </section>
     </div>
@@ -58,6 +58,7 @@
     <div class="glass-card max-w-2xl w-full max-h-[92vh] overflow-y-auto rounded-3xl p-6 space-y-5 text-xs">
       <div class="flex justify-between items-center border-b border-slate-800 pb-3"><h3 id="editModalProductTitle" class="text-lg font-bold">管理商品</h3><button id="closeProductModalBtn" class="text-slate-400 p-2"><i class="fa-solid fa-xmark text-lg"></i></button></div>
       <div class="grid sm:grid-cols-2 gap-3"><label><span class="font-bold block mb-1">車款名稱</span><input id="editNameInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">款式</span><input id="editStyleInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">標籤</span><input id="editTagInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">顏色（逗號分隔）</span><input id="editColorsInput" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">鉛酸版售價</span><input id="editPriceLeadInput" type="number" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label><label><span class="font-bold block mb-1">鋰電版售價</span><input id="editPriceLithiumInput" type="number" placeholder="不提供請留空" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" /></label></div>
+      <label><span class="font-bold block mb-1">商品說明</span><textarea id="editDescriptionInput" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3" placeholder="前台顯示的商品說明"></textarea></label>
       <label class="flex items-center gap-2"><input id="editVisibleInput" type="checkbox" class="accent-sky-500" /><span class="font-bold">顯示於傑瑞前台</span></label>
       <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3"><div class="flex justify-between items-center"><label class="font-bold"><i class="fa-solid fa-cloud-arrow-up text-sky-400 mr-2"></i>實車圖庫</label><span id="uploadProgressText" class="text-slate-400 text-[10px]"></span></div><input type="file" id="imageFileInput" multiple accept="image/*" class="hidden" /><button id="chooseImagesBtn" class="bg-slate-800 text-sky-400 border border-sky-500/30 font-bold px-4 py-2 rounded-xl"><i class="fa-solid fa-images mr-1"></i>選擇照片上傳</button><div id="productGalleryGrid" class="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-2"></div></div>
       <button id="saveProductBtn" class="w-full bg-sky-500 text-white font-black py-3 rounded-xl">儲存商品設定</button>
@@ -65,8 +66,8 @@
   </div>
 
   <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] bg-slate-100 text-slate-950 px-5 py-3 rounded-full shadow-2xl text-xs font-bold translate-y-20 opacity-0 transition-all"><span id="toastMsg"></span></div>
-  <script src="/config.js?v=32.2"></script>
-  <script src="/firebase-config.js?v=32.2"></script>
-  <script type="module" src="/admin/admin.js?v=32.2"></script>
+  <script src="/config.js?v=32.3"></script>
+  <script src="/firebase-config.js?v=32.3"></script>
+  <script type="module" src="/admin/admin.js?v=32.3"></script>
 </body>
 </html>
