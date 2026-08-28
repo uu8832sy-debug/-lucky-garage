@@ -13,7 +13,7 @@ if(!html.includes(marker)){
 
 const publicJerryDir=path.resolve("public/jerry");
 fs.mkdirSync(publicJerryDir,{recursive:true});
-const jerryStaticFiles=["reservation.js","shop-photos.js","catalog.js","carousel.js","installment.js","online-review.js","stability.css","admin-products.js","orders.html","orders.js","wheel.svg","mechanic.svg","workshop.svg","thumbs.svg","storefront.svg"];
+const jerryStaticFiles=["reservation.js","shop-photos.js","catalog.js","carousel.js","installment.js","online-review.js","short-videos.js","stability.css","admin-products.js","orders.html","orders.js","wheel.svg","mechanic.svg","workshop.svg","thumbs.svg","storefront.svg"];
 for(const fileName of jerryStaticFiles){
   const source=path.resolve("jerry",fileName),target=path.join(publicJerryDir,fileName);
   if(!fs.existsSync(source))throw new Error(`Jerry static file missing: ${source}`);
@@ -26,8 +26,8 @@ let jerryHtml=fs.readFileSync(jerryIndexPath,"utf8");
 if(!/rel=["']icon["']/i.test(jerryHtml))jerryHtml=jerryHtml.replace("</title>",'</title>\n  <link rel="icon" type="image/png" href="/jerry/admin-logo.png" />\n  <link rel="apple-touch-icon" href="/jerry/admin-logo.png" />');
 if(!jerryHtml.includes('/jerry/stability.css'))jerryHtml=jerryHtml.replace(/(<link rel="stylesheet" href="\/jerry\/styles\.css[^>]*>)/i,'$1\n  <link rel="stylesheet" href="/jerry/stability.css?v=2" />');
 jerryHtml=jerryHtml
-  .replace(/\s*<script[^>]+src=["']\/jerry\/(reservation|shop-photos|catalog|carousel|installment)\.js[^"']*["'][^>]*><\/script>/gi,"");
-jerryHtml=jerryHtml.replace("</body>",'  <script src="/jerry/carousel.js?v=1"></script>\n  <script src="/jerry/reservation.js?v=4"></script>\n  <script src="/jerry/shop-photos.js?v=3"></script>\n  <script type="module" src="/jerry/catalog.js?v=4"></script>\n  <script src="/jerry/installment.js?v=1"></script>\n</body>');
+  .replace(/\s*<script[^>]+src=["']\/jerry\/(reservation|shop-photos|catalog|carousel|installment|short-videos)\.js[^"']*["'][^>]*><\/script>/gi,"");
+jerryHtml=jerryHtml.replace("</body>",'  <script src="/jerry/carousel.js?v=1"></script>\n  <script src="/jerry/reservation.js?v=4"></script>\n  <script src="/jerry/shop-photos.js?v=3"></script>\n  <script type="module" src="/jerry/catalog.js?v=4"></script>\n  <script src="/jerry/installment.js?v=1"></script>\n  <script type="module" src="/jerry/short-videos.js?v=1"></script>\n</body>');
 fs.writeFileSync(jerryIndexPath,jerryHtml,"utf8");
 
 // One owner per storefront area: app.js only settings/payment, catalog.js owns products, shop-photos.js owns cases.
@@ -76,4 +76,4 @@ if(!sharedOrdersHtml.includes(ordersBrandMarker)){
   sharedOrdersHtml=sharedOrdersHtml.replace(/<head(\s[^>]*)?>/i,m=>`${m}\n  ${brandingScript}`);
 }
 fs.writeFileSync(sharedOrdersPath,sharedOrdersHtml,"utf8");
-console.log("Jerry storefront: carousel, installment calculator, review-first online orders, and formal-order approval flow enabled");
+console.log("Jerry storefront: carousel, installment calculator, review-first orders, and lazy short-video reels enabled");
