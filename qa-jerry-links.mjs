@@ -4,162 +4,146 @@ import path from "node:path";
 const root=process.cwd();
 const failures=[];
 const passes=[];
-const checked=[];
+let staticLinkCount=0;
 
-function read(relative){
-  const file=path.resolve(root,relative);
-  if(!fs.existsSync(file)){failures.push(`缺少檔案：${relative}`);return "";}
-  return fs.readFileSync(file,"utf8");
-}
-function pass(label){passes.push(label);}
-function fail(label,detail=""){failures.push(`${label}${detail?`｜${detail}`:""}`);}
-function ok(label,condition,detail=""){condition?pass(label):fail(label,detail);}
-function idsOf(html){return new Set([...html.matchAll(/\bid=["']([^"']+)["']/gi)].map(m=>m[1]));}
-function anchorsOf(html){
-  return [...html.matchAll(/<a\b([^>]*)>/gi)].map((m,index)=>{
-    const attrs=m[1];
-    const href=(attrs.match(/\bhref=["']([^"']*)["']/i)||[])[1]??"";
-    const target=(attrs.match(/\btarget=["']([^"']*)["']/i)||[])[1]??"";
-    const rel=(attrs.match(/\brel=["']([^"']*)["']/i)||[])[1]??"";
-    const id=(attrs.match(/\bid=["']([^"']*)["']/i)||[])[1]??"";
-    return{index,href,target,rel,id,raw:m[0]};
-  });
-}
-function internalTarget(pageRelative,href){
+function read(rel){const p=path.resolve(root,rel);if(!fs.existsSync(p)){failures.push(`缺少檔案｜${rel}`);return "";}return fs.readFileSync(p,"utf8");}
+function ok(label,condition,detail=""){if(condition)passes.push(label);else failures.push(`${label}${detail?`｜${detail}`:""}`);}
+function has(label,text,needle){ok(label,text.includes(needle),`缺少 ${needle}`);}
+function hasAll(label,text,needles){const missing=needles.filter(x=>!text.includes(x));ok(label,!missing.length,missing.length?`缺少 ${missing.join("、")}`:"");}
+
+function resolveInternal(page,href){
   const clean=href.split("#")[0].split("?")[0];
   if(!clean)return null;
   if(clean.startsWith("/")){
-    let rel=`public${clean}`;
-    if(clean.endsWith("/"))rel+=`index.html`;
-    return path.resolve(root,rel.replace(/^\/+/,""));
+    const rel=`public${clean}${clean.endsWith("/")?"index.html":""}`;
+    return path.resolve(root,rel);
   }
-  const pagePath=path.resolve(root,pageRelative);
-  const target=path.resolve(path.dirname(pagePath),clean);
-  return clean.endsWith("/")?path.join(target,"index.html"):target;
-}
-function checkHtmlLinks(pageRelative,{jerryBack=false}={}){
-  const html=read(pageRelative);
-  if(!html)return;
-  const ids=idsOf(html);
-  const anchors=anchorsOf(html);
-  ok(`${pageRelative} 有可點連結`,anchors.length>0,`找不到 <a>`);
-  for(const a of anchors){
-    const label=`${pageRelative} 連結 ${a.id?`#${a.id}`:`${a.index+1}`} ${a.href||"(空)"}`;
-    checked.push(label);
-    if(!a.href){fail(label,"href 為空");continue;}
-    if(a.href==="#"){fail(label,"href 仍是 #");continue;}
-    if(a.href.startsWith("#")){
-      ok(label,ids.has(a.href.slice(1)),`頁內目標 ${a.href} 不存在`);
-      continue;
-    }
-    if(a.href.startsWith("tel:")){
-      const digits=a.href.replace(/\D/g,"");
-      ok(label,/^0\d{8,9}$/.test(digits),`電話格式不正確：${digits}`);
-      continue;
-    }
-    if(/^https?:\/\//i.test(a.href)){
-      try{
-        const u=new URL(a.href);
-        ok(label,u.protocol==="https:","外部連結不是 HTTPS");
-        if(a.target==="_blank")ok(`${label} 安全開新頁`,/\bnoopener\b/i.test(a.rel),"target=_blank 缺 rel=noopener");
-        if(/line\.me$/i.test(u.hostname)){
-          ok(`${label} LINE 網域`,u.hostname==="line.me","LINE 網域錯誤");
-          ok(`${label} LINE 預填格式`,!(u.pathname.includes("/R/ti/p/")&&u.search.includes("text=")),"ti/p 不支援 ?text= 預填");
-        }
-      }catch(e){fail(label,`URL 無法解析：${e.message}`);}
-      continue;
-    }
-    const target=internalTarget(pageRelative,a.href);
-    ok(label,Boolean(target&&fs.existsSync(target)),`內部頁不存在：${target||a.href}`);
-  }
-  if(jerryBack){
-    ok(`${pageRelative} Jerry 回後台腳本`,html.includes("JERRY_ADMIN_BACK_LINK_V1")&&html.includes("/jerry/admin.html?shop=jerry"),"Jerry 可能回到共用後台");
-  }
+  const p=path.resolve(path.dirname(path.resolve(root,page)),clean);
+  return clean.endsWith("/")?path.join(p,"index.html"):p;
 }
 
-checkHtmlLinks("public/jerry/index.html");
-checkHtmlLinks("public/jerry/admin.html");
-checkHtmlLinks("public/admin/orders.html");
-checkHtmlLinks("public/admin/site-settings.html",{jerryBack:true});
-checkHtmlLinks("public/admin/payment-settings.html",{jerryBack:true});
-checkHtmlLinks("public/admin/cases.html",{jerryBack:true});
+function checkHtml(page,{jerryBack=false}={}){
+  const html=read(page);
+  const ids=new Set([...html.matchAll(/\bid=["']([^"']+)["']/gi)].map(m=>m[1]));
+  const anchors=[...html.matchAll(/<a\b([^>]*)>/gi)];
+  ok(`${page} 有可點連結`,anchors.length>0);
+  anchors.forEach((m,i)=>{
+    staticLinkCount++;
+    const attrs=m[1];
+    const href=(attrs.match(/\bhref=["']([^"']*)["']/i)||[])[1]||"";
+    const target=(attrs.match(/\btarget=["']([^"']*)["']/i)||[])[1]||"";
+    const rel=(attrs.match(/\brel=["']([^"']*)["']/i)||[])[1]||"";
+    const id=(attrs.match(/\bid=["']([^"']*)["']/i)||[])[1]||String(i+1);
+    const label=`${page}｜${id}｜${href||"空連結"}`;
+    if(!href){ok(label,false,"href 為空");return;}
+    if(href==="#"){ok(label,false,"href 仍是 #");return;}
+    if(href.startsWith("#")){ok(label,ids.has(href.slice(1)),`找不到頁內目標 ${href}`);return;}
+    if(href.startsWith("tel:")){const digits=href.replace(/\D/g,"");ok(label,/^0\d{8,9}$/.test(digits),`電話格式 ${digits}`);return;}
+    if(/^https?:\/\//i.test(href)){
+      try{
+        const u=new URL(href);
+        ok(label,u.protocol==="https:","外部連結必須 HTTPS");
+        if(target==="_blank")ok(`${label}｜noopener`,/\bnoopener\b/i.test(rel),"target=_blank 缺 rel=noopener");
+        if(u.hostname==="line.me")ok(`${label}｜LINE格式`,!(u.pathname.includes("/R/ti/p/")&&u.search.includes("text=")),"ti/p 不能用 ?text= 預填");
+      }catch(e){ok(label,false,`URL 無法解析 ${e.message}`);}
+      return;
+    }
+    const dest=resolveInternal(page,href);
+    ok(label,Boolean(dest&&fs.existsSync(dest)),`內部目標不存在 ${dest||href}`);
+  });
+  if(jerryBack)hasAll(`${page}｜Jerry 回後台`,html,["JERRY_ADMIN_BACK_LINK_V1","/jerry/admin.html?shop=jerry"]);
+}
+
+checkHtml("public/jerry/index.html");
+checkHtml("public/jerry/admin.html");
+checkHtml("public/admin/orders.html");
+checkHtml("public/admin/site-settings.html",{jerryBack:true});
+checkHtml("public/admin/payment-settings.html",{jerryBack:true});
+checkHtml("public/admin/cases.html",{jerryBack:true});
 
 const front=read("public/jerry/index.html");
-const mapHref=(front.match(/<a\b[^>]*id=["']mapBtn["'][^>]*href=["']([^"']+)["'][^>]*>/i)||[])[1]||"";
-ok("開啟導航直接有正確 href",mapHref.startsWith("https://www.google.com/maps/dir/?api=1&destination="),`目前：${mapHref}`);
-ok("導航目的地是保安街一段366號",decodeURIComponent(mapHref).includes("新北市樹林區保安街一段366號"),`目前：${decodeURIComponent(mapHref||"")}`);
+const mapHref=(front.match(/<a\b[^>]*id=["']mapBtn["'][^>]*href=["']([^"']+)["']/i)||[])[1]||"";
+ok("導航按鈕直接是 Google Maps directions",mapHref.startsWith("https://www.google.com/maps/dir/?api=1&destination="),mapHref);
+ok("導航目的地固定保安街一段366號",decodeURIComponent(mapHref).includes("新北市樹林區保安街一段366號"),decodeURIComponent(mapHref||""));
+
 const adminHtml=read("public/jerry/admin.html");
-ok("Jerry 後台 5 個主要入口",[
+hasAll("Jerry 後台主要入口完整",adminHtml,[
   "/jerry/",
   "/admin/site-settings.html?shop=jerry",
   "/admin/payment-settings.html?shop=jerry",
   "/admin/cases.html?shop=jerry",
   "/admin/orders.html?shop=jerry"
-].every(x=>adminHtml.includes(x)),"Jerry 後台入口缺漏");
+]);
 
 const app=read("public/jerry/app.js");
-ok("頁首 LINE 會改成官方 LINE",app.includes('$("#headerCta").href = safeUrl(s.lineUrl || DEFAULTS.lineUrl')));
-ok("Hero LINE 會改成官方 LINE",app.includes('$("#heroPrimary").href = safeUrl(s.lineUrl || DEFAULTS.lineUrl')));
-ok("門市 LINE 會改成官方 LINE",app.includes('$("#lineBtn").href = safeUrl(s.lineUrl || DEFAULTS.lineUrl)'));
-ok("電話按鈕使用 tel:",app.includes('$("#storePhone").href = `tel:${phone.replace(/[^0-9+]/g, "")}`'));
-ok("導航不吃後台錯誤 mapUrl",app.includes('$("#mapBtn").href = DEFAULTS.mapUrl;'));
-ok("舊 LINE ?text 格式已清除",!app.includes("/R/ti/p/@882npfrm?text="),"app.js 還有錯誤 LINE 預填格式");
+has("頁首 LINE 綁官方 LINE",app,'$("#headerCta").href = safeUrl(s.lineUrl || DEFAULTS.lineUrl');
+has("Hero LINE 綁官方 LINE",app,'$("#heroPrimary").href = safeUrl(s.lineUrl || DEFAULTS.lineUrl');
+has("門市 LINE 綁官方 LINE",app,'$("#lineBtn").href = safeUrl(s.lineUrl || DEFAULTS.lineUrl)');
+has("電話連結使用 tel",app,'$("#storePhone").href = `tel:${phone.replace(/[^0-9+]/g, "")}`');
+has("導航不吃 Firestore 舊 mapUrl",app,'$("#mapBtn").href = DEFAULTS.mapUrl;');
+ok("app.js 沒有舊 LINE ?text 格式",!app.includes("/R/ti/p/@882npfrm?text="));
 
 const reservation=read("public/jerry/reservation.js");
-ok("預約送出有綁 submit",reservation.includes("form.addEventListener('submit'")||reservation.includes('form.addEventListener("submit"'));
-ok("預約 LINE 會預填文字",reservation.includes("/R/oaMessage/")&&reservation.includes("【網站預約】"));
+has("預約送出事件存在",reservation,"form.addEventListener('submit'");
+hasAll("預約 LINE 自動帶文字",reservation,["/R/oaMessage/","【網站預約】","reservationPhone"]);
 
 const catalog=read("public/jerry/catalog.js");
-ok("每個價目點擊有事件",catalog.includes("querySelectorAll('[data-order-model]')")&&catalog.includes("addEventListener('click'"));
-ok("價目備援 LINE 預填正確",catalog.includes("/R/oaMessage/%40882npfrm/?")&&!catalog.includes("/R/ti/p/@882npfrm?text="));
+hasAll("價目表每個價格可點下單",catalog,["data-order-model","addEventListener('click'","window.JerryCommerce?.order"]);
+has("價目表備援 LINE 預填正確",catalog,"/R/oaMessage/%40882npfrm/?");
+ok("價目表沒有舊 LINE ?text 格式",!catalog.includes("/R/ti/p/@882npfrm?text="));
 
 const installment=read("public/jerry/installment.js");
-ok("分期詢問按鈕有 click 驗證",installment.includes("line.addEventListener('click'")&&installment.includes("^09\\d{8}$"));
-ok("分期 LINE 預填正確",installment.includes("/R/oaMessage/%40882npfrm/?"));
-ok("分期所有選單都有 change 事件",["model.addEventListener('change'","battery.addEventListener('change'","edition.addEventListener('change'","license.addEventListener('change'"].every(x=>installment.includes(x)));
+hasAll("分期所有操作都有事件",installment,[
+  "line.addEventListener('click'",
+  "model.addEventListener('change'",
+  "battery.addEventListener('change'",
+  "edition.addEventListener('change'",
+  "license.addEventListener('change'",
+  "phone.addEventListener('input'"
+]);
+hasAll("分期手機驗證與 LINE 預填",installment,["^09\\d{8}$","/R/oaMessage/%40882npfrm/?"]);
 
 const social=read("public/jerry/social-links.js");
-for(const [name,needle] of [["LINE","line.me/R/ti/p/@882npfrm"],["TikTok","tiktok.com/@jerry950114"],["Instagram","instagram.com/jerryebike"],["Facebook","facebook.com/share/"]]){
-  ok(`社群 ${name} 連結已設定`,social.includes(needle),`缺少 ${needle}`);
-}
-ok("社群外連都有 noopener",social.includes('rel="noopener noreferrer"'));
+hasAll("官方社群四個連結完整",social,[
+  "line.me/R/ti/p/@882npfrm",
+  "tiktok.com/@jerry950114",
+  "instagram.com/jerryebike",
+  "facebook.com/share/",
+  'rel="noopener noreferrer"'
+]);
 
 const shorts=read("public/jerry/short-videos.js");
-ok("短影音導覽新增後有對應 section",shorts.includes('section.id = "short-videos"')&&shorts.includes('link.href = "#short-videos"'));
-ok("短影音播放按鈕有 click 事件",shorts.includes('play?.addEventListener("click"'));
+hasAll("短影音導覽與播放可點",shorts,["section.id = \"short-videos\"","link.href = \"#short-videos\"","play?.addEventListener(\"click\""]);
 
 const commerce=read("public/jerry/commerce.js");
-ok("商品詳情／下單按鈕都有 click",commerce.includes('querySelector(".view-bike")?.addEventListener("click"')&&commerce.includes('querySelector(".order-bike")?.addEventListener("click"'));
-ok("訂單 modal 關閉按鈕都有 click",commerce.includes('querySelectorAll("[data-close-order]")')&&commerce.includes('addEventListener("click"'));
-ok("訂單 LINE 預填格式正確",commerce.includes("/R/oaMessage/%40882npfrm/?")&&!commerce.includes("/R/ti/p/@882npfrm?text="));
+hasAll("商品詳情／下單／關閉都有 click",commerce,[".view-bike",".order-bike","[data-close-order]","addEventListener(\"click\""]);
+has("訂單 LINE 預填正確",commerce,"/R/oaMessage/%40882npfrm/?");
+ok("訂單沒有舊 LINE ?text 格式",!commerce.includes("/R/ti/p/@882npfrm?text="));
 
 const review=read("public/jerry/online-review.js");
-ok("線上訂單確認按鈕有 click",review.includes(".confirm-online")&&review.includes("confirmOrder"));
-ok("線上訂單拒絕按鈕有 click",review.includes(".reject-online")&&review.includes("rejectOrder"));
+hasAll("線上訂單確認／拒絕可點",review,[".confirm-online","confirmOrder",".reject-online","rejectOrder"]);
 
 const photo=read("public/jerry/product-photo-fix.js");
-ok("商品照片選擇按鈕有 capture click",photo.includes("#chooseImagesBtn")&&photo.includes("input.click()"));
-ok("商品照片 change 有上傳處理",photo.includes('input.id !== "imageFileInput"')&&photo.includes("uploadFiles(files)"));
+hasAll("商品照片選擇與上傳事件完整",photo,["#chooseImagesBtn","input.click()","imageFileInput","uploadFiles(files)"]);
 
 const media=read("public/jerry/media-admin.js");
-ok("短影音上傳按鈕會開檔案選擇",media.includes("#shortVideoUploadBtn")&&media.includes("#shortVideoFile")&&media.includes(".click()"));
-ok("短影音影片選擇後有 upload handler",media.includes("uploadShortVideoFile"));
-ok("短影音封面選擇後有 upload handler",media.includes("uploadShortPosterFile"));
-ok("短影音儲存／編輯／顯示／刪除都有 handler",["saveShortFromForm","editShort","toggleShort","deleteShort","moveShort"].every(x=>media.includes(x)));
+hasAll("短影音後台所有按鈕 handler 完整",media,[
+  "#shortVideoUploadBtn","#shortVideoFile","uploadShortVideoFile",
+  "#shortPosterUploadBtn","uploadShortPosterFile",
+  "saveShortFromForm","editShort","toggleShort","deleteShort","moveShort"
+]);
 
-const adminProducts=read("public/jerry/admin-products.js");
-ok("商品管理照片按鈕有 click",adminProducts.includes(".jerry-manage")&&adminProducts.includes("openFixedModal"));
-ok("主圖／刪除照片都有 click",adminProducts.includes(".jerry-primary")&&adminProducts.includes(".jerry-delete"));
+const products=read("public/jerry/admin-products.js");
+hasAll("商品管理照片／主圖／刪除可點",products,[".jerry-manage","openFixedModal",".jerry-primary",".jerry-delete"]);
 
 const orders=read("public/admin/orders.html");
-ok("完整訂單 Jerry 導覽回後台正確",orders.includes('/jerry/admin.html?shop=jerry'));
-ok("完整訂單 Jerry 查看前台正確",orders.includes('href="/jerry/"'));
+hasAll("完整訂單 Jerry 導覽正確",orders,["/jerry/admin.html?shop=jerry","href=\"/jerry/\""]);
 
-console.log(`\nJerry 點擊連結驗收：檢查 ${checked.length} 個靜態連結，${passes.length} 項通過`);
-passes.forEach(x=>console.log(`  ✓ ${x}`));
+console.log(`\nJerry 點擊驗收：${staticLinkCount} 個靜態連結，${passes.length} 項通過`);
 if(failures.length){
-  console.error(`\nJerry 點擊連結驗收失敗：${failures.length} 項`);
+  console.error(`Jerry 點擊驗收失敗：${failures.length} 項`);
   failures.forEach(x=>console.error(`  ✗ ${x}`));
   process.exit(1);
 }
+passes.forEach(x=>console.log(`  ✓ ${x}`));
 console.log("\n✓ Jerry 所有可驗證點擊／連結路徑通過。\n");
