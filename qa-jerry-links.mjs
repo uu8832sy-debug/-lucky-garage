@@ -88,19 +88,14 @@ const front=read("public/jerry/index.html");
 const mapHref=(front.match(/<a\b[^>]*id=["']mapBtn["'][^>]*href=["']([^"']+)["'][^>]*>/i)||[])[1]||"";
 ok("開啟導航直接有正確 href",mapHref.startsWith("https://www.google.com/maps/dir/?api=1&destination="),`目前：${mapHref}`);
 ok("導航目的地是保安街一段366號",decodeURIComponent(mapHref).includes("新北市樹林區保安街一段366號"),`目前：${decodeURIComponent(mapHref||"")}`);
+const adminHtml=read("public/jerry/admin.html");
 ok("Jerry 後台 5 個主要入口",[
   "/jerry/",
   "/admin/site-settings.html?shop=jerry",
   "/admin/payment-settings.html?shop=jerry",
   "/admin/cases.html?shop=jerry",
   "/admin/orders.html?shop=jerry"
-].every(x=>front||true) && [
-  "/jerry/",
-  "/admin/site-settings.html?shop=jerry",
-  "/admin/payment-settings.html?shop=jerry",
-  "/admin/cases.html?shop=jerry",
-  "/admin/orders.html?shop=jerry"
-].every(x=>read("public/jerry/admin.html").includes(x)),"Jerry 後台入口缺漏");
+].every(x=>adminHtml.includes(x)),"Jerry 後台入口缺漏");
 
 const app=read("public/jerry/app.js");
 ok("頁首 LINE 會改成官方 LINE",app.includes('$("#headerCta").href = safeUrl(s.lineUrl || DEFAULTS.lineUrl')));
@@ -111,7 +106,7 @@ ok("導航不吃後台錯誤 mapUrl",app.includes('$("#mapBtn").href = DEFAULTS.
 ok("舊 LINE ?text 格式已清除",!app.includes("/R/ti/p/@882npfrm?text="),"app.js 還有錯誤 LINE 預填格式");
 
 const reservation=read("public/jerry/reservation.js");
-ok("預約送出有綁 click/submit",reservation.includes('form.addEventListener(\'submit\'')||reservation.includes('form.addEventListener("submit"'));
+ok("預約送出有綁 submit",reservation.includes("form.addEventListener('submit'")||reservation.includes('form.addEventListener("submit"'));
 ok("預約 LINE 會預填文字",reservation.includes("/R/oaMessage/")&&reservation.includes("【網站預約】"));
 
 const catalog=read("public/jerry/catalog.js");
@@ -158,7 +153,7 @@ ok("主圖／刪除照片都有 click",adminProducts.includes(".jerry-primary")&
 
 const orders=read("public/admin/orders.html");
 ok("完整訂單 Jerry 導覽回後台正確",orders.includes('/jerry/admin.html?shop=jerry'));
-ok("完整訂單 Jerry 查看前台正確",orders.includes('href=\"/jerry/\"')||orders.includes('href="/jerry/"'));
+ok("完整訂單 Jerry 查看前台正確",orders.includes('href="/jerry/"'));
 
 console.log(`\nJerry 點擊連結驗收：檢查 ${checked.length} 個靜態連結，${passes.length} 項通過`);
 passes.forEach(x=>console.log(`  ✓ ${x}`));
