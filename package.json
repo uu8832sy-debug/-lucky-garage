@@ -3,6 +3,6 @@
   "private": true,
   "version": "32.1.5",
   "scripts": {
-    "build": "node build.mjs && node postbuild-jerry.mjs"
+    "build": "node build.mjs && node postbuild-jerry.mjs && node postbuild-jerry-favicon.mjs"
   }
 }
