@@ -14,26 +14,23 @@ if(!fs.existsSync(adminPath)) throw new Error("Jerry admin missing");
 let html=fs.readFileSync(adminPath,"utf8");
 
 // Product photos have one owner only: product-photo-fix.js.
-html=html.replace(/<script([^>]*?)src=["']\/jerry\/firestore-image-upload\.js[^"']*["']([^>]*)><\/script>/gi,'<script type="module" src="/jerry/product-photo-fix.js?v=6"></script>');
+html=html.replace(/<script([^>]*?)src=["']\/jerry\/firestore-image-upload\.js[^"']*["']([^>]*)><\/script>/gi,'<script type="module" src="/jerry/product-photo-fix.js?v=5&rev=6"></script>');
 html=html.replace(/\s*<script[^>]+src=["']\/jerry\/product-photo-fix\.js[^"']*["'][^>]*><\/script>/gi,"");
-html=html.replace("</body>",'  <script type="module" src="/jerry/product-photo-fix.js?v=6"></script>\n</body>');
+html=html.replace("</body>",'  <script type="module" src="/jerry/product-photo-fix.js?v=5&rev=6"></script>\n</body>');
 fs.writeFileSync(adminPath,html,"utf8");
 
-// Disable the older inline Firestore image interceptor in the built runtime.
 const corePath=path.resolve("public/multi-shop-core.js");
 if(!fs.existsSync(corePath)) throw new Error("multi-shop-core.js missing");
 let core=fs.readFileSync(corePath,"utf8");
 core=core.replace(/\ninstallJerryFirestoreImageUpload\(\);\s*$/,"\n// Jerry inline Firestore image uploader disabled; canonical Cloudinary photo manager is active.\n");
 fs.writeFileSync(corePath,core,"utf8");
 
-// Disable media-admin's older product-photo capture listeners; media-admin now owns short videos only.
 const mediaAdminPath=path.resolve("public/jerry/media-admin.js");
 if(!fs.existsSync(mediaAdminPath)) throw new Error("Jerry media-admin.js missing");
 let mediaAdmin=fs.readFileSync(mediaAdminPath,"utf8");
 mediaAdmin=mediaAdmin.replace(/\n\s*installProductUploadOverride\(\);/,"\n  // Product photos are handled exclusively by product-photo-fix.js.\n");
 fs.writeFileSync(mediaAdminPath,mediaAdmin,"utf8");
 
-// Keep Jerry cases editable from the backend while product cards remain controlled by the fixed official catalog.
 const appPath=path.resolve("public/jerry/app.js");
 if(!fs.existsSync(appPath)) throw new Error("Jerry app.js missing");
 let appJs=fs.readFileSync(appPath,"utf8");
@@ -42,7 +39,6 @@ appJs=appJs.replace('$("#mapBtn").href = safeUrl(s.mapUrl || DEFAULTS.mapUrl);',
 appJs=appJs.replace("${DEFAULTS.lineUrl}?text=${encodeURIComponent(","https://line.me/R/oaMessage/%40882npfrm/?${encodeURIComponent(");
 fs.writeFileSync(appPath,appJs,"utf8");
 
-// Fix LINE prefilled-message links in the final storefront runtime.
 for (const fileName of ["commerce.js","catalog.js"]) {
   const filePath=path.join(pub,fileName);
   if(!fs.existsSync(filePath)) throw new Error(`Jerry runtime missing: ${fileName}`);
@@ -51,7 +47,6 @@ for (const fileName of ["commerce.js","catalog.js"]) {
   fs.writeFileSync(filePath,text,"utf8");
 }
 
-// Force Jerry storefront navigation to the real store address and ignore stale Firestore mapUrl values.
 const frontPath=path.resolve("public/jerry/index.html");
 if(!fs.existsSync(frontPath)) throw new Error("Jerry storefront missing");
 let front=fs.readFileSync(frontPath,"utf8");
@@ -63,8 +58,6 @@ const navScript=`<script data-jerry-fixed-nav>(function(){var u='${fixedMapUrl}'
 front=front.replace("</body>",`${navScript}\n</body>`);
 fs.writeFileSync(frontPath,front,"utf8");
 
-// Shared admin detail pages are also used by XiaoYu. When ?shop=jerry is present,
-// every "back to admin" link must return to Jerry admin instead of /admin/index.html.
 for (const name of ["site-settings.html","payment-settings.html","cases.html"]) {
   const filePath=path.resolve("public/admin",name);
   if(!fs.existsSync(filePath)) throw new Error(`Missing shared admin page: ${name}`);
