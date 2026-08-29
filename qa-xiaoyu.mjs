@@ -9,6 +9,8 @@ const home = read("home.js");
 const ordersJs = read("admin/orders.js");
 const ordersHtml = read("admin/orders.html");
 const productsHtml = read("products.html");
+const branding = read("admin/shop-branding.js");
+const multiShopCore = read("multi-shop-core.js");
 
 function expect(condition, message) {
   if (!condition) throw new Error(`XIAOYU QA FAILED: ${message}`);
@@ -53,4 +55,15 @@ expect(ordersJs.includes("lithiumBattery ? 12 : 6"), "battery warranty month log
 expect(!productsHtml.includes("送出後會建立「待訂金」訂單"), "products page still says 待訂金");
 expect(!productsHtml.includes("實際訂金、交期及配備由客服再次確認"), "products page still says deposit/waiting");
 
-console.log("Xiaoyu QA passed: official prices, storefront orders, admin orders, warranty and inventory color are aligned.");
+// 小宇管理後台必須永遠固定在 legacy 根目錄，不能被瀏覽器上次的傑瑞選擇帶走。
+expect(branding.includes('let selected = explicitJerry ? "jerry" : "xiaoyu"'), "xiaoyu admin routing is not pinned");
+expect(branding.includes('if (!explicitJerry) persistShop("xiaoyu")'), "xiaoyu admin does not clear stale Jerry state");
+expect(!branding.includes('sessionStorage.getItem(ownerShopKey) || localStorage.getItem(storageKey)'), "xiaoyu admin still trusts stale browser shop state");
+expect(branding.includes('orders.html') && branding.includes('?shop=xiaoyu'), "xiaoyu child admin links are not pinned to xiaoyu");
+
+// 新人 adminAccounts 綁 xiaoyu 必須走舊根目錄 orders/products，不得走 shops/xiaoyu/* 空資料區。
+expect(multiShopCore.includes('if (accountShopId === "xiaoyu")'), "staff xiaoyu legacy branch missing");
+expect(multiShopCore.includes('shopId:"xiaoyu"') && multiShopCore.includes('legacy:true'), "staff xiaoyu context must be legacy");
+expect(multiShopCore.includes('return context.legacy ? collection(db, name) : collection(db, "shops", context.shopId, name)'), "legacy collection routing missing");
+
+console.log("Xiaoyu QA passed: prices, storefront orders, legacy order visibility, staff routing, warranty and inventory color are aligned.");
