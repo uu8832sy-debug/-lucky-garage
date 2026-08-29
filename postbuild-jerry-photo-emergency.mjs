@@ -13,19 +13,25 @@ const adminPath=path.resolve("public/jerry/admin.html");
 if(!fs.existsSync(adminPath)) throw new Error("Jerry admin missing");
 let html=fs.readFileSync(adminPath,"utf8");
 
-// Any legacy Firestore uploader reference is redirected to the single Cloudinary uploader.
-html=html.replace(/<script([^>]*?)src=["']\/jerry\/firestore-image-upload\.js[^"']*["']([^>]*)><\/script>/gi,'<script type="module" src="/jerry/product-photo-fix.js?v=5"></script>');
+// Product photos have one owner only: product-photo-fix.js.
+html=html.replace(/<script([^>]*?)src=["']\/jerry\/firestore-image-upload\.js[^"']*["']([^>]*)><\/script>/gi,'<script type="module" src="/jerry/product-photo-fix.js?v=6"></script>');
 html=html.replace(/\s*<script[^>]+src=["']\/jerry\/product-photo-fix\.js[^"']*["'][^>]*><\/script>/gi,"");
-html=html.replace("</body>",'  <script type="module" src="/jerry/product-photo-fix.js?v=5"></script>\n</body>');
+html=html.replace("</body>",'  <script type="module" src="/jerry/product-photo-fix.js?v=6"></script>\n</body>');
 fs.writeFileSync(adminPath,html,"utf8");
 
-// Disable the older Firestore-inline image interceptor in the built runtime.
-// Jerry product and case uploads now use Cloudinary, so the old capture listener must not block them.
+// Disable the older inline Firestore image interceptor in the built runtime.
 const corePath=path.resolve("public/multi-shop-core.js");
 if(!fs.existsSync(corePath)) throw new Error("multi-shop-core.js missing");
 let core=fs.readFileSync(corePath,"utf8");
-core=core.replace(/\ninstallJerryFirestoreImageUpload\(\);\s*$/,"\n// Jerry inline Firestore image uploader disabled; Cloudinary uploader is active.\n");
+core=core.replace(/\ninstallJerryFirestoreImageUpload\(\);\s*$/,"\n// Jerry inline Firestore image uploader disabled; canonical Cloudinary photo manager is active.\n");
 fs.writeFileSync(corePath,core,"utf8");
+
+// Disable media-admin's older product-photo capture listeners; media-admin now owns short videos only.
+const mediaAdminPath=path.resolve("public/jerry/media-admin.js");
+if(!fs.existsSync(mediaAdminPath)) throw new Error("Jerry media-admin.js missing");
+let mediaAdmin=fs.readFileSync(mediaAdminPath,"utf8");
+mediaAdmin=mediaAdmin.replace(/\n\s*installProductUploadOverride\(\);/,"\n  // Product photos are handled exclusively by product-photo-fix.js.\n");
+fs.writeFileSync(mediaAdminPath,mediaAdmin,"utf8");
 
 // Keep Jerry cases editable from the backend while product cards remain controlled by the fixed official catalog.
 const appPath=path.resolve("public/jerry/app.js");
@@ -70,4 +76,4 @@ for (const name of ["site-settings.html","payment-settings.html","cases.html"]) 
   fs.writeFileSync(filePath,page,"utf8");
 }
 
-console.log("Jerry final overrides applied: complete storefront, Cloudinary uploads, editable cases, backend-driven installment, LINE prefills, fixed navigation, Jerry-safe admin back links.");
+console.log("Jerry final overrides applied: one canonical product-photo manager, replace/delete/primary enabled, editable cases, backend-driven installment, LINE prefills, fixed navigation, Jerry-safe admin back links.");
