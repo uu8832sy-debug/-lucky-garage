@@ -11,8 +11,7 @@
   const byJerryPath = /^\/jerry(?:\/|$)/i.test(location.pathname);
   const explicitJerry = byHost || byJerryPath || queryShop === "jerry";
 
-  // 小宇後台使用根目錄 legacy 資料。不能再用 localStorage/sessionStorage
-  // 決定目前店家，否則曾經切到傑瑞後，回 /admin/ 會誤讀 shops/jerry/*。
+  // 小宇後台固定使用根目錄 legacy 資料，不能以瀏覽器上一次選店紀錄決定資料區。
   let selected = explicitJerry ? "jerry" : "xiaoyu";
 
   function persistShop(shopId){
@@ -25,8 +24,18 @@
     if (!byJerryPath) location.replace("/jerry/admin.html?shop=jerry");
   }
 
-  // 只要是在標準 /admin/ 小宇後台，先清掉任何舊的傑瑞記憶。
+  // 只要進標準小宇 /admin/，立即覆蓋任何舊的傑瑞記憶。
   if (!explicitJerry) persistShop("xiaoyu");
+
+  function pinXiaoyuLinks(){
+    const pages = new Set(["orders.html","draw.html","site-settings.html","cases.html","payment-settings.html","audit-log.html"]);
+    document.querySelectorAll('a[href]').forEach((anchor) => {
+      const raw = String(anchor.getAttribute("href") || "");
+      const [pathname] = raw.split(/[?#]/);
+      if (!pages.has(pathname)) return;
+      anchor.setAttribute("href", `${pathname}?shop=xiaoyu`);
+    });
+  }
 
   function applyBrand(shopId, persist = true) {
     const brand = BRANDS[shopId] || BRANDS.xiaoyu;
@@ -44,6 +53,7 @@
     if (loginTitle) loginTitle.textContent=`${brand.short}管理員登入`;
     const headerSelect = document.querySelector("#ownerShopSwitcher");
     if (headerSelect) headerSelect.value = selected;
+    if (selected === "xiaoyu") pinXiaoyuLinks();
   }
 
   function switchShop(shopId) {
