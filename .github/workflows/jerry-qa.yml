@@ -1,13 +1,14 @@
-name: Jerry Handoff QA
+name: Full Platform QA
 
 on:
   push:
     branches:
       - main
       - multi-shop-admin
+      - fix/xiaoyu-platform-final
 
 jobs:
-  jerry-qa:
+  full-build-qa:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -17,5 +18,5 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Run full Jerry build and click-link QA
+      - name: Run full platform build and QA
         run: npm run build
