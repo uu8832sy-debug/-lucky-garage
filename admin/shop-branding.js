@@ -6,9 +6,14 @@
   const storageKey = "luckyGarageAdminBrand";
   const ownerShopKey = "luckyGarageAdminShop";
   const ownerEmail = "uu8832sr@gmail.com";
-  const byHost = /(^|\.)jerrye-bike\.com$/i.test(location.hostname) ? "jerry" : null;
   const queryShop = new URLSearchParams(location.search).get("shop");
-  let selected = (queryShop && BRANDS[queryShop] ? queryShop : null) || byHost || sessionStorage.getItem(ownerShopKey) || localStorage.getItem(storageKey) || "xiaoyu";
+  const byHost = /(^|\.)jerrye-bike\.com$/i.test(location.hostname);
+  const byJerryPath = /^\/jerry(?:\/|$)/i.test(location.pathname);
+  const explicitJerry = byHost || byJerryPath || queryShop === "jerry";
+
+  // 小宇後台使用根目錄 legacy 資料。不能再用 localStorage/sessionStorage
+  // 決定目前店家，否則曾經切到傑瑞後，回 /admin/ 會誤讀 shops/jerry/*。
+  let selected = explicitJerry ? "jerry" : "xiaoyu";
 
   function persistShop(shopId){
     localStorage.setItem(storageKey,shopId);
@@ -17,8 +22,11 @@
 
   function routeJerry(){
     persistShop("jerry");
-    location.replace("/jerry/admin.html?shop=jerry");
+    if (!byJerryPath) location.replace("/jerry/admin.html?shop=jerry");
   }
+
+  // 只要是在標準 /admin/ 小宇後台，先清掉任何舊的傑瑞記憶。
+  if (!explicitJerry) persistShop("xiaoyu");
 
   function applyBrand(shopId, persist = true) {
     const brand = BRANDS[shopId] || BRANDS.xiaoyu;
@@ -48,7 +56,7 @@
     location.assign(url.href);
   }
 
-  if (selected === "jerry") {
+  if (explicitJerry) {
     routeJerry();
     return;
   }
@@ -58,7 +66,7 @@
     if (!card || card.querySelector(".shop-choice")) return;
     const selector=document.createElement("div");
     selector.className="shop-choice";
-    selector.innerHTML='<p>請先選擇管理車行</p><div><button type="button" data-shop-choice="xiaoyu"><img src="../assets/brand/logo-round.webp" alt=""><span>小宇微電</span></button><button type="button" data-shop-choice="jerry"><img src="../jerry/admin-logo.png" alt=""><span>傑瑞電動車</span></button></div><small>傑瑞使用獨立資料後台，不會顯示小宇資料。</small>';
+    selector.innerHTML='<p>目前管理：小宇微電</p><div><button type="button" data-shop-choice="xiaoyu"><img src="../assets/brand/logo-round.webp" alt=""><span>小宇微電</span></button><button type="button" data-shop-choice="jerry"><img src="../jerry/admin-logo.png" alt=""><span>傑瑞電動車</span></button></div><small>小宇與傑瑞使用不同資料區；此頁預設固定為小宇微電。</small>';
     const loginButton=card.querySelector("#loginBtn");
     (loginButton?.parentElement?.id === "loginCard" ? loginButton : card.querySelector("h2")?.parentElement)?.after(selector);
     selector.addEventListener("click",event=>{const button=event.target.closest("[data-shop-choice]");if(button)switchShop(button.dataset.shopChoice);});
