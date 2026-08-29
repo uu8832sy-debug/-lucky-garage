@@ -10,6 +10,24 @@ service firebase.storage {
       return signedIn() && request.auth.token.email == value;
     }
 
+    function tenantAccount() {
+      return firestore.get(/databases/(default)/documents/adminAccounts/$(request.auth.uid));
+    }
+
+    function tenantEnabled() {
+      return signedIn() && tenantAccount().data.enabled == true;
+    }
+
+    function accountRole() {
+      return tenantEnabled() ? tenantAccount().data.get('role', 'admin') : '';
+    }
+
+    function accountShopId() {
+      return tenantEnabled()
+        ? tenantAccount().data.get('shopId', tenantAccount().data.get('shopID', tenantAccount().data.get('shopid', tenantAccount().data.get('shopld', ''))))
+        : '';
+    }
+
     function legacyAdmin() {
       return signedIn() && (
         emailIs('uu8832sr@gmail.com')
@@ -20,26 +38,26 @@ service firebase.storage {
       );
     }
 
-    function tenantAccount() {
-      return firestore.get(/databases/(default)/documents/adminAccounts/$(request.auth.uid));
-    }
-
     function isJerryAdminEmail() {
       return emailIs('a0975607339@gmail.com');
     }
 
     function belongsTo(shopId) {
-      return (shopId == 'jerry' && isJerryAdminEmail()) || (
-        signedIn()
-        && tenantAccount().data.enabled == true
-        && tenantAccount().data.shopId == shopId
-      );
+      return (shopId == 'jerry' && isJerryAdminEmail()) || (tenantEnabled() && accountShopId() == shopId);
     }
 
     function isPlatformOwner() {
       return signedIn() && (
         emailIs('uu8832sr@gmail.com')
-        || (tenantAccount().data.enabled == true && tenantAccount().data.role == 'platformOwner')
+        || (tenantEnabled() && accountRole() == 'platformOwner')
+      );
+    }
+
+    function canOperateLegacyXiaoyu() {
+      return legacyAdmin() || (
+        tenantEnabled()
+        && accountShopId() == 'xiaoyu'
+        && (accountRole() == 'staff' || accountRole() == 'admin' || accountRole() == 'owner' || accountRole() == 'platformOwner')
       );
     }
 
@@ -52,12 +70,12 @@ service firebase.storage {
 
     match /products/{productId}/{fileName} {
       allow read: if true;
-      allow write: if legacyAdmin() && validImageWrite();
+      allow write: if canOperateLegacyXiaoyu() && validImageWrite();
     }
 
     match /cases/{caseId}/{fileName} {
       allow read: if true;
-      allow write: if legacyAdmin() && validImageWrite();
+      allow write: if canOperateLegacyXiaoyu() && validImageWrite();
     }
 
     match /shops/{shopId}/products/{productId}/{fileName} {
