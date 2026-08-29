@@ -3,6 +3,6 @@
   "private": true,
   "version": "32.1.8",
   "scripts": {
-    "build": "node build.mjs && node postbuild-jerry.mjs && node postbuild-jerry-favicon.mjs && node postbuild-jerry-photo-emergency.mjs && node postbuild-jerry-share-meta.mjs && node qa-jerry.mjs && node qa-jerry-links.mjs"
+    "build": "node build.mjs && node postbuild-xiaoyu-copy.mjs && node postbuild-jerry.mjs && node postbuild-jerry-favicon.mjs && node postbuild-jerry-photo-emergency.mjs && node postbuild-jerry-share-meta.mjs && node qa-jerry.mjs && node qa-jerry-links.mjs"
   }
 }
