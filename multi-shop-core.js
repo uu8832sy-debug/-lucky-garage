@@ -28,6 +28,12 @@ export function setOwnerShop(shopId) {
   try { globalThis.sessionStorage?.setItem(OWNER_SHOP_KEY, shopId); } catch {}
 }
 
+function normalizeAccountShopId(account = {}) {
+  const candidates = [account.shopId, account.shopID, account.shopid, account.shopld];
+  const value = candidates.find((item) => typeof item === "string" && item.trim());
+  return String(value || "").trim().toLowerCase();
+}
+
 export async function resolveShopContext(db, user) {
   if (!user || user.isAnonymous) throw new Error("尚未登入");
 
@@ -92,9 +98,25 @@ export async function resolveShopContext(db, user) {
 
   const account = accountSnap.data() || {};
   if (account.enabled !== true) throw new Error("此帳號已停用");
-  if (!account.shopId || typeof account.shopId !== "string") throw new Error("此帳號缺少 shopId");
 
-  const shopSnap = await getDoc(doc(db, "shops", account.shopId));
+  const accountShopId = normalizeAccountShopId(account);
+  if (!accountShopId) throw new Error("此帳號缺少 shopId");
+  const role = String(account.role || "admin");
+
+  // 小宇微電目前仍使用根目錄的舊版資料結構；員工帳號也必須走 legacy context，
+  // 否則會誤讀 shops/xiaoyu/* 的空資料區。
+  if (accountShopId === "xiaoyu") {
+    return {
+      uid:user.uid,
+      email:user.email || "",
+      shopId:"xiaoyu",
+      role,
+      legacy:true,
+      shop:OWNER_SHOPS.xiaoyu
+    };
+  }
+
+  const shopSnap = await getDoc(doc(db, "shops", accountShopId));
   if (!shopSnap.exists()) throw new Error("找不到對應車行");
 
   const shop = shopSnap.data() || {};
@@ -103,10 +125,10 @@ export async function resolveShopContext(db, user) {
   return {
     uid:user.uid,
     email:user.email || "",
-    shopId:account.shopId,
-    role:account.role || "admin",
+    shopId:accountShopId,
+    role,
     legacy:false,
-    shop:{ id:account.shopId, ...shop }
+    shop:{ id:accountShopId, ...shop }
   };
 }
 

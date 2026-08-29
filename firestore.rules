@@ -23,11 +23,19 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/adminAccounts/$(request.auth.uid))
         && get(/databases/$(database)/documents/adminAccounts/$(request.auth.uid)).data.enabled == true;
     }
+    function accountData() {
+      return get(/databases/$(database)/documents/adminAccounts/$(request.auth.uid)).data;
+    }
     function accountRole() {
-      return hasTenantAccount() ? get(/databases/$(database)/documents/adminAccounts/$(request.auth.uid)).data.role : null;
+      return hasTenantAccount() ? accountData().get('role', 'admin') : null;
+    }
+    function accountShopId() {
+      return hasTenantAccount()
+        ? accountData().get('shopId', accountData().get('shopID', accountData().get('shopid', accountData().get('shopld', ''))))
+        : '';
     }
     function belongsTo(shopId) {
-      return (shopId == 'jerry' && isJerryAdminEmail()) || (hasTenantAccount() && get(/databases/$(database)/documents/adminAccounts/$(request.auth.uid)).data.shopId == shopId);
+      return (shopId == 'jerry' && isJerryAdminEmail()) || (hasTenantAccount() && accountShopId() == shopId);
     }
     function isPlatformOwner() {
       return isOwnerEmail() || (hasTenantAccount() && accountRole() == 'platformOwner');
@@ -40,6 +48,15 @@ service cloud.firestore {
     }
     function canOperateShop(shopId) {
       return isShopManager(shopId) || isShopStaff(shopId);
+    }
+    function isLegacyXiaoyuManager() {
+      return legacyAdmin() || (hasTenantAccount() && accountShopId() == 'xiaoyu' && (accountRole() == 'platformOwner' || accountRole() == 'owner' || accountRole() == 'admin'));
+    }
+    function isLegacyXiaoyuStaff() {
+      return hasTenantAccount() && accountShopId() == 'xiaoyu' && accountRole() == 'staff';
+    }
+    function canOperateLegacyXiaoyu() {
+      return isLegacyXiaoyuManager() || isLegacyXiaoyuStaff();
     }
 
     function validPublicOrder(orderId) {
@@ -93,18 +110,71 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
     }
 
-    match /admins/{uid} { allow get: if signedIn() && request.auth.uid == uid; allow list, create, update, delete: if false; }
-    match /products/{productId} { allow read: if true; allow create, update, delete: if legacyAdmin(); }
-    match /siteSettings/{docId} { allow read: if true; allow create, update, delete: if legacyAdmin(); }
-    match /deliveryCases/{caseId} { allow read: if true; allow create, update, delete: if legacyAdmin(); }
-    match /orders/{orderId} { allow read, update, delete: if legacyAdmin(); allow create: if legacyAdmin() || validPublicOrder(orderId); }
-    match /onlineOrders/{orderId} { allow read, update, delete: if legacyAdmin(); allow create: if legacyAdmin() || validPublicOrder(orderId); }
-    match /installmentLeads/{leadId} { allow create: if validInstallmentLead(); allow read, update, delete: if legacyAdmin(); }
-    match /warranties/{warrantyId} { allow get: if legacyAdmin() || resource.data.published == true; allow list: if legacyAdmin(); allow create, update, delete: if legacyAdmin(); }
-    match /receipts/{receiptId} { allow read, create, update, delete: if legacyAdmin(); }
-    match /sales/{saleId} { allow read, create, update, delete: if legacyAdmin(); }
-    match /campaigns/{campaignId} { allow read, create, update, delete: if legacyAdmin(); }
-    match /drawCodes/{codeId} { allow read, create, update, delete: if legacyAdmin(); }
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+
+    // 小宇微電舊版根目錄資料
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update: if canOperateLegacyXiaoyu();
+      allow delete: if isLegacyXiaoyuManager();
+    }
+    match /siteSettings/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isLegacyXiaoyuManager();
+    }
+    match /deliveryCases/{caseId} {
+      allow read: if true;
+      allow create, update: if canOperateLegacyXiaoyu();
+      allow delete: if isLegacyXiaoyuManager();
+    }
+    match /orders/{orderId} {
+      allow read, update: if canOperateLegacyXiaoyu();
+      allow delete: if isLegacyXiaoyuManager();
+      allow create: if canOperateLegacyXiaoyu() || validPublicOrder(orderId);
+    }
+    match /onlineOrders/{orderId} {
+      allow read, update: if canOperateLegacyXiaoyu();
+      allow delete: if isLegacyXiaoyuManager();
+      allow create: if canOperateLegacyXiaoyu() || validPublicOrder(orderId);
+    }
+    match /installmentLeads/{leadId} {
+      allow create: if validInstallmentLead();
+      allow read: if canOperateLegacyXiaoyu();
+      allow update, delete: if isLegacyXiaoyuManager();
+    }
+    match /warranties/{warrantyId} {
+      allow get: if canOperateLegacyXiaoyu() || resource.data.published == true;
+      allow list: if canOperateLegacyXiaoyu();
+      allow create, update: if canOperateLegacyXiaoyu();
+      allow delete: if isLegacyXiaoyuManager();
+    }
+    match /receipts/{receiptId} {
+      allow read, create, update: if canOperateLegacyXiaoyu();
+      allow delete: if isLegacyXiaoyuManager();
+    }
+    match /sales/{saleId} {
+      allow read, create, update: if canOperateLegacyXiaoyu();
+      allow delete: if isLegacyXiaoyuManager();
+    }
+    match /campaigns/{campaignId} {
+      allow read: if canOperateLegacyXiaoyu();
+      allow create, update, delete: if isLegacyXiaoyuManager();
+    }
+    match /drawCodes/{codeId} {
+      allow read: if canOperateLegacyXiaoyu();
+      allow create, update, delete: if isLegacyXiaoyuManager();
+    }
+    match /auditLogs/{logId} {
+      allow create: if canOperateLegacyXiaoyu()
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.shopId == 'xiaoyu'
+        && request.resource.data.createdAt == request.time;
+      allow read: if isLegacyXiaoyuManager();
+      allow update, delete: if false;
+    }
 
     match /adminAccounts/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;
@@ -120,8 +190,15 @@ service cloud.firestore {
         allow create, update: if canOperateShop(shopId);
         allow delete: if isShopManager(shopId);
       }
-      match /siteSettings/{docId} { allow read: if true; allow create, update, delete: if isShopManager(shopId); }
-      match /deliveryCases/{caseId} { allow read: if true; allow create, update: if canOperateShop(shopId); allow delete: if isShopManager(shopId); }
+      match /siteSettings/{docId} {
+        allow read: if true;
+        allow create, update, delete: if isShopManager(shopId);
+      }
+      match /deliveryCases/{caseId} {
+        allow read: if true;
+        allow create, update: if canOperateShop(shopId);
+        allow delete: if isShopManager(shopId);
+      }
       match /orders/{orderId} {
         allow read, update: if canOperateShop(shopId);
         allow delete: if isShopManager(shopId);
@@ -143,10 +220,22 @@ service cloud.firestore {
         allow create, update: if canOperateShop(shopId);
         allow delete: if isShopManager(shopId);
       }
-      match /receipts/{receiptId} { allow read, create, update: if canOperateShop(shopId); allow delete: if isShopManager(shopId); }
-      match /sales/{saleId} { allow read, create, update: if canOperateShop(shopId); allow delete: if isShopManager(shopId); }
-      match /campaigns/{campaignId} { allow read: if canOperateShop(shopId); allow create, update, delete: if isShopManager(shopId); }
-      match /drawCodes/{codeId} { allow read: if canOperateShop(shopId); allow create, update, delete: if isShopManager(shopId); }
+      match /receipts/{receiptId} {
+        allow read, create, update: if canOperateShop(shopId);
+        allow delete: if isShopManager(shopId);
+      }
+      match /sales/{saleId} {
+        allow read, create, update: if canOperateShop(shopId);
+        allow delete: if isShopManager(shopId);
+      }
+      match /campaigns/{campaignId} {
+        allow read: if canOperateShop(shopId);
+        allow create, update, delete: if isShopManager(shopId);
+      }
+      match /drawCodes/{codeId} {
+        allow read: if canOperateShop(shopId);
+        allow create, update, delete: if isShopManager(shopId);
+      }
       match /auditLogs/{logId} {
         allow create: if canOperateShop(shopId)
           && request.resource.data.actorUid == request.auth.uid
@@ -157,6 +246,8 @@ service cloud.firestore {
       }
     }
 
-    match /{document=**} { allow read, write: if false; }
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }
