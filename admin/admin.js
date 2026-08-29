@@ -9,6 +9,7 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 import {
+  addDoc,
   getDocs,
   getFirestore,
   serverTimestamp,
@@ -85,6 +86,43 @@ function requireContext() {
   if (!currentContext?.shopId) throw new Error("尚未載入車行權限");
   return currentContext;
 }
+function isOwnerLike() {
+  return ["platformOwner","owner","admin"].includes(currentContext?.role || "");
+}
+function isStaff() { return currentContext?.role === "staff"; }
+function compactProduct(p = {}) {
+  return {
+    name:p.name || "", style:p.style || "", tag:p.tag || "", description:p.description || "",
+    colors:Array.isArray(p.colors)?p.colors:[], priceLead:Number(p.priceLead||0),
+    priceLithium:p.priceLithium == null ? null : Number(p.priceLithium||0), visible:p.visible !== false,
+    imageCount:Array.isArray(p.images)?p.images.length:0
+  };
+}
+async function logAudit(action, targetId, targetLabel, before = null, after = null) {
+  try {
+    const context = requireContext();
+    await addDoc(shopCollection(db, context, "auditLogs"), {
+      action,
+      targetId:targetId || "",
+      targetLabel:targetLabel || "",
+      before,
+      after,
+      actorUid:currentUser?.uid || "",
+      actorEmail:currentUser?.email || "",
+      role:context.role || "",
+      shopId:context.shopId,
+      createdAt:serverTimestamp()
+    });
+  } catch (error) {
+    console.warn("Audit log failed:", error);
+  }
+}
+function applyRoleUi() {
+  $$('[data-owner-only]').forEach((el) => el.classList.toggle("hidden", !isOwnerLike()));
+  if (isStaff()) {
+    $("#seedProductsBtn")?.classList.add("hidden");
+  }
+}
 
 function installPasswordLogin() {
   const card = $("#loginCard");
@@ -96,7 +134,7 @@ function installPasswordLogin() {
     <input id="adminEmailInput" type="email" autocomplete="username" placeholder="管理員 Email" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm" />
     <input id="adminPasswordInput" type="password" autocomplete="current-password" placeholder="密碼" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm" />
     <button id="emailLoginBtn" class="w-full bg-emerald-500 text-slate-950 font-black py-3 rounded-xl"><i class="fa-solid fa-right-to-bracket mr-2"></i>Email／密碼登入</button>
-    <div class="text-center text-[10px] text-slate-500">或使用原本的 Google 管理員登入</div>`;
+    <div class="text-center text-[10px] text-slate-500">或使用 Google 管理員登入</div>`;
   googleBtn.before(wrap);
   $("#emailLoginBtn")?.addEventListener("click", beginEmailLogin);
   $("#adminPasswordInput")?.addEventListener("keydown", (event) => { if (event.key === "Enter") beginEmailLogin(); });
@@ -177,8 +215,9 @@ async function showAdmin(user, context) {
   $("#headerActions")?.classList.add("flex");
   const shopName = context.shop?.name || context.shop?.displayName || context.shopId;
   $("#seedProductsBtn")?.classList.toggle("hidden", !context.legacy);
-  if ($("#adminIdentity")) $("#adminIdentity").textContent = `${shopName}｜${user.email || user.uid}`;
+  if ($("#adminIdentity")) $("#adminIdentity").textContent = `${shopName}｜${context.role || "admin"}｜${user.email || user.uid}`;
   document.title = `${shopName}｜管理員後台`;
+  applyRoleUi();
   await Promise.all([loadOrders(), loadProducts()]);
 }
 
@@ -232,11 +271,13 @@ function renderOrders() {
     <td class="p-3 text-slate-500">${formatDate(o.createdAt)}</td>
   </tr>`).join("");
   $$(".order-status").forEach((select) => select.addEventListener("change", async () => {
+    const found = orders.find((o) => o.id === select.dataset.orderId);
+    const before = found?.status || "";
     select.disabled = true;
     try {
       await updateDoc(shopDoc(db, requireContext(), "orders", select.dataset.orderId), { status:select.value, updatedAt:serverTimestamp(), updatedBy:currentUser.uid });
-      const found = orders.find((o) => o.id === select.dataset.orderId);
       if (found) found.status = select.value;
+      await logAudit("update_order_status", select.dataset.orderId, found?.orderNo || select.dataset.orderId, {status:before}, {status:select.value});
       showToast("訂單狀態已更新");
     } catch (error) {
       console.error(error); showToast("狀態更新失敗");
@@ -262,13 +303,14 @@ function renderProducts() {
   const tbody = $("#adminProductTableBody");
   if (!tbody) return;
   if (!products.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">尚未建立傑瑞商品，請按「新增車款」。</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="p-5 text-center text-slate-500">尚未建立商品。</td></tr>';
     return;
   }
   tbody.innerHTML = products.map((p) => `<tr class="hover:bg-slate-900/50"><td class="p-3 text-emerald-400">${Array.isArray(p.images)?p.images.length:0} 張</td><td class="p-3 font-bold text-white">${escapeHtml(p.name)}</td><td class="p-3 text-slate-400">${escapeHtml(p.style||"")}</td><td class="p-3">${money(p.priceLead)}</td><td class="p-3">${Number(p.priceLithium||0)>0?money(p.priceLithium):"不提供"}</td><td class="p-3">${p.visible===false?'<span class="text-rose-400">隱藏</span>':'<span class="text-emerald-400">顯示</span>'}</td><td class="p-3 text-right"><button class="edit-product text-emerald-400 underline" data-product-id="${escapeHtml(p.id)}">管理</button></td></tr>`).join("");
   $$(".edit-product").forEach((button) => button.addEventListener("click", () => openProductModal(button.dataset.productId)));
 }
 async function seedProducts() {
+  if (!isOwnerLike()) throw new Error("此功能限管理員使用");
   const context = requireContext();
   const batch = writeBatch(db);
   const existing = new Set(products.map((p) => p.id));
@@ -281,6 +323,7 @@ async function seedProducts() {
   }
   if (!count) return showToast("預設商品已經齊全");
   await batch.commit();
+  await logAudit("seed_products", "products", `補齊 ${count} 款商品`, null, {count});
   showToast(`已補齊 ${count} 款商品`);
   await loadProducts();
 }
@@ -317,21 +360,17 @@ function renderGallery(product) {
 }
 async function createProduct() {
   const context = requireContext();
-  const id = `jerry-${Date.now()}`;
+  const id = `${context.shopId}-${Date.now()}`;
   await setDoc(shopDoc(db, context, "products", id), {
-    name:"新車款", style:"", tag:"JERRY E-BIKE", description:"", colors:[],
-    priceLead:0, priceLithium:null, images:[], visible:false,
-    approvedForJerry:!context.legacy, shopId:context.shopId,
-    createdAt:serverTimestamp(), updatedAt:serverTimestamp(), updatedBy:currentUser.uid
+    name:"新車款", style:"", tag:"", description:"", colors:[], priceLead:0, priceLithium:null, images:[], visible:false,
+    approvedForJerry:!context.legacy, shopId:context.shopId, createdAt:serverTimestamp(), updatedAt:serverTimestamp(), updatedBy:currentUser.uid
   });
+  await logAudit("create_product", id, "新車款", null, {name:"新車款", visible:false});
   await loadProducts();
   openProductModal(id);
 }
 async function uploadToCloudinary(file, folder) {
-  const body = new FormData();
-  body.append("file", file);
-  body.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-  body.append("folder", folder);
+  const body = new FormData(); body.append("file", file); body.append("upload_preset", CLOUDINARY_UPLOAD_PRESET); body.append("folder", folder);
   const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, { method:"POST", body });
   const result = await response.json();
   if (!response.ok || !result.secure_url) throw new Error(result?.error?.message || "Cloudinary 圖片上傳失敗");
@@ -341,6 +380,7 @@ async function uploadImages(files) {
   const context = requireContext();
   const product = products.find((p) => p.id === editingProductId);
   if (!product || !files.length) return;
+  const before = compactProduct(product);
   if (!Array.isArray(product.images)) product.images = [];
   for (let i=0;i<files.length;i+=1) {
     const file = files[i];
@@ -358,58 +398,49 @@ async function uploadImages(files) {
     }
   }
   await setDoc(shopDoc(db, context, "products", product.id), { images:product.images, shopId:context.shopId, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
+  await logAudit("upload_product_images", product.id, product.name, before, compactProduct(product));
   if ($("#uploadProgressText")) $("#uploadProgressText").textContent = "上傳完成";
   renderGallery(product); renderProducts();
 }
 async function setPrimaryImage(index) {
-  const context = requireContext();
-  const product = products.find((p) => p.id === editingProductId);
-  if (!product) return;
+  const context = requireContext(); const product = products.find((p) => p.id === editingProductId); if (!product) return;
+  const before = compactProduct(product);
   product.images = (product.images || []).map((img,i) => ({...img,isPrimary:i===index}));
   await setDoc(shopDoc(db, context, "products", product.id), { images:product.images, shopId:context.shopId, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
+  await logAudit("set_primary_image", product.id, product.name, before, compactProduct(product));
   renderGallery(product); renderProducts();
 }
 async function deleteImage(index) {
-  const context = requireContext();
-  const product = products.find((p) => p.id === editingProductId);
-  const image = product?.images?.[index];
+  const context = requireContext(); const product = products.find((p) => p.id === editingProductId); const image = product?.images?.[index];
   if (!product || !image || !confirm("確定刪除這張照片？")) return;
+  const before = compactProduct(product);
   if (image.path && image.provider !== "cloudinary") { try { await deleteObject(ref(storage,image.path)); } catch (error) { console.warn(error); } }
   product.images.splice(index,1);
   if (product.images.length && !product.images.some((img) => img.isPrimary)) product.images[0].isPrimary = true;
   await setDoc(shopDoc(db, context, "products", product.id), { images:product.images, shopId:context.shopId, updatedAt:serverTimestamp(), updatedBy:currentUser.uid }, { merge:true });
+  await logAudit("delete_product_image", product.id, product.name, before, compactProduct(product));
   renderGallery(product); renderProducts();
 }
 async function saveProduct() {
-  const context = requireContext();
-  const product = products.find((p) => p.id === editingProductId);
-  if (!product) return;
+  const context = requireContext(); const product = products.find((p) => p.id === editingProductId); if (!product) return;
+  const before = compactProduct(product);
   const colors = ($("#editColorsInput")?.value || "").split(/[、,，]/).map((v) => v.trim()).filter(Boolean);
   const update = {
-    name:$("#editNameInput")?.value.trim() || "",
-    style:$("#editStyleInput")?.value.trim() || "",
-    tag:$("#editTagInput")?.value.trim() || "",
-    description:$("#editDescriptionInput")?.value.trim() || "",
-    colors,
-    priceLead:Math.max(0,Number($("#editPriceLeadInput")?.value)||0),
-    priceLithium:$("#editPriceLithiumInput")?.value===""?null:Math.max(0,Number($("#editPriceLithiumInput")?.value)||0),
-    visible:Boolean($("#editVisibleInput")?.checked),
-    approvedForJerry:context.legacy ? Boolean(product.approvedForJerry) : true,
-    shopId:context.shopId,
-    updatedAt:serverTimestamp(),
-    updatedBy:currentUser.uid
+    name:$("#editNameInput")?.value.trim() || "", style:$("#editStyleInput")?.value.trim() || "", tag:$("#editTagInput")?.value.trim() || "",
+    description:$("#editDescriptionInput")?.value.trim() || "", colors,
+    priceLead:Math.max(0,Number($("#editPriceLeadInput")?.value)||0), priceLithium:$("#editPriceLithiumInput")?.value===""?null:Math.max(0,Number($("#editPriceLithiumInput")?.value)||0),
+    visible:Boolean($("#editVisibleInput")?.checked), approvedForJerry:context.legacy ? Boolean(product.approvedForJerry) : true,
+    shopId:context.shopId, updatedAt:serverTimestamp(), updatedBy:currentUser.uid
   };
   await setDoc(shopDoc(db, context, "products", product.id), update, { merge:true });
   Object.assign(product,update);
+  await logAudit("update_product", product.id, product.name, before, compactProduct(product));
   renderProducts(); closeProductModal(); showToast("商品設定已儲存");
 }
 function switchTab(tab) {
   $("#admin-section-orders")?.classList.toggle("hidden",tab!=="orders");
   $("#admin-section-products")?.classList.toggle("hidden",tab!=="products");
-  $$(".admin-tab").forEach((button) => {
-    const active = button.dataset.adminTab===tab;
-    button.className = `admin-tab ${active?'bg-emerald-500 text-slate-950 font-black':'bg-slate-900 border border-slate-800 text-slate-300 font-bold'} rounded-xl p-3 text-xs`;
-  });
+  $$(".admin-tab").forEach((button) => { const active = button.dataset.adminTab===tab; button.className = `admin-tab ${active?'bg-emerald-500 text-slate-950 font-black':'bg-slate-900 border border-slate-800 text-slate-300 font-bold'} rounded-xl p-3 text-xs`; });
 }
 
 installPasswordLogin();
@@ -420,7 +451,7 @@ $("#refreshOrdersBtn")?.addEventListener("click",loadOrders);
 $("#orderSearch")?.addEventListener("input",renderOrders);
 $("#refreshProductsBtn")?.addEventListener("click",loadProducts);
 $("#newProductBtn")?.addEventListener("click",()=>createProduct().catch((e)=>{console.error(e);showToast("新增車款失敗");}));
-$("#seedProductsBtn")?.addEventListener("click",()=>seedProducts().catch((e)=>{console.error(e);showToast("建立商品失敗");}));
+$("#seedProductsBtn")?.addEventListener("click",()=>seedProducts().catch((e)=>{console.error(e);showToast(e?.message || "建立商品失敗");}));
 $$(".admin-tab").forEach((button)=>button.addEventListener("click",()=>switchTab(button.dataset.adminTab)));
 $("#closeProductModalBtn")?.addEventListener("click",closeProductModal);
 $("#chooseImagesBtn")?.addEventListener("click",()=>$("#imageFileInput")?.click());

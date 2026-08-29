@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-Hant" class="h-full bg-[#080a0f] text-slate-100">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <title>小宇微電｜操作紀錄</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-full bg-slate-950 text-slate-100 antialiased">
+  <main class="max-w-7xl mx-auto p-4 sm:p-6 space-y-5">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div><p class="text-xs text-emerald-400 font-bold">AUDIT LOG</p><h1 class="text-2xl font-black">操作紀錄</h1><p class="text-sm text-slate-400 mt-1">紀錄員工與管理員的商品、訂單等重要操作。</p></div>
+      <a href="index.html" class="bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl text-sm">← 回後台</a>
+    </div>
+    <div id="status" class="text-sm text-slate-400">讀取中…</div>
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-x-auto">
+      <table class="w-full text-left text-xs min-w-[900px]">
+        <thead><tr class="border-b border-slate-800 text-slate-500"><th class="p-3">時間</th><th class="p-3">操作人</th><th class="p-3">角色</th><th class="p-3">動作</th><th class="p-3">項目</th><th class="p-3">修改前</th><th class="p-3">修改後</th></tr></thead>
+        <tbody id="auditBody" class="divide-y divide-slate-800"></tbody>
+      </table>
+    </div>
+  </main>
+  <script src="../config.js?v=12.2"></script>
+  <script src="../firebase-config.js?v=12.2"></script>
+  <script type="module" src="audit-log.js?v=1"></script>
+</body>
+</html>
