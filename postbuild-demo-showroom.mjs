@@ -25,6 +25,10 @@ function replaceOnce(text, search, replacement, label) {
 }
 
 copy("demo/index.html", "demo/index.html");
+copy("demo/templates.css", "demo/templates.css");
+copy("demo/basic/index.html", "demo/basic/index.html");
+copy("demo/performance/index.html", "demo/performance/index.html");
+copy("demo/premium/index.html", "demo/premium/index.html");
 copy("admin/demo-bootstrap.js", "admin/demo-bootstrap.js");
 
 patch("admin/login.js", (input) => {
@@ -65,4 +69,4 @@ patch("admin/index.html", (input) => {
   return input.replace("</body>", '  <script type="module" src="/admin/demo-bootstrap.js?v=1"></script>\n</body>');
 });
 
-console.log("✓ DEMO showroom published: /demo/ + isolated shops/demo tenant bootstrap + shop selector entry");
+console.log("✓ DEMO showroom published: /demo/ selector + A/B/C storefront templates + isolated shops/demo tenant bootstrap");
