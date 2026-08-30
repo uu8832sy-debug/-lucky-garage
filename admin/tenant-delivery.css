@@ -1,0 +1,24 @@
+/* Standard delivery skin for non-legacy tenant shops */
+body.tenant-delivery-admin{background:radial-gradient(circle at 10% 0,rgba(16,185,129,.08),transparent 26%),#070b11}
+body.tenant-delivery-admin header{border-bottom-color:rgba(51,65,85,.75)}
+body.tenant-delivery-admin .tenant-delivery-hero{background:linear-gradient(135deg,rgba(15,23,42,.96),rgba(8,24,28,.94));border:1px solid rgba(52,211,153,.15);border-radius:24px;padding:20px;display:grid;gap:18px;box-shadow:0 20px 60px rgba(0,0,0,.16)}
+body.tenant-delivery-admin .tenant-delivery-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+body.tenant-delivery-admin .tenant-delivery-kicker{font-size:10px;letter-spacing:.18em;font-weight:900;color:#34d399;margin-bottom:5px}
+body.tenant-delivery-admin .tenant-delivery-title{font-size:22px;font-weight:950;color:#f8fafc;line-height:1.25}
+body.tenant-delivery-admin .tenant-delivery-desc{font-size:12px;color:#94a3b8;line-height:1.75;margin-top:6px}
+body.tenant-delivery-admin .tenant-delivery-badge{display:inline-flex;align-items:center;gap:7px;border:1px solid rgba(52,211,153,.24);background:rgba(16,185,129,.08);color:#6ee7b7;border-radius:999px;padding:7px 11px;font-size:11px;font-weight:900}
+body.tenant-delivery-admin .tenant-delivery-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+body.tenant-delivery-admin .tenant-stat{background:rgba(2,6,23,.58);border:1px solid rgba(51,65,85,.8);border-radius:16px;padding:14px;text-decoration:none;transition:.18s ease}
+body.tenant-delivery-admin .tenant-stat:hover{transform:translateY(-1px);border-color:rgba(52,211,153,.35)}
+body.tenant-delivery-admin .tenant-stat small{display:block;color:#64748b;font-size:10px;font-weight:800;margin-bottom:6px}
+body.tenant-delivery-admin .tenant-stat strong{display:block;color:#f8fafc;font-size:19px;font-weight:950}
+body.tenant-delivery-admin .tenant-stat span{display:block;color:#94a3b8;font-size:10px;margin-top:4px}
+body.tenant-delivery-admin .tenant-delivery-guide{display:flex;align-items:center;gap:9px;flex-wrap:wrap;color:#94a3b8;font-size:11px}
+body.tenant-delivery-admin .tenant-delivery-guide b{color:#cbd5e1}
+body.tenant-delivery-admin .tenant-delivery-guide i{color:#34d399}
+body.tenant-delivery-admin .tenant-obsolete{display:none!important}
+body.tenant-delivery-admin #adminApp>nav{grid-template-columns:repeat(6,minmax(0,1fr))}
+body.tenant-delivery-admin #adminApp>nav>*{min-height:48px;display:flex;align-items:center;justify-content:center}
+body.tenant-delivery-admin .tenant-brand-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(14,165,233,.08);border:1px solid rgba(56,189,248,.2);color:#7dd3fc;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:900}
+@media(max-width:900px){body.tenant-delivery-admin .tenant-delivery-stats{grid-template-columns:repeat(2,minmax(0,1fr))}body.tenant-delivery-admin #adminApp>nav{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){body.tenant-delivery-admin .tenant-delivery-hero{padding:16px;border-radius:20px}body.tenant-delivery-admin .tenant-delivery-stats{grid-template-columns:1fr 1fr}body.tenant-delivery-admin #adminApp>nav{grid-template-columns:repeat(2,minmax(0,1fr))}.tenant-delivery-title{font-size:19px}}
