@@ -18,7 +18,11 @@ function includesAll(label, text, values) {
   ok(label, missing.length === 0, missing.length ? `缺少：${missing.join("、")}` : "");
 }
 
-const storefront = read("public/demo/index.html");
+const selectorPage = read("public/demo/index.html");
+const styles = read("public/demo/templates.css");
+const basic = read("public/demo/basic/index.html");
+const performance = read("public/demo/performance/index.html");
+const premium = read("public/demo/premium/index.html");
 const login = read("public/admin/login.js");
 const selector = read("public/admin/shop-selector.js");
 const bootstrap = read("public/admin/demo-bootstrap.js");
@@ -26,10 +30,21 @@ const admin = read("public/admin/index.html");
 const core = read("public/multi-shop-core.js");
 const rules = read("firestore.rules");
 
-includesAll("DEMO 前台已發布且清楚標示假資料", storefront, [
-  "小宇車行系統｜DEMO 展示店", "DEMO 展示站", "所有車款、價格、訂單與客戶資料皆為展示假資料", "/admin/login.html?shop=demo"
+includesAll("DEMO 模板選擇頁已發布", selectorPage, [
+  "小宇車行系統｜模板展示中心", "3 套完整前台模板", "/demo/basic/", "/demo/performance/", "/demo/premium/", "/admin/login.html?shop=demo"
 ]);
-includesAll("DEMO 前台包含系統銷售流程展示", storefront, ["線上訂單怎麼走？", "店家確認／拒絕", "建立完整訂單", "模擬線上下單"]);
+includesAll("Template A 極簡商務版完整發布", basic, [
+  "TEMPLATE A", "極簡商務", "熱門車款", "線上訂單流程", "店家確認／拒絕", "建立完整訂單", "/admin/login.html?shop=demo"
+]);
+includesAll("Template B 性能暗黑版完整發布", performance, [
+  "TEMPLATE B", "DARK PERFORMANCE", "FEATURED MACHINES", "ORDER FLOW", "確認／拒絕", "正式訂單", "/admin/login.html?shop=demo"
+]);
+includesAll("Template C 品牌旗艦版完整發布", premium, [
+  "TEMPLATE C", "PREMIUM BRAND", "Signature Collection", "Recent Deliveries", "店家審核", "正式訂單", "/admin/login.html?shop=demo"
+]);
+includesAll("三套模板具備獨立視覺樣式", styles, [
+  "body.basic", "body.performance", "body.premium", "minimal business", "performance dark", "premium brand"
+]);
 includesAll("共用登入入口固定包含 DEMO 店", login, [
   'id:"demo"', "小宇車行系統｜DEMO 展示店", '["demo", DEMO]'
 ]);
@@ -55,4 +70,4 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`  ✗ ${failure}`));
   process.exit(1);
 }
-console.log("\n✓ DEMO storefront, selector, bootstrap and tenant isolation passed.\n");
+console.log("\n✓ DEMO selector + three visual storefront templates + isolated tenant bootstrap passed.\n");
