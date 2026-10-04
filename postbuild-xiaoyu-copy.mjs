@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 
 const outDir = path.resolve("public");
 const sourceRoot = path.resolve(".");
@@ -38,13 +39,13 @@ patch("products.html", (input) => {
   html = html.replace(/實車照片、售價、電池版本與參考續航集中展示；[^<]*客服最終確認為準。/g,
     "實車照片、售價、電池版本與參考續航集中展示；車款顏色依現貨為主，領牌及分期結果以客服最終確認為準。");
   html = html.replace(/<div class="notice" style="margin-top:14px">[\s\S]*?<\/div>/,
-    '<div class="notice" style="margin-top:14px"><b>正式電池方案：</b>鉛酸、7230 鋰電、7240 鋰電、7250 鋰電、7265 鋰電。車款顏色依現貨為主；續航依載重、路況及騎乘方式而異。</div>');
+    '<div class="notice" style="margin-top:14px"><b>正式電池方案：</b>各車款提供的電壓、容量及售價不同，請依該車款列出的電池方案選購。車款顏色依現貨為主；續航依載重、路況及騎乘方式而異。</div>');
   html = html.replaceAll("電池參考壽命", "電池保固");
   html = html.replaceAll("送出後會建立「待訂金」訂單，實際訂金、交期及配備由客服再次確認。", "送出後由客服確認訂單內容與交車安排。");
   html = html.replaceAll("例如：想了解無卡分期、指定顏色或交車時間", "例如：想了解無卡分期或其他需求");
   html = html.replaceAll('<span>顏色</span><select id="color" required></select>', '<span>車款顏色</span><select id="color" required></select>');
   html = html.replace(/<button class="filter-btn" data-filter="lithium">[^<]*<\/button>/,
-    '<button class="filter-btn" data-filter="lithium">可選鋰電（7230／7240／7250／7265）</button>');
+    '<button class="filter-btn" data-filter="lithium">可選鋰電</button>');
   return html;
 });
 
@@ -75,7 +76,7 @@ patch("products.js", (input) => {
     if (Number(product?.priceTernary || 0) > 0) fallback.push({ key:"7230", label:"7230 鋰電", battery:"7230 鋰電", price:Number(product.priceTernary), range:product?.rangeTernary || "請洽客服確認", warranty:"1 年" });
     return fallback.filter((item) => item.price > 0);
   }
-  function hasTernary(product) { return batteryOptionsFor(product).some((item) => item.key !== "lead"); }
+  function hasTernary(product) { return batteryOptionsFor(product).some((item) => /鋰/.test(item.label)); }
   function hasLiFePO4() { return false; }
   function productMatches(product) {`, "products merge/official price lock");
 
@@ -84,7 +85,7 @@ patch("products.js", (input) => {
 `  function batteryLabel(product) {
     const options = batteryOptionsFor(product);
     if (options.length <= 1) return options[0]?.label || "鉛酸版";
-    return "鉛酸／7230／7240／7250／7265 鋰電";
+    return options.map((item) => item.label).join("／");
   }
   function rangeSummary(product) {
     return batteryOptionsFor(product).map((item) => \`${'${'}item.label} ${'${'}item.range || "請洽客服確認"}\`).join("｜");
@@ -123,6 +124,8 @@ patch("products.js", (input) => {
     'const noLicense = product?.licenseRequired === false || String(product?.name || "").includes("小紅豆");\n    const isTrike = String(product?.name || "").includes("三輪");\n    if (noLicense) {\n      select.innerHTML = `<option value="不需代辦領牌" data-fee="0" data-hint="此車款不套用領牌代辦費。">不需代辦領牌</option>`;\n      select.disabled = true;\n      return;\n    }\n    if (isTrike) {'
   );
 
+  js = js.replace('<div class="price-note">以上為車價；代辦領牌＋保險另加 NT$3,000。</div>', '<div class="price-note">${product.licenseRequired === false ? "此車款不適用領牌代辦費。" : "以上為車價；代辦領牌＋保險另加 NT$3,000。"}</div>');
+
   js = js.replaceAll("請協助確認訂金與交車。", "請協助確認訂單內容與交車安排。");
   js = js.replaceAll("請協助確認訂金、領牌方式與交車安排。", "請協助確認訂單內容、領牌方式與交車安排。");
   js = mustReplace(js, 'doc(db, "onlineOrders", orderId)', 'doc(db, "orders", orderId)', "public order collection");
@@ -138,19 +141,19 @@ patch("home.js", (input) => {
     /  function mergeRemote\(remote\)\{[\s\S]*?\n  function renderProducts\(products\)\{/,
 `  function mergeRemote(remote){const map=new Map(normalize(defaults).map((p)=>[p.id,{...p}]));for(const r of remote||[]){if(!r?.id||!map.has(r.id))continue;const base=map.get(r.id);const imgs=imageUrls(r);map.set(r.id,{...base,visible:r.visible!==false,images:imgs.length?imgs:imageUrls(base)});}return normalize([...map.values()]);}
   function batteryOptionsFor(p){const list=Array.isArray(p?.batteryOptions)?p.batteryOptions:[];if(list.length)return list.map((x)=>({...x,price:Number(x.price||0)})).filter((x)=>x.price>0);return [{key:'lead',label:'鉛酸電池',price:Number(p?.priceLead||0),range:p?.rangeLead||'請洽客服確認'}].filter((x)=>x.price>0);}
-  function hasTernary(p){return batteryOptionsFor(p).some((x)=>x.key!=='lead');}
+  function hasTernary(p){return batteryOptionsFor(p).some((x)=>/鋰/.test(x.label));}
   function hasLiFePO4(){return false;}
-  function batterySummary(p){const x=batteryOptionsFor(p);return x.length>1?'鉛酸／7230／7240／7250／7265 鋰電':(x[0]?.label||'鉛酸版');}
+  function batterySummary(p){const x=batteryOptionsFor(p);return x.map((item)=>item.label).join('／')||'電池規格請洽客服';}
   function rangeSummary(p){return batteryOptionsFor(p).map((x)=>\`${'${'}x.label} ${'${'}x.range||'請洽客服確認'}\`).join('｜');}
   function badgeText(p){return batteryOptionsFor(p).length>1?'多種電池規格可選':'鉛酸版';}
-  function card(p){const img=imageUrls(p)[0]||'/icon-512.png';const priceBlocks=batteryOptionsFor(p).map((x)=>\`<div><small>${'${'}escapeHtml(x.label)}</small><strong>${'${'}money(x.price)}</strong></div>\`);return \`<article class="product-card"><a class="product-photo" href="/products.html#${'${'}escapeHtml(p.id)}"><img src="${'${'}escapeHtml(img)}" alt="${'${'}escapeHtml(p.name)} 實車照片" loading="lazy" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">${'${'}escapeHtml(badgeText(p))}</span></a><div class="product-body"><div><span class="product-style">${'${'}escapeHtml(p.style||'')}</span><h3>${'${'}escapeHtml(p.name)}</h3></div><div class="spec-row"><span>🔋 ${'${'}escapeHtml(batterySummary(p))}</span><span>🛣️ ${'${'}escapeHtml(rangeSummary(p))}</span></div><div class="model-prices">${'${'}priceBlocks.join('')}</div><div class="price-note">車價不含領牌保險代辦；代辦另加 NT$3,000。</div><div class="price-row"><a class="btn btn-primary full-width" href="/products.html#${'${'}escapeHtml(p.id)}">看詳情</a></div></div></article>\`;}
+  function card(p){const img=imageUrls(p)[0]||'/icon-512.png';const priceBlocks=batteryOptionsFor(p).map((x)=>\`<div><small>${'${'}escapeHtml(x.label)}</small><strong>${'${'}money(x.price)}</strong></div>\`);return \`<article class="product-card"><a class="product-photo" href="/products.html#${'${'}escapeHtml(p.id)}"><img src="${'${'}escapeHtml(img)}" alt="${'${'}escapeHtml(p.name)} 實車照片" loading="lazy" onerror="this.onerror=null;this.src='/icon-512.png'"><span class="tag">${'${'}escapeHtml(badgeText(p))}</span></a><div class="product-body"><div><span class="product-style">${'${'}escapeHtml(p.style||'')}</span><h3>${'${'}escapeHtml(p.name)}</h3></div><div class="spec-row"><span>🔋 ${'${'}escapeHtml(batterySummary(p))}</span><span>🛣️ ${'${'}escapeHtml(rangeSummary(p))}</span></div><div class="model-prices">${'${'}priceBlocks.join('')}</div><div class="price-note">${'${'}p.licenseRequired === false ? "此車款不適用領牌代辦費。" : "車價不含領牌保險代辦；代辦另加 NT$3,000。"}</div><div class="price-row"><a class="btn btn-primary full-width" href="/products.html#${'${'}escapeHtml(p.id)}">看詳情</a></div></div></article>\`;}
   function renderProducts(products){`, "home official price render");
 
   js = mustRegex(js,
     /    const batteryOptions=\(p\)=>\{[\s\S]*?\n    \};/,
 `    const batteryOptions=(p)=>batteryOptionsFor(p);`, "installment battery options");
   js = js.replace("function productCanLicense(p){return p?.id!==\"scooter-12\"&&!/無法領牌|不可領牌/.test(String(p?.note||''));}", "function productCanLicense(p){return p?.licenseRequired!==false&&!/無法領牌|不可領牌/.test(String(p?.note||''));}");
-  js = js.replace("batteryKey:r.battery?.key||''", "batteryKey:(r.battery?.key==='lead'?'lead':'ternary')");
+  js = js.replace("batteryKey:r.battery?.key||''", "batteryKey:(/鉛酸/.test(r.battery?.label||'')?'lead':'ternary')");
   return js;
 });
 
@@ -162,7 +165,7 @@ patch("admin/orders.html", (input) => {
 `<select id="model" required>
               <option value="">請選擇車款</option>
               <option>大偉士</option><option>Z3 天鵝座</option><option>正9號</option><option>小偉士</option><option>神盾</option>
-              <option>DIO</option><option>拿鐵</option><option>QC</option><option>小紅豆｜電輔車</option><option>H1</option><option>其他</option>
+              <option>極酷</option><option>DIO</option><option>拿鐵</option><option>QC</option><option>小紅豆｜電輔車</option><option>H1</option><option>其他</option>
             </select>`, "admin model list");
   html = html.replaceAll("車款版本 *", "版本／電池規格 *");
   html = html.replaceAll("代辦（另加 NT$2,500）", "代辦（另加 NT$3,000）");
@@ -173,29 +176,16 @@ patch("admin/orders.html", (input) => {
 
 patch("admin/orders.js", (input) => {
   let js = input;
+  const catalogContext = { window:{} };
+  vm.runInNewContext(fs.readFileSync(path.join(sourceRoot, "xiaoyu-official-catalog.js"), "utf8"), catalogContext);
+  const table = {};
+  for (const p of catalogContext.window.YU_PRODUCT_CATALOG) {
+    table[p.name] ||= [];
+    for (const b of p.batteryOptions) table[p.name].push([`${p.style}｜${b.label}`, b.battery || b.label, b.price]);
+  }
+  table["其他"] = [["其他／手動輸入", "其他", 0]];
   const priceTable = `
-const XIAOYU_PRICE_TABLE = {
-  "大偉士": [
-    ["普通版｜鉛酸電池","鉛酸電池",33000],["普通版｜7230 鋰電","7230 鋰電",49800],["普通版｜7240 鋰電","7240 鋰電",54800],["普通版｜7250 鋰電","7250 鋰電",60800],["普通版｜7265 鋰電","7265 鋰電",67800],
-    ["改裝特仕版｜鉛酸電池","鉛酸電池",35000],["改裝特仕版｜7230 鋰電","7230 鋰電",51800],["改裝特仕版｜7240 鋰電","7240 鋰電",56800],["改裝特仕版｜7250 鋰電","7250 鋰電",62800],["改裝特仕版｜7265 鋰電","7265 鋰電",69800]
-  ],
-  "Z3 天鵝座": [
-    ["普通版｜鉛酸電池","鉛酸電池",36000],["普通版｜7230 鋰電","7230 鋰電",52800],["普通版｜7240 鋰電","7240 鋰電",57800],["普通版｜7250 鋰電","7250 鋰電",63800],["普通版｜7265 鋰電","7265 鋰電",70800],
-    ["暗魂版｜鉛酸電池","鉛酸電池",38000],["暗魂版｜7230 鋰電","7230 鋰電",54800],["暗魂版｜7240 鋰電","7240 鋰電",59800],["暗魂版｜7250 鋰電","7250 鋰電",65800],["暗魂版｜7265 鋰電","7265 鋰電",72800]
-  ],
-  "正9號": [
-    ["曠達版｜鉛酸電池","鉛酸電池",35000],["曠達版｜7230 鋰電","7230 鋰電",51800],["曠達版｜7240 鋰電","7240 鋰電",56800],["曠達版｜7250 鋰電","7250 鋰電",62800],["曠達版｜7265 鋰電","7265 鋰電",69800],
-    ["金大力版｜鉛酸電池","鉛酸電池",35000],["金大力版｜7230 鋰電","7230 鋰電",51800],["金大力版｜7240 鋰電","7240 鋰電",56800],["金大力版｜7250 鋰電","7250 鋰電",62800],["金大力版｜7265 鋰電","7265 鋰電",69800]
-  ],
-  "小偉士": [["標準版｜鉛酸電池","鉛酸電池",27400],["標準版｜7230 鋰電","7230 鋰電",45800],["標準版｜7240 鋰電","7240 鋰電",50800],["標準版｜7250 鋰電","7250 鋰電",56800],["標準版｜7265 鋰電","7265 鋰電",63800]],
-  "神盾": [["標準版｜鉛酸電池","鉛酸電池",29000],["標準版｜7230 鋰電","7230 鋰電",47400],["標準版｜7240 鋰電","7240 鋰電",52400],["標準版｜7250 鋰電","7250 鋰電",58400],["標準版｜7265 鋰電","7265 鋰電",65400]],
-  "DIO": [["標準版｜鉛酸電池","鉛酸電池",30000],["標準版｜7230 鋰電","7230 鋰電",48400],["標準版｜7240 鋰電","7240 鋰電",53400],["標準版｜7250 鋰電","7250 鋰電",59400],["標準版｜7265 鋰電","7265 鋰電",66400]],
-  "拿鐵": [["標準版｜鉛酸電池","鉛酸電池",30000],["標準版｜7230 鋰電","7230 鋰電",48400],["標準版｜7240 鋰電","7240 鋰電",53400],["標準版｜7250 鋰電","7250 鋰電",59400],["標準版｜7265 鋰電","7265 鋰電",66400]],
-  "QC": [["標準版｜鉛酸電池","鉛酸電池",33000],["標準版｜7230 鋰電","7230 鋰電",49800],["標準版｜7240 鋰電","7240 鋰電",54800],["標準版｜7250 鋰電","7250 鋰電",60800],["標準版｜7265 鋰電","7265 鋰電",67800]],
-  "小紅豆｜電輔車": [["標準版｜鉛酸整車","鉛酸整車",18500]],
-  "H1": [["特仕版｜鉛酸電池","鉛酸電池",38000],["特仕版｜7230 鋰電","7230 鋰電",54800],["特仕版｜7240 鋰電","7240 鋰電",59800],["特仕版｜7250 鋰電","7250 鋰電",65800],["特仕版｜7265 鋰電","7265 鋰電",72800]],
-  "其他": [["其他／手動輸入","其他",0]]
-};
+const XIAOYU_PRICE_TABLE = ${JSON.stringify(table)};
 function xiaoyuVariants(model) {
   return (XIAOYU_PRICE_TABLE[model] || XIAOYU_PRICE_TABLE["其他"]).map(([label,battery,price]) => ({ label,battery,price,cost:0 }));
 }
@@ -207,9 +197,19 @@ function xiaoyuVariants(model) {
   return VEHICLE_COSTS[model] || VEHICLE_COSTS["其他"];
 }`, "admin variant source");
 
+  js = mustRegex(js, /function selectedVariantInfo\(\) \{[\s\S]*?\n\}/,
+`function selectedVariantInfo() {
+  const variants = variantOptionsFor(fields.model.value);
+  const selected = variants.find((item) => item.label === fields.vehicleVariant.value);
+  if (selected) return selected;
+  if (currentContext?.legacy && fields.vehicleVariant.value) return { label:fields.vehicleVariant.value, battery:fields.vehicleVariant.value.split("｜").pop(), price:numberValue(fields.price.value), cost:numberValue(fields.cost.value) };
+  return variants[0];
+}`, "preserve historical variant");
+
   js = mustRegex(js, /function updateVariantOptions\(\{ savedVariant = "", savedCost = null \} = \{\}\) \{[\s\S]*?\n\}/,
 `function updateVariantOptions({ savedVariant = "", savedCost = null, savedPrice = null } = {}) {
-  const variants = variantOptionsFor(fields.model.value);
+  const variants = variantOptionsFor(fields.model.value).slice();
+  if (savedVariant && savedPrice !== null && !variants.some((item) => item.label === savedVariant)) variants.push({ label:savedVariant, battery:savedVariant.split("｜").pop(), price:numberValue(savedPrice), cost:numberValue(savedCost) });
   fields.vehicleVariant.innerHTML = variants.map((item) => \`<option value="${'${'}escapeHtml(item.label)}">${'${'}escapeHtml(item.label)}</option>\`).join("");
   const wanted = variants.some((item) => item.label === savedVariant) ? savedVariant : variants[0].label;
   fields.vehicleVariant.value = wanted;
@@ -243,3 +243,8 @@ function xiaoyuVariants(model) {
 });
 
 console.log("Applied Xiaoyu final storefront/order/price fixes.");
+
+// Refresh scripts for returning customers after the October price update.
+for (const page of ["index.html", "products.html", "installment.html", "admin/orders.html"]) {
+  patch(page, (html) => html.replace(/((?:catalog|products|home|orders)\.js)(?:\?v=[^"']*)?/g, "$1?v=20261004"));
+}

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 
 const root = path.resolve("public");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
@@ -19,18 +20,38 @@ function containsAll(text, values, label) {
   values.forEach((value) => expect(text.includes(String(value)), `${label} missing ${value}`));
 }
 
-// 5 頁正式價目表核心價格：每個價格至少要出現在正式 catalog。
-containsAll(catalog, [
-  33000,49800,54800,60800,67800,
-  35000,51800,56800,62800,69800,
-  36000,52800,57800,63800,70800,
-  38000,59800,65800,72800,
-  27400,45800,50800,63800,
-  29000,47400,52400,58400,65400,
-  30000,48400,53400,59400,66400,
-  18500
-], "official price catalog");
-containsAll(catalog, ["7230 鋰電","7240 鋰電","7250 鋰電","7265 鋰電","車款顏色依現貨為主","小紅豆｜電輔車","H1"], "official catalog labels");
+// Verify all published prices against the approved October pricing matrix.
+const expected = {
+ "scooter-1":[36000,51000,57000,62000,67000,73000],
+ "scooter-1-special":[41000,56000,62000,67000,72000,78000],
+ "scooter-4":[41000,56000,62000,67000,72000,78000],
+ "scooter-5":[46000,61000,67000,72000,77000,83000],
+ "scooter-6":[43000,58000,64000,69000,74000,80000],
+ "scooter-7":[48000,63000,69000,74000,79000,85000],
+ "scooter-2":[30000,31000,41000,47000,50000],
+ "scooter-11":[18000,21000,27000,31000],
+ "scooter-3":[30500,50000,55000,65500,71000],
+ "scooter-9":[31500,51000,56000,66500,72000],
+ "scooter-8":[31500,51000,56000,66500,72000],
+ "scooter-10":[34500,52500,57500,68000,73500],
+ "red-bean":[19500], "h1-special":[40000,57500,63000,69000,76500]
+};
+const ctx={window:{}}; vm.runInNewContext(catalog,ctx);
+const items=ctx.window.YU_PRODUCT_CATALOG;
+expect(items.length === Object.keys(expected).length, "catalog has unexpected/missing models");
+for (const [id, prices] of Object.entries(expected)) {
+ const p=items.find((x)=>x.id===id);
+ expect(p && JSON.stringify(p.batteryOptions.map((b)=>b.price))===JSON.stringify(prices), id + " approved price mismatch");
+ expect(new Set(p.batteryOptions.map((b)=>b.key)).size===p.batteryOptions.length, id + " duplicate battery keys");
+}
+expect(items.find((p)=>p.id==='red-bean').licenseRequired===false, "red bean must not have plate fee");
+const adminTableMatch=ordersJs.match(/const XIAOYU_PRICE_TABLE = (.*);/);
+expect(!!adminTableMatch, "admin price table missing");
+const adminTable=JSON.parse(adminTableMatch[1]);
+for(const p of items) for(const b of p.batteryOptions) expect(adminTable[p.name].some(([label,battery,price])=>label===p.style+'｜'+b.label&&price===b.price), p.id+' admin price differs');
+expect(products.includes('batteryOptionsFor(product).map((option)'), 'public price list must render every battery option');
+expect(!catalog.includes('鋰鐵'), 'catalog must not sell retired lithium iron options');
+containsAll(catalog, ["7230 鋰電","7240 鋰電","7250 鋰電","7265 鋰電","72V80Ah 鋰電","48V12Ah 鉛酸","車款顏色依現貨為主","小紅豆｜電輔車","H1","極酷"], "official catalog labels");
 
 // 前台下單必須直接進後台 orders，不得再分流 onlineOrders。
 expect(products.includes('doc(db, "orders", orderId)'), "storefront must write orders collection");
@@ -42,11 +63,11 @@ expect(!products.includes("請協助確認訂金、領牌方式與交車安排")
 
 // 首頁與分期同一份正式價格結構。
 expect(home.includes("batteryOptionsFor"), "home/installment must use official battery options");
-expect(home.includes("batteryKey:(r.battery?.key==='lead'?'lead':'ternary')"), "installment lead compatibility mapping missing");
+expect(home.includes("batteryKey:(/鉛酸/.test(r.battery?.label||'')?'lead':'ternary')"), "installment lead compatibility mapping missing");
 
 // 後台訂單須有正式價格表與正確代辦費。
 containsAll(ordersJs, ["XIAOYU_PRICE_TABLE","大偉士","Z3 天鵝座","正9號","小偉士","神盾","DIO","拿鐵","QC","小紅豆｜電輔車","H1"], "admin order price table");
-containsAll(ordersJs, [33000,49800,27400,45800,29000,47400,30000,48400,18500,72800], "admin official prices");
+expect(ordersJs.includes("savedPrice:numberValue(order.price)"), "existing orders must retain sale price");
 expect(ordersHtml.includes("代辦（另加 NT$3,000）"), "admin license fee must be 3000");
 expect(!ordersHtml.includes("代辦（另加 NT$2,500）"), "admin still shows old 2500 fee");
 expect(ordersJs.includes("lithiumBattery ? 12 : 6"), "battery warranty month logic missing");

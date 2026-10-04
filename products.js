@@ -157,9 +157,7 @@
     box.innerHTML = products.map((product) => `<article class="price-list-card">
       <div><span>${escapeHtml(product.style || "")}</span><strong>${escapeHtml(product.name)}</strong></div>
       <div class="price-list-values">
-        <p><small>鉛酸版</small><b>${money(product.priceLead)}</b></p>
-        ${hasTernary(product) ? `<p><small>三元鋰 30Ah</small><b>${money(product.priceTernary)}</b></p>` : ""}
-        ${hasLiFePO4(product) ? `<p><small>鋰鐵 30Ah</small><b>${money(product.priceLithium)}</b></p>` : ""}
+        ${batteryOptionsFor(product).map((option) => `<p><small>${escapeHtml(option.label)}</small><b>${money(option.price)}</b></p>`).join("")}
       </div>
     </article>`).join("");
   }
