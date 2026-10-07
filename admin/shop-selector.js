@@ -1,7 +1,7 @@
 import { getApps, getApp, initializeApp } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
 import { collection, getDocs, getFirestore, query, where } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-firestore.js";
-import { resolveShopContext, setOwnerShop } from "../multi-shop-core.js";
+import { isPrimaryOwner, resolveShopContext, setOwnerShop } from "../multi-shop-core.js";
 
 const app = getApps().length ? getApp() : initializeApp(window.LUCKY_GARAGE_FIREBASE_CONFIG || {});
 const auth = getAuth(app);
@@ -137,7 +137,7 @@ function renderLoginSelector() {
 function renderOwnerSwitcher(activeId) {
   const identity = document.querySelector("#adminIdentity");
   const actions = document.querySelector("#headerActions");
-  if (!identity || !actions || !/uu8832sr@gmail\.com/i.test(identity.textContent || "")) return;
+  if (!identity || !actions || !isPrimaryOwner(auth.currentUser)) return;
   let select = document.querySelector("#ownerShopSwitcher");
   if (!select) {
     select = document.createElement("select");

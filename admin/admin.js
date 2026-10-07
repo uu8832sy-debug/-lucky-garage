@@ -25,6 +25,7 @@ import {
   uploadBytes
 } from "https://www.gstatic.com/firebasejs/12.17.0/firebase-storage.js";
 import {
+  isPrimaryOwner,
   resolveShopContext,
   shopCollection,
   shopDoc,
@@ -118,7 +119,11 @@ async function logAudit(action, targetId, targetLabel, before = null, after = nu
   }
 }
 function applyRoleUi() {
+  $$('a[href*="audit-log.html"], a[href*="platform.html"]').forEach((el) => {
+    el.dataset.platformOnly = "";
+  });
   $$('[data-owner-only]').forEach((el) => el.classList.toggle("hidden", !isOwnerLike()));
+  $$('[data-platform-only]').forEach((el) => el.classList.toggle("hidden", !isPrimaryOwner(currentUser)));
   if (isStaff()) {
     $("#seedProductsBtn")?.classList.add("hidden");
   }

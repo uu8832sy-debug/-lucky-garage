@@ -34,11 +34,16 @@ function normalizeAccountShopId(account = {}) {
   return String(value || "").trim().toLowerCase();
 }
 
+export function isPrimaryOwner(user) {
+  return !!user && !user.isAnonymous && user.emailVerified === true
+    && String(user.email || "").toLowerCase() === LEGACY_OWNER_EMAIL;
+}
+
 export async function resolveShopContext(db, user) {
   if (!user || user.isAnonymous) throw new Error("尚未登入");
 
   const email = String(user.email || "").toLowerCase();
-  const isPlatformOwner = email === LEGACY_OWNER_EMAIL;
+  const isPlatformOwner = isPrimaryOwner(user);
   const isJerryAdmin = email === JERRY_ADMIN_EMAIL;
 
   if (isJerryAdmin) {
@@ -101,7 +106,8 @@ export async function resolveShopContext(db, user) {
 
   const accountShopId = normalizeAccountShopId(account);
   if (!accountShopId) throw new Error("此帳號缺少 shopId");
-  const role = String(account.role || "admin");
+  const role = String(account.role || "");
+  if (!["owner", "admin", "staff"].includes(role)) throw new Error("此帳號未設定有效操作權限");
 
   // 小宇微電目前仍使用根目錄的舊版資料結構；員工帳號也必須走 legacy context，
   // 否則會誤讀 shops/xiaoyu/* 的空資料區。

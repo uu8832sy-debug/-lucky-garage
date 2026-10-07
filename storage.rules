@@ -19,7 +19,7 @@ service firebase.storage {
     }
 
     function accountRole() {
-      return tenantEnabled() ? tenantAccount().data.get('role', 'admin') : '';
+      return tenantEnabled() ? tenantAccount().data.get('role', '') : '';
     }
 
     function accountShopId() {
@@ -30,7 +30,7 @@ service firebase.storage {
 
     function legacyAdmin() {
       return signedIn() && (
-        emailIs('uu8832sr@gmail.com')
+        (emailIs('uu8832sr@gmail.com') && request.auth.token.email_verified == true)
         || request.auth.uid == 'rN911472GUXjc1IYToSPhgf6zbs2'
         || request.auth.uid == 'iRdFBpDpXcNklIQ2tzP8kP1lDu42'
         || request.auth.uid == 'azMaRtblP0VevIvEQQDG6OZj5wh1'
@@ -48,8 +48,7 @@ service firebase.storage {
 
     function isPlatformOwner() {
       return signedIn() && (
-        emailIs('uu8832sr@gmail.com')
-        || (tenantEnabled() && accountRole() == 'platformOwner')
+        emailIs('uu8832sr@gmail.com') && request.auth.token.email_verified == true
       );
     }
 
@@ -57,7 +56,7 @@ service firebase.storage {
       return legacyAdmin() || (
         tenantEnabled()
         && accountShopId() == 'xiaoyu'
-        && (accountRole() == 'staff' || accountRole() == 'admin' || accountRole() == 'owner' || accountRole() == 'platformOwner')
+        && (accountRole() == 'staff' || accountRole() == 'admin' || accountRole() == 'owner')
       );
     }
 

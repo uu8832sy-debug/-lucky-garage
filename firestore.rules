@@ -5,7 +5,7 @@ service cloud.firestore {
 
     function signedIn() { return request.auth != null; }
     function emailIs(value) { return signedIn() && request.auth.token.email == value; }
-    function isOwnerEmail() { return emailIs('uu8832sr@gmail.com'); }
+    function isOwnerEmail() { return emailIs('uu8832sr@gmail.com') && request.auth.token.email_verified == true; }
     function isJerryAdminEmail() { return emailIs('a0975607339@gmail.com'); }
 
     function legacyAdmin() {
@@ -27,7 +27,7 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/adminAccounts/$(request.auth.uid)).data;
     }
     function accountRole() {
-      return hasTenantAccount() ? accountData().get('role', 'admin') : null;
+      return hasTenantAccount() ? accountData().get('role', '') : null;
     }
     function accountShopId() {
       return hasTenantAccount()
@@ -38,7 +38,7 @@ service cloud.firestore {
       return (shopId == 'jerry' && isJerryAdminEmail()) || (hasTenantAccount() && accountShopId() == shopId);
     }
     function isPlatformOwner() {
-      return isOwnerEmail() || (hasTenantAccount() && accountRole() == 'platformOwner');
+      return isOwnerEmail();
     }
     function isShopManager(shopId) {
       return isPlatformOwner() || (belongsTo(shopId) && (accountRole() == 'owner' || accountRole() == 'admin')) || (shopId == 'jerry' && isJerryAdminEmail());
@@ -50,7 +50,7 @@ service cloud.firestore {
       return isShopManager(shopId) || isShopStaff(shopId);
     }
     function isLegacyXiaoyuManager() {
-      return legacyAdmin() || (hasTenantAccount() && accountShopId() == 'xiaoyu' && (accountRole() == 'platformOwner' || accountRole() == 'owner' || accountRole() == 'admin'));
+      return legacyAdmin() || (hasTenantAccount() && accountShopId() == 'xiaoyu' && (accountRole() == 'owner' || accountRole() == 'admin'));
     }
     function isLegacyXiaoyuStaff() {
       return hasTenantAccount() && accountShopId() == 'xiaoyu' && accountRole() == 'staff';
@@ -172,7 +172,7 @@ service cloud.firestore {
         && request.resource.data.actorUid == request.auth.uid
         && request.resource.data.shopId == 'xiaoyu'
         && request.resource.data.createdAt == request.time;
-      allow read: if isLegacyXiaoyuManager();
+      allow read: if isOwnerEmail();
       allow update, delete: if false;
     }
 
@@ -241,9 +241,14 @@ service cloud.firestore {
           && request.resource.data.actorUid == request.auth.uid
           && request.resource.data.shopId == shopId
           && request.resource.data.createdAt == request.time;
-        allow read: if isShopManager(shopId);
+        allow read: if isOwnerEmail();
         allow update, delete: if false;
       }
+    }
+
+    // Collection-group queries are private to the verified primary owner.
+    match /{path=**}/auditLogs/{logId} {
+      allow read: if isOwnerEmail();
     }
 
     match /{document=**} {

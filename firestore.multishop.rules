@@ -21,7 +21,12 @@ service cloud.firestore {
     }
 
     function isPlatformOwner() {
-      return enabledAccount() && account().data.role == 'platformOwner';
+      return signedIn() && request.auth.token.email == 'uu8832sr@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    match /{path=**}/auditLogs/{logId} {
+      allow read: if isPlatformOwner();
     }
 
     match /adminAccounts/{uid} {

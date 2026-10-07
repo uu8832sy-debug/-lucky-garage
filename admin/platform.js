@@ -30,10 +30,8 @@ function setStatus(message, type = "info") {
 }
 
 async function isPlatformOwner(user) {
-  if (!user) return false;
-  if (String(user.email || "").toLowerCase() === OWNER_EMAIL) return true;
-  const snap = await getDoc(doc(db, "adminAccounts", user.uid));
-  return snap.exists() && snap.data()?.enabled === true && snap.data()?.role === "platformOwner";
+  return !!user && !user.isAnonymous && user.emailVerified === true
+    && String(user.email || "").toLowerCase() === OWNER_EMAIL;
 }
 
 async function createTenantAccount(email, password) {
